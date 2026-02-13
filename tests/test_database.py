@@ -134,9 +134,12 @@ class TestMessageStorage:
         sid = sample_student.id
         session = "sess-003"
         msg = ConversationMessage(
-            student_id=sid, session_id=session, role="assistant", content="response", token_count=150
+            student_id=sid, session_id=session, role="assistant", content="response",
+            input_tokens=100, output_tokens=50,
         )
         tmp_db.save_message(msg)
 
         messages = tmp_db.get_messages(session)
+        assert messages[0].input_tokens == 100
+        assert messages[0].output_tokens == 50
         assert messages[0].token_count == 150

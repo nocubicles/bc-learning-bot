@@ -28,6 +28,10 @@ MAX_TOKENS = int(os.getenv("BCBOT_MAX_TOKENS", "4096"))
 MAX_CONTEXT_TOKENS = 30_000  # sliding window target
 SUMMARY_RESERVE_TOKENS = 2_000  # reserved for progress summary in prompt
 
+# Pricing (USD per million tokens) — Claude Sonnet 4.5
+INPUT_PRICE_PER_M = float(os.getenv("BCBOT_INPUT_PRICE", "3.0"))
+OUTPUT_PRICE_PER_M = float(os.getenv("BCBOT_OUTPUT_PRICE", "15.0"))
+
 # Defaults
 DEFAULT_STUDENT_NAME = "Student"
 DEFAULT_CURRICULUM = "_trading_company.yaml"

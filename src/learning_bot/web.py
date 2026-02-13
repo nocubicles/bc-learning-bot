@@ -206,6 +206,14 @@ def get_status(session_id: str) -> JSONResponse:
     return JSONResponse(progress_data or {})
 
 
+@app.get("/api/tokens/{session_id}")
+def get_tokens(session_id: str) -> JSONResponse:
+    """Get token usage summary and estimated cost for a session."""
+    agent = _get_agent(session_id)
+    summary = agent.db.get_session_token_summary(agent.session_id)
+    return JSONResponse(summary)
+
+
 @app.get("/api/curriculum/{session_id}")
 def get_curriculum(session_id: str) -> JSONResponse:
     """Get the curriculum tree."""

@@ -19,7 +19,7 @@ class PromptBuilder:
             lstrip_blocks=True,
         )
 
-    def build_system_prompt(
+    def build_system_prompt_parts(
         self,
         student_name: str,
         module: dict | None = None,
@@ -28,19 +28,23 @@ class PromptBuilder:
         task_index: int = 0,
         total_tasks: int = 0,
         progress_summary: dict | None = None,
-    ) -> str:
-        """Build complete system prompt from templates."""
-        parts: list[str] = []
+    ) -> tuple[str, str]:
+        """Build system prompt as (base_prompt, dynamic_prompt).
 
-        # Base persona
+        base_prompt: stable persona text (cacheable across turns).
+        dynamic_prompt: curriculum context + progress (changes per turn).
+        """
+        # Base persona (stable across turns)
         base_template = self.env.get_template("system_base.md.j2")
-        parts.append(base_template.render(student_name=student_name))
+        base_prompt = base_template.render(student_name=student_name)
 
-        # Curriculum context (if in a lesson)
+        # Dynamic parts
+        dynamic_parts: list[str] = []
+
         if lesson:
             try:
                 ctx_template = self.env.get_template("curriculum_context.md.j2")
-                parts.append(
+                dynamic_parts.append(
                     ctx_template.render(
                         module=module or {},
                         lesson=lesson,
@@ -52,15 +56,39 @@ class PromptBuilder:
             except Exception:
                 pass
 
-        # Progress context
         if progress_summary:
             try:
                 prog_template = self.env.get_template("progress_context.md.j2")
-                parts.append(prog_template.render(**progress_summary))
+                dynamic_parts.append(prog_template.render(**progress_summary))
             except Exception:
                 pass
 
-        return "\n\n---\n\n".join(parts)
+        dynamic_prompt = "\n\n---\n\n".join(dynamic_parts)
+        return base_prompt, dynamic_prompt
+
+    def build_system_prompt(
+        self,
+        student_name: str,
+        module: dict | None = None,
+        lesson: dict | None = None,
+        current_task: dict | None = None,
+        task_index: int = 0,
+        total_tasks: int = 0,
+        progress_summary: dict | None = None,
+    ) -> str:
+        """Build complete system prompt from templates (convenience wrapper)."""
+        base, dynamic = self.build_system_prompt_parts(
+            student_name=student_name,
+            module=module,
+            lesson=lesson,
+            current_task=current_task,
+            task_index=task_index,
+            total_tasks=total_tasks,
+            progress_summary=progress_summary,
+        )
+        if dynamic:
+            return f"{base}\n\n---\n\n{dynamic}"
+        return base
 
     def build_fallback_prompt(self, student_name: str) -> str:
         """Build a minimal prompt when templates aren't available."""

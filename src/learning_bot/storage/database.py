@@ -35,13 +35,15 @@ CREATE TABLE IF NOT EXISTS lesson_progress (
 );
 
 CREATE TABLE IF NOT EXISTS conversation_messages (
-    id          TEXT PRIMARY KEY,
-    student_id  TEXT NOT NULL REFERENCES students(id),
-    session_id  TEXT NOT NULL,
-    role        TEXT NOT NULL,
-    content     TEXT NOT NULL,
-    timestamp   TEXT NOT NULL,
-    token_count INTEGER NOT NULL DEFAULT 0
+    id            TEXT PRIMARY KEY,
+    student_id    TEXT NOT NULL REFERENCES students(id),
+    session_id    TEXT NOT NULL,
+    role          TEXT NOT NULL,
+    content       TEXT NOT NULL,
+    timestamp     TEXT NOT NULL,
+    token_count   INTEGER NOT NULL DEFAULT 0,
+    input_tokens  INTEGER NOT NULL DEFAULT 0,
+    output_tokens INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_progress_student
@@ -97,10 +99,25 @@ class Database:
     # ------------------------------------------------------------------
 
     def init_db(self) -> None:
-        """Create tables if they don't exist."""
+        """Create tables if they don't exist, and run migrations."""
         with self._connect() as conn:
             conn.executescript(_SCHEMA)
+            self._migrate(conn)
         log.info("Database initialised at %s", self.db_path)
+
+    @staticmethod
+    def _migrate(conn: sqlite3.Connection) -> None:
+        """Add columns that may be missing in older databases."""
+        columns = {
+            row["name"]
+            for row in conn.execute("PRAGMA table_info(conversation_messages)").fetchall()
+        }
+        for col in ("input_tokens", "output_tokens"):
+            if col not in columns:
+                conn.execute(
+                    f"ALTER TABLE conversation_messages ADD COLUMN {col} INTEGER NOT NULL DEFAULT 0"
+                )
+                log.info("Migrated: added %s column", col)
 
     # ------------------------------------------------------------------
     # Students
@@ -236,8 +253,9 @@ class Database:
         with self._connect() as conn:
             conn.execute(
                 """INSERT INTO conversation_messages
-                   (id, student_id, session_id, role, content, timestamp, token_count)
-                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                   (id, student_id, session_id, role, content, timestamp, token_count,
+                    input_tokens, output_tokens)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     message.id,
                     message.student_id,
@@ -246,6 +264,8 @@ class Database:
                     message.content,
                     _to_iso(message.timestamp),
                     message.token_count,
+                    message.input_tokens,
+                    message.output_tokens,
                 ),
             )
         return message
@@ -277,6 +297,33 @@ class Database:
         messages.reverse()
         return messages
 
+    def get_session_token_summary(self, session_id: str) -> dict:
+        """Return total input/output tokens for a session + estimated cost."""
+        from learning_bot.config import INPUT_PRICE_PER_M, OUTPUT_PRICE_PER_M
+
+        with self._connect() as conn:
+            row = conn.execute(
+                """SELECT
+                       COALESCE(SUM(input_tokens), 0)  AS total_input,
+                       COALESCE(SUM(output_tokens), 0) AS total_output,
+                       COUNT(*)                         AS message_count
+                   FROM conversation_messages
+                   WHERE session_id = ?""",
+                (session_id,),
+            ).fetchone()
+
+        total_input = row["total_input"]
+        total_output = row["total_output"]
+        cost = (total_input / 1_000_000) * INPUT_PRICE_PER_M + (total_output / 1_000_000) * OUTPUT_PRICE_PER_M
+
+        return {
+            "total_input_tokens": total_input,
+            "total_output_tokens": total_output,
+            "total_tokens": total_input + total_output,
+            "estimated_cost_usd": round(cost, 6),
+            "message_count": row["message_count"],
+        }
+
     @staticmethod
     def _row_to_message(row: sqlite3.Row) -> ConversationMessage:
         return ConversationMessage(
@@ -286,5 +333,6 @@ class Database:
             role=row["role"],
             content=row["content"],
             timestamp=_from_iso(row["timestamp"]),  # type: ignore[arg-type]
-            token_count=row["token_count"],
+            input_tokens=row["input_tokens"],
+            output_tokens=row["output_tokens"],
         )

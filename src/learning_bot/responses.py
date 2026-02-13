@@ -34,6 +34,8 @@ class ChatResponse:
     export_format: str | None = None
     commands: list[dict] | None = None
     token_count: int = 0
+    input_tokens: int = 0
+    output_tokens: int = 0
 
     def to_dict(self) -> dict:
         """Serialize to a JSON-friendly dict."""
@@ -52,4 +54,8 @@ class ChatResponse:
             d["commands"] = self.commands
         if self.token_count:
             d["token_count"] = self.token_count
+        if self.input_tokens:
+            d["input_tokens"] = self.input_tokens
+        if self.output_tokens:
+            d["output_tokens"] = self.output_tokens
         return d

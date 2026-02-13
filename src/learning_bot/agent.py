@@ -53,8 +53,8 @@ class Agent:
         self.client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
         self.messages: list[dict] = []
 
-    def _build_system_prompt(self) -> str:
-        """Assemble the system prompt with current context."""
+    def _build_system_prompt_parts(self) -> tuple[str, str]:
+        """Assemble the system prompt as (base, dynamic) for caching."""
         module_dict = None
         lesson_dict = None
         current_task = None
@@ -63,7 +63,6 @@ class Agent:
         progress_summary = None
 
         if self.nav and self.progress:
-            # Get current lesson from progress
             all_progress = self.progress.get_all_progress(self.student_id)
             lesson_info = self.nav.get_current_lesson(all_progress)
 
@@ -78,19 +77,6 @@ class Agent:
                     "id": lesson.id,
                     "title": lesson.title,
                     "objectives": lesson.objectives,
-                    "tasks": [
-                        {
-                            "id": t.id,
-                            "title": t.title,
-                            "instructions": t.instructions,
-                            "config_data": t.config_data,
-                            "validation_questions": [
-                                {"question": q.question, "expected_answer": q.expected_answer, "hints": q.hints}
-                                for q in t.validation_questions
-                            ],
-                        }
-                        for t in lesson.tasks
-                    ],
                     "validation_questions": [
                         {"question": q.question, "expected_answer": q.expected_answer, "hints": q.hints}
                         for q in lesson.validation_questions
@@ -100,14 +86,24 @@ class Agent:
                 }
                 total_tasks = len(lesson.tasks)
                 if total_tasks > 0:
-                    current_task = lesson_dict["tasks"][0]
+                    t = lesson.tasks[0]
+                    current_task = {
+                        "id": t.id,
+                        "title": t.title,
+                        "instructions": t.instructions,
+                        "config_data": t.config_data,
+                        "validation_questions": [
+                            {"question": q.question, "expected_answer": q.expected_answer, "hints": q.hints}
+                            for q in t.validation_questions
+                        ],
+                    }
                     task_index = 1
 
             progress_summary = self.nav.get_progress_summary(all_progress)
             progress_summary["student_name"] = self.student_name
 
         try:
-            return self.prompt_builder.build_system_prompt(
+            return self.prompt_builder.build_system_prompt_parts(
                 student_name=self.student_name,
                 module=module_dict,
                 lesson=lesson_dict,
@@ -117,7 +113,7 @@ class Agent:
                 progress_summary=progress_summary,
             )
         except Exception:
-            return self.prompt_builder.build_fallback_prompt(self.student_name)
+            return self.prompt_builder.build_fallback_prompt(self.student_name), ""
 
     def _trim_messages(self) -> list[dict]:
         """Apply sliding window to keep messages under token budget."""
@@ -161,15 +157,21 @@ class Agent:
             content=user_input,
         ))
 
-        # Build system prompt
-        system_prompt = self._build_system_prompt()
+        # Build system prompt with caching support
+        base_prompt, dynamic_prompt = self._build_system_prompt_parts()
+
+        system_blocks: list[dict] = [
+            {"type": "text", "text": base_prompt, "cache_control": {"type": "ephemeral"}},
+        ]
+        if dynamic_prompt:
+            system_blocks.append({"type": "text", "text": dynamic_prompt})
 
         # Call Claude
         try:
             response = self.client.messages.create(
                 model=config.MODEL,
                 max_tokens=config.MAX_TOKENS,
-                system=system_prompt,
+                system=system_blocks,
                 messages=self._trim_messages(),
             )
             assistant_text = response.content[0].text
@@ -178,13 +180,12 @@ class Agent:
             self.messages.pop()
             return ChatResponse(type=ResponseType.ERROR, content=f"Claude API error: {e}")
 
-        # Token counting
-        token_count = 0
+        # Token counting — split input/output
+        input_tokens = 0
+        output_tokens = 0
         if hasattr(response, "usage") and response.usage is not None:
-            token_count = (
-                getattr(response.usage, "input_tokens", 0)
-                + getattr(response.usage, "output_tokens", 0)
-            )
+            input_tokens = getattr(response.usage, "input_tokens", 0)
+            output_tokens = getattr(response.usage, "output_tokens", 0)
 
         # Save
         self.messages.append({"role": "assistant", "content": assistant_text})
@@ -193,13 +194,16 @@ class Agent:
             session_id=self.session_id,
             role="assistant",
             content=assistant_text,
-            token_count=token_count,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
         ))
 
         return ChatResponse(
             type=ResponseType.ASSISTANT,
             content=assistant_text,
-            token_count=token_count,
+            token_count=input_tokens + output_tokens,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
         )
 
     def _handle_slash_command(self, command: str) -> ChatResponse:

@@ -43,4 +43,9 @@ class ConversationMessage:
     content: str
     id: str = field(default_factory=_new_id)
     timestamp: datetime = field(default_factory=_utcnow)
-    token_count: int = 0
+    input_tokens: int = 0
+    output_tokens: int = 0
+
+    @property
+    def token_count(self) -> int:
+        return self.input_tokens + self.output_tokens

@@ -321,10 +321,14 @@ class Agent:
         self.progress.complete_lesson(self.student_id, module.id, lesson.id)
 
         advance_resp = self._advance_to_next()
-        return ChatResponse(
-            type=ResponseType.SUCCESS,
-            content=f"Skipped: {lesson.title}\n{advance_resp.content}",
+
+        # Generate AI introduction for the new lesson
+        intro = self.chat(
+            "[The student just skipped the previous lesson. "
+            "Please introduce the new current lesson and its first task.]"
         )
+        intro.content = f"*Skipped: {lesson.title}*\n\n{intro.content}"
+        return intro
 
     def _cmd_next(self) -> ChatResponse:
         """Move to next lesson, checking prerequisites on the target lesson."""
@@ -340,10 +344,14 @@ class Agent:
         self.progress.complete_lesson(self.student_id, module.id, lesson.id)
 
         advance_resp = self._advance_to_next(check_prerequisites=True)
-        return ChatResponse(
-            type=ResponseType.SUCCESS,
-            content=f"Completed: {lesson.title}\n{advance_resp.content}",
+
+        # Generate AI introduction for the new lesson
+        intro = self.chat(
+            "[The student just completed the previous lesson. "
+            "Please introduce the new current lesson and its first task.]"
         )
+        intro.content = f"*Completed: {lesson.title}*\n\n{intro.content}"
+        return intro
 
     def _advance_to_next(self, check_prerequisites: bool = False) -> ChatResponse:
         """Advance to the next lesson and return info about it."""

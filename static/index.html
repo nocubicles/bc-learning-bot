@@ -38,6 +38,43 @@
       40% { transform: scale(1); }
     }
 
+    /* Command palette */
+    #command-palette {
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      right: 0;
+      margin-bottom: 4px;
+      max-height: 280px;
+      overflow-y: auto;
+      background: #1f2937;
+      border: 1px solid #4b5563;
+      border-radius: 0.5rem;
+      z-index: 50;
+    }
+    #command-palette .cmd-item {
+      padding: 0.5rem 0.75rem;
+      cursor: pointer;
+      display: flex;
+      gap: 0.75rem;
+      align-items: baseline;
+    }
+    #command-palette .cmd-item.active {
+      background: #4b5563;
+    }
+    #command-palette .cmd-item:hover {
+      background: #374151;
+    }
+    #command-palette .cmd-name {
+      color: #67e8f9;
+      font-family: monospace;
+      white-space: nowrap;
+    }
+    #command-palette .cmd-desc {
+      color: #9ca3af;
+      font-size: 0.85em;
+    }
+
     /* Sidebar status icons */
     .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
     .status-not_started { background: #6b7280; }
@@ -121,7 +158,8 @@
 
         <!-- Input area -->
         <div class="border-t border-gray-700 p-4 bg-gray-800 shrink-0">
-          <form id="chat-form" class="flex gap-3">
+          <form id="chat-form" class="flex gap-3 relative">
+            <div id="command-palette" class="hidden"></div>
             <input
               id="chat-input"
               type="text"
@@ -363,6 +401,7 @@
         const data = await res.json();
         sessionId = data.session_id;
         studentLabel.textContent = data.student_name;
+        localStorage.setItem('bcbot_name', name);
 
         // Switch screens
         loginScreen.classList.add('hidden');
@@ -477,6 +516,101 @@
       }
     }
 
+    // ---------- Command palette ----------
+    const COMMANDS = [
+      { command: '/help', description: 'Show available commands' },
+      { command: '/status', description: 'View your learning progress' },
+      { command: '/hint', description: 'Get a hint for the current exercise' },
+      { command: '/skip', description: 'Skip the current lesson' },
+      { command: '/back', description: 'Go back to the previous lesson' },
+      { command: '/reset', description: 'Restart the current lesson' },
+      { command: '/notes', description: 'View or save notes for the current lesson' },
+      { command: '/export', description: 'Export your learning progress' },
+      { command: '/quit', description: 'End the session' },
+    ];
+
+    const commandPalette = document.getElementById('command-palette');
+    let paletteIndex = -1;
+
+    function showPalette(filtered) {
+      if (!filtered.length) { hidePalette(); return; }
+      paletteIndex = 0;
+      commandPalette.innerHTML = filtered.map((c, i) =>
+        `<div class="cmd-item${i === 0 ? ' active' : ''}" data-cmd="${c.command}">` +
+        `<span class="cmd-name">${escapeHtml(c.command)}</span>` +
+        `<span class="cmd-desc">${escapeHtml(c.description)}</span></div>`
+      ).join('');
+      commandPalette.classList.remove('hidden');
+    }
+
+    function hidePalette() {
+      commandPalette.classList.add('hidden');
+      commandPalette.innerHTML = '';
+      paletteIndex = -1;
+    }
+
+    function isPaletteOpen() {
+      return !commandPalette.classList.contains('hidden');
+    }
+
+    function selectPaletteItem() {
+      const items = commandPalette.querySelectorAll('.cmd-item');
+      if (paletteIndex >= 0 && paletteIndex < items.length) {
+        chatInput.value = items[paletteIndex].dataset.cmd + ' ';
+        hidePalette();
+        chatInput.focus();
+      }
+    }
+
+    chatInput.addEventListener('input', () => {
+      const val = chatInput.value;
+      if (val.startsWith('/')) {
+        const prefix = val.split(' ')[0].toLowerCase();
+        const filtered = COMMANDS.filter(c => c.command.startsWith(prefix));
+        showPalette(filtered);
+      } else {
+        hidePalette();
+      }
+    });
+
+    chatInput.addEventListener('keydown', (e) => {
+      if (!isPaletteOpen()) return;
+      const items = commandPalette.querySelectorAll('.cmd-item');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        paletteIndex = Math.min(paletteIndex + 1, items.length - 1);
+        items.forEach((el, i) => el.classList.toggle('active', i === paletteIndex));
+        items[paletteIndex].scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        paletteIndex = Math.max(paletteIndex - 1, 0);
+        items.forEach((el, i) => el.classList.toggle('active', i === paletteIndex));
+        items[paletteIndex].scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        selectPaletteItem();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        hidePalette();
+      }
+    });
+
+    commandPalette.addEventListener('mousedown', (e) => {
+      const item = e.target.closest('.cmd-item');
+      if (item) {
+        e.preventDefault();
+        chatInput.value = item.dataset.cmd + ' ';
+        hidePalette();
+        chatInput.focus();
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!commandPalette.contains(e.target) && e.target !== chatInput) {
+        hidePalette();
+      }
+    });
+
     // ---------- Event listeners ----------
     startBtn.addEventListener('click', startSession);
     nameInput.addEventListener('keydown', (e) => {
@@ -498,6 +632,10 @@
         sidebar.classList.remove('absolute', 'inset-y-0', 'left-0', 'z-50', 'lg:relative');
       }
     });
+
+    // ---------- Restore saved name ----------
+    const savedName = localStorage.getItem('bcbot_name');
+    if (savedName) nameInput.value = savedName;
   </script>
 </body>
 </html>

@@ -1,0 +1,171 @@
+id: coa_design
+title: "Understanding the Chart of Accounts"
+objectives:
+  - "Understand the structure and purpose of a Chart of Accounts"
+  - "Learn the Danish standard account numbering convention"
+  - "Plan the CoA structure for Nordic Traders ApS"
+prerequisites:
+  - "assisted_setup"
+tasks:
+  - id: understand_coa_structure
+    title: "Learn the CoA structure"
+    instructions: |
+      Before creating accounts, you need to understand how a Chart of Accounts
+      is structured in Business Central.
+
+      Search for "Chart of Accounts" (Page 16).
+
+      In BC, each G/L account has:
+        - No. (Account Number): A unique identifier
+        - Name: A descriptive name
+        - Income/Balance: Whether it is a P&L account or a Balance Sheet account
+        - Account Type: Posting, Heading, Total, Begin-Total, End-Total
+        - Account Category and Subcategory: For financial reporting mapping
+
+      The Danish standard chart (Standardkontoplan) typically uses:
+        1000-1999  Assets (Aktiver)
+        2000-2999  Liabilities (Passiver)
+        3000-3999  Equity (Egenkapital)
+        4000-4999  Revenue (Omsaetning)
+        5000-5999  Cost of Goods Sold (Vareforbrug)
+        6000-6999  Operating Expenses (Driftsomkostninger)
+        7000-7999  Personnel Expenses (Personaleomkostninger)
+        8000-8999  Financial Income/Expenses (Finansielle poster)
+        9000-9999  Tax and Extraordinary Items (Skat og ekstraordinaere poster)
+    config_data: {}
+    validation_questions:
+      - question: "What number range is typically used for Revenue accounts in the Danish standard?"
+        expected_answer: "4000-4999"
+        hints:
+          - "Revenue (Omsaetning) is in the 4000 range"
+      - question: "What is the difference between a 'Posting' account and a 'Heading' account?"
+        expected_answer: "Posting accounts accept transactions/entries; Heading accounts are labels used for grouping and cannot receive postings"
+        hints:
+          - "Only Posting type accounts can have ledger entries posted to them"
+
+  - id: review_planned_accounts
+    title: "Review the planned accounts for Nordic Traders"
+    instructions: |
+      Here is the Chart of Accounts we will set up for Nordic Traders ApS.
+      Review this list carefully. In the next lesson, we will import them.
+
+      BALANCE SHEET ACCOUNTS:
+      ────────────────────────
+      1000  Assets (Heading)
+      1100  Fixed Assets (Begin-Total)
+      1110  Equipment & Furniture (Posting) — Balance Sheet, Assets
+      1120  IT Hardware (Posting) — Balance Sheet, Assets
+      1190  Total Fixed Assets (End-Total)
+      1200  Current Assets (Begin-Total)
+      1210  Inventory (Posting) — Balance Sheet, Assets
+      1300  Trade Receivables (Posting) — Balance Sheet, Assets
+      1310  Prepayments to Vendors (Posting) — Balance Sheet, Assets
+      1400  VAT Receivable (Posting) — Balance Sheet, Assets
+      1500  Bank Account - DKK (Posting) — Balance Sheet, Assets
+      1510  Bank Account - USD (Posting) — Balance Sheet, Assets
+      1520  Cash (Posting) — Balance Sheet, Assets
+      1990  Total Current Assets (End-Total)
+      1999  Total Assets (Total)
+
+      2000  Liabilities (Heading)
+      2100  Current Liabilities (Begin-Total)
+      2110  Trade Payables (Posting) — Balance Sheet, Liabilities
+      2120  Prepayments from Customers (Posting) — Balance Sheet, Liabilities
+      2200  VAT Payable (Posting) — Balance Sheet, Liabilities
+      2210  Tax Payable (Posting) — Balance Sheet, Liabilities
+      2300  Accrued Expenses (Posting) — Balance Sheet, Liabilities
+      2900  Total Current Liabilities (End-Total)
+
+      3000  Equity (Heading)
+      3100  Share Capital (Posting) — Balance Sheet, Equity
+      3200  Retained Earnings (Posting) — Balance Sheet, Equity
+      3999  Total Equity (Total)
+
+      INCOME STATEMENT ACCOUNTS:
+      ────────────────────────────
+      4000  Revenue (Heading)
+      4100  Product Sales (Posting) — Income Statement, Income
+      4200  Service Revenue (Posting) — Income Statement, Income
+      4300  Sales Discounts (Posting) — Income Statement, Income
+      4999  Total Revenue (Total)
+
+      5000  Cost of Goods Sold (Heading)
+      5100  COGS - Products (Posting) — Income Statement, COGS
+      5200  COGS - Freight Inbound (Posting) — Income Statement, COGS
+      5300  Inventory Adjustments (Posting) — Income Statement, COGS
+      5999  Total COGS (Total)
+
+      6000  Operating Expenses (Heading)
+      6100  Rent (Posting) — Income Statement, Expense
+      6200  Utilities (Posting) — Income Statement, Expense
+      6300  Office Supplies (Posting) — Income Statement, Expense
+      6400  Insurance (Posting) — Income Statement, Expense
+      6500  Marketing & Advertising (Posting) — Income Statement, Expense
+      6600  Travel Expenses (Posting) — Income Statement, Expense
+      6700  IT & Software (Posting) — Income Statement, Expense
+      6800  Depreciation (Posting) — Income Statement, Expense
+      6999  Total Operating Expenses (Total)
+
+      7000  Personnel Expenses (Heading)
+      7100  Salaries (Posting) — Income Statement, Expense
+      7200  Social Contributions (Posting) — Income Statement, Expense
+      7300  Pension Contributions (Posting) — Income Statement, Expense
+      7999  Total Personnel Expenses (Total)
+
+      8000  Financial Items (Heading)
+      8100  Interest Income (Posting) — Income Statement, Income
+      8200  Interest Expense (Posting) — Income Statement, Expense
+      8300  Currency Exchange Gains (Posting) — Income Statement, Income
+      8400  Currency Exchange Losses (Posting) — Income Statement, Expense
+      8999  Total Financial Items (Total)
+
+      9000  Tax (Heading)
+      9100  Corporate Income Tax (Posting) — Income Statement, Expense
+      9999  Total Tax (Total)
+
+      Note account 8300 and 8400 — these are important for Nordic Traders
+      because we import in USD and sell in DKK/EUR, so currency fluctuations
+      are a real business concern.
+    config_data:
+      total_accounts: 50
+      balance_sheet_range: "1000-3999"
+      income_statement_range: "4000-9999"
+    validation_questions:
+      - question: "What account number will we use for Trade Receivables?"
+        expected_answer: "1300"
+        hints:
+          - "In the Current Assets section, 1300 range"
+      - question: "Why do we have separate accounts for Currency Exchange Gains (8300) and Losses (8400)?"
+        expected_answer: "Because Nordic Traders imports in USD and sells in DKK/EUR, so foreign currency transactions create exchange rate differences that need to be tracked separately"
+        hints:
+          - "Think about the import/export nature of the business"
+
+validation_questions:
+  - question: "What account number range will Revenue accounts use?"
+    expected_answer: "4000-4999"
+    hints: []
+  - question: "What type of account is '1000 Assets' — Posting or Heading?"
+    expected_answer: "Heading"
+    hints:
+      - "It groups other accounts beneath it; you cannot post to it directly"
+
+agent_context: |
+  This is a theory-heavy lesson. The student needs to understand CoA structure
+  before importing. The Danish standard chart is the reference point.
+
+  Key teaching points:
+  - Balance Sheet (1000-3999) vs Income Statement (4000-9999) distinction
+  - Account Types: Posting (accepts entries), Heading (label), Total (summing),
+    Begin-Total/End-Total (indentation grouping)
+  - Account Categories map to financial reporting (Assets, Liabilities, Equity, Income, COGS, Expense)
+  - Currency exchange accounts (8300/8400) are especially relevant for a trading company
+
+  Common mistakes:
+  - Confusing Account Type with Income/Balance classification
+  - Not understanding the Begin-Total / End-Total pairing
+  - Thinking all accounts need to be Posting type
+
+  Encourage the student to study the list carefully. They do not need to
+  memorize it — they will import it in the next lesson.
+
+estimated_duration: "25 minutes"

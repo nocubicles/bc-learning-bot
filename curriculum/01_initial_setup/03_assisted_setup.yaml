@@ -1,0 +1,150 @@
+id: assisted_setup
+title: "Running Assisted Setup Wizards"
+objectives:
+  - "Understand the purpose of Assisted Setup in Business Central"
+  - "Run key setup wizards for email, accounting periods, and base configuration"
+  - "Know which wizards to skip and why for a manual implementation"
+prerequisites:
+  - "company_information"
+tasks:
+  - id: open_assisted_setup
+    title: "Open the Assisted Setup page"
+    instructions: |
+      Search for "Assisted Setup" (Page 1801) using the search bar (Alt+Q).
+
+      The Assisted Setup page shows a list of guided setup wizards organized
+      by area. Each wizard walks you through configuring a specific feature.
+
+      Review the list of available wizards. You will see categories like:
+      - Start
+      - Financial
+      - Sales
+      - Purchasing
+      - Reference Data
+
+      Note which ones show "Completed" and which are "Not Completed".
+    config_data: {}
+    validation_questions:
+      - question: "Can you see the Assisted Setup page with a list of wizards?"
+        expected_answer: "Yes"
+        hints:
+          - "Search for 'Assisted Setup' — it should show grouped wizards"
+
+  - id: run_accounting_periods
+    title: "Set up accounting periods"
+    instructions: |
+      We need accounting periods before we can post any transactions.
+
+      Search for "Accounting Periods" (Page 100) directly, or look for a
+      "Create Year" or "Fiscal Year" option on the Assisted Setup.
+
+      On the Accounting Periods page:
+        1. Click "Create Year" in the action bar
+        2. Starting Date: set to 01-01-2025 (or the current year)
+        3. No. of Periods: 12
+        4. Period Length: 1M (one month)
+        5. Click OK
+
+      This creates 12 monthly accounting periods for the fiscal year.
+      The first period (January) will automatically be marked as
+      the start of a new fiscal year.
+    config_data:
+      starting_date: "01-01-2025"
+      no_of_periods: 12
+      period_length: "1M"
+    validation_questions:
+      - question: "How many accounting periods did you create?"
+        expected_answer: "12"
+        hints:
+          - "One period per month for a full calendar year"
+      - question: "What is the starting date of the first period?"
+        expected_answer: "01-01-2025"
+        hints:
+          - "The fiscal year starts on January 1"
+
+  - id: review_local_functionality
+    title: "Check Danish localization setup"
+    instructions: |
+      Search for "General Ledger Setup" (Page 118).
+
+      On this page, verify or set:
+        LCY Code:                     DKK
+        Local Currency Symbol:        kr.
+        Local Currency Description:   Danish Krone
+
+      The LCY (Local Currency) Code is critical — it defines the base
+      currency for all financial transactions in this company.
+
+      Also on this page, in the Application section:
+        Allow Posting From:   01-01-2025
+        Allow Posting To:     12-31-2025
+
+      This restricts posting to the current fiscal year.
+    config_data:
+      lcy_code: "DKK"
+      local_currency_symbol: "kr."
+      local_currency_description: "Danish Krone"
+      allow_posting_from: "01-01-2025"
+      allow_posting_to: "12-31-2025"
+    validation_questions:
+      - question: "What is the LCY Code on the General Ledger Setup page?"
+        expected_answer: "DKK"
+        hints:
+          - "Danish Krone — the local currency for a Danish company"
+      - question: "What date range have you set for Allow Posting From/To?"
+        expected_answer: "01-01-2025 to 12-31-2025"
+        hints:
+          - "This should match the fiscal year"
+
+  - id: skip_unnecessary_wizards
+    title: "Understand which wizards to skip"
+    instructions: |
+      Back on the Assisted Setup page, review the remaining wizards.
+
+      For our manual implementation, we will SKIP the following wizards
+      and configure them manually in later lessons:
+        - "Set up chart of accounts" — we will import our own CoA
+        - "Set up sales tax" or "Set up VAT" — we will configure VAT posting setup manually
+        - "Migrate business data" — we are starting fresh
+        - "Set up email" — optional, not needed for training
+
+      You do NOT need to run these wizards. Just be aware they exist.
+      In a real project you might use some of them to speed up the process,
+      but for learning purposes we will configure everything step by step.
+    config_data: {}
+    validation_questions:
+      - question: "Why are we skipping the chart of accounts wizard?"
+        expected_answer: "Because we will import and configure the chart of accounts manually in the next module"
+        hints:
+          - "We want to learn the detailed setup process"
+
+validation_questions:
+  - question: "What is the LCY Code for Nordic Traders?"
+    expected_answer: "DKK"
+    hints:
+      - "The currency code for Danish Krone"
+  - question: "How many monthly accounting periods did you create for the fiscal year?"
+    expected_answer: "12"
+    hints: []
+
+agent_context: |
+  This lesson bridges initial company creation and detailed configuration.
+  The student should understand that Assisted Setup wizards are shortcuts,
+  but we intentionally configure things manually for learning purposes.
+
+  Key teaching points:
+  - Accounting periods MUST exist before any posting can happen
+  - LCY Code (Local Currency) is one of the most fundamental settings
+  - Allow Posting From/To prevents accidental posting to wrong periods
+  - Danish localization uses DKK, kr. symbol
+
+  Common mistakes:
+  - Running the CoA wizard when we want to import our own chart
+  - Setting wrong period length (e.g., 1Y instead of 1M)
+  - Forgetting to set Allow Posting From/To dates
+  - Not understanding that LCY Code affects every financial transaction
+
+  If the student asks about the email setup wizard, explain it is useful
+  for production but not needed for our training sandbox.
+
+estimated_duration: "20 minutes"

@@ -1,0 +1,314 @@
+id: sales_order
+title: "Creating and Processing a Sales Order"
+objectives:
+  - "Create a sales order for a domestic (Danish) customer in DKK"
+  - "Understand VAT calculation on domestic sales (25% Danish moms)"
+  - "Review sales pricing and line details before posting"
+  - "Post a shipment (Ship only, without invoicing)"
+  - "Understand the impact of shipping on inventory and the document status"
+prerequisites:
+  - "sales_setup"
+tasks:
+  - id: create_sales_order
+    title: "Create a sales order for Nordisk Elektronik A/S"
+    instructions: |
+      Search for "Sales Orders" and click "+ New" to create a new sales order
+      (Page 42).
+
+      Header fields:
+        Sell-to Customer No.:   C10000 (Nordisk Elektronik A/S)
+
+      When you select the customer, BC auto-fills:
+        - Customer Name: Nordisk Elektronik A/S
+        - Address: (from customer card)
+        - Payment Terms: NET30
+        - Currency Code: (blank — this means DKK, the local currency)
+        - Gen. Bus. Posting Group: DOMESTIC
+        - VAT Bus. Posting Group: DOMESTIC
+        - Customer Posting Group: DOMESTIC
+
+      Set additional header fields:
+        External Document No.:  NE-PO-2025-108 (customer's purchase order reference)
+        Order Date:             (today's work date)
+        Requested Delivery Date: (work date + 7 days)
+        Location Code:          MAIN
+        Salesperson Code:       (if configured, otherwise leave blank)
+
+      Now add the sales lines:
+
+        Type    No.        Description              Qty    Unit Price (DKK)
+        ──────  ─────────  ─────────────────────    ─────  ────────────────
+        Item    ITEM-1001  ProBook 15 Laptop        10     5,800.00
+        Item    ITEM-2001  ClearView 27" Monitor    5      2,400.00
+
+      After entering the lines, observe:
+        - Line Amount = Qty x Unit Price
+        - Line 1: 10 x 5,800.00 = 58,000.00 DKK
+        - Line 2: 5 x 2,400.00 = 12,000.00 DKK
+        - Subtotal (excl. VAT): 70,000.00 DKK
+
+      The lines auto-fill:
+        - Gen. Prod. Posting Group: RETAIL
+        - VAT Prod. Posting Group: VAT25
+        - VAT %: 25 (DOMESTIC + VAT25 = 25% normal VAT)
+
+      Check the Statistics (F7):
+        Amount Excl. VAT:    70,000.00 DKK
+        VAT Amount:          17,500.00 DKK  (70,000 x 25%)
+        Amount Incl. VAT:    87,500.00 DKK
+    config_data:
+      customer:
+        no: "C10000"
+        name: "Nordisk Elektronik A/S"
+        currency: "DKK"
+        payment_terms: "NET30"
+        gen_bus_posting_group: "DOMESTIC"
+        vat_bus_posting_group: "DOMESTIC"
+        customer_posting_group: "DOMESTIC"
+      header:
+        external_document_no: "NE-PO-2025-108"
+        location_code: "MAIN"
+      lines:
+        - { type: "Item", no: "ITEM-1001", description: "ProBook 15 Laptop", quantity: 10, unit_price_dkk: 5800.00, line_amount_dkk: 58000.00 }
+        - { type: "Item", no: "ITEM-2001", description: "ClearView 27\" Monitor", quantity: 5, unit_price_dkk: 2400.00, line_amount_dkk: 12000.00 }
+      totals:
+        amount_excl_vat: 70000.00
+        vat_amount: 17500.00
+        amount_incl_vat: 87500.00
+        vat_percentage: 25
+    validation_questions:
+      - question: "What is the VAT amount on this sales order?"
+        expected_answer: "17,500.00 DKK (70,000.00 x 25% Danish moms)"
+        hints:
+          - "DOMESTIC + VAT25 = 25% standard Danish VAT"
+      - question: "Why is the Currency Code blank on this sales order?"
+        expected_answer: "Because the customer Nordisk Elektronik A/S is a Danish company and transacts in DKK, which is the company's local currency. In BC, a blank Currency Code means the document is in the local currency (LCY)."
+        hints:
+          - "The local currency does not need an explicit currency code"
+
+  - id: review_pricing_and_vat
+    title: "Review pricing, margins, and VAT calculation"
+    instructions: |
+      Let us analyze the economics of this sale:
+
+      ProBook 15 Laptop (ITEM-1001):
+        Purchase cost (from PO): 520.00 USD ≈ 3,562.00 DKK (at 6.85 rate)
+        Sales price:             5,800.00 DKK
+        Gross margin:            5,800 - 3,562 = 2,238.00 DKK per unit (38.6%)
+
+      ClearView 27" Monitor (ITEM-2001):
+        Purchase cost (from PO): 280.00 USD ≈ 1,918.00 DKK (at 6.85 rate)
+        Sales price:             2,400.00 DKK
+        Gross margin:            2,400 - 1,918 = 482.00 DKK per unit (20.1%)
+
+      Total order margin:
+        Revenue:    70,000.00 DKK
+        COGS:       (10 x 3,562) + (5 x 1,918) = 35,620 + 9,590 = 45,210 DKK
+        Gross profit: 70,000 - 45,210 = 24,790 DKK (35.4% margin)
+
+      VAT breakdown:
+        The 25% Danish moms is calculated on the net amount (excl. VAT):
+        - VAT on laptops: 58,000 x 25% = 14,500 DKK
+        - VAT on monitors: 12,000 x 25% = 3,000 DKK
+        - Total VAT: 17,500 DKK
+
+      Important: VAT is NOT a cost to Nordic Traders — it is collected from the
+      customer and remitted to SKAT (Danish tax authority). It is a pass-through.
+
+      To see this breakdown, open the Statistics page (F7) on the sales order.
+      You can also use the "VAT Amount Lines" action to see VAT per line.
+    config_data:
+      margin_analysis:
+        item_1001:
+          purchase_cost_usd: 520.00
+          purchase_cost_dkk: 3562.00
+          sales_price_dkk: 5800.00
+          margin_pct: 38.6
+        item_2001:
+          purchase_cost_usd: 280.00
+          purchase_cost_dkk: 1918.00
+          sales_price_dkk: 2400.00
+          margin_pct: 20.1
+      order_totals:
+        revenue: 70000.00
+        cogs_estimate: 45210.00
+        gross_profit: 24790.00
+        gross_margin_pct: 35.4
+    validation_questions:
+      - question: "Is the 25% VAT (17,500 DKK) a cost to Nordic Traders?"
+        expected_answer: "No. VAT is collected from the customer and remitted to the tax authority (SKAT). It is a pass-through — it appears as a liability (VAT Payable, account 2200) until it is remitted. It does not affect profit."
+        hints:
+          - "Think of the company as a VAT collection agent for the government"
+      - question: "What is the approximate gross margin percentage on this order?"
+        expected_answer: "Approximately 35.4% — revenue of 70,000 DKK minus estimated COGS of 45,210 DKK = 24,790 DKK gross profit"
+        hints:
+          - "Margin = (Revenue - COGS) / Revenue"
+
+  - id: post_shipment
+    title: "Post the sales shipment (Ship only)"
+    instructions: |
+      Now we will post the shipment — this means the goods have left our
+      warehouse for delivery to Nordisk Elektronik.
+
+      On the Sales Order page (Page 42):
+        1. Go to Actions → Posting → Post
+        2. BC asks "Ship and/or Invoice?"
+        3. Select "Ship" only (do NOT select Invoice)
+        4. Confirm the posting
+
+      After posting the shipment, observe what has changed:
+
+      On the Sales Order:
+        - Quantity Shipped: 10 (laptops) and 5 (monitors)
+        - Qty. to Ship: 0
+        - Qty. to Invoice: 10 and 5 (invoice not yet posted)
+        - The order remains open (partially posted)
+
+      To see the posted shipment:
+        Search for "Posted Sales Shipments" (Page 142)
+        Find the new shipment (SS-100001 or similar)
+        Review the lines — they match the SO lines
+
+      To check inventory impact:
+        Search for "Item Ledger Entries" (Page 38)
+        Filter: Item No. = ITEM-1001
+        You should see a new entry:
+          Entry Type: Sale
+          Quantity: -10 (negative = leaving inventory)
+          Location Code: MAIN
+          Remaining Quantity: 0 (fully applied)
+
+        Also check Item Card (Page 30) for ITEM-1001:
+          Quantity on Hand: should now be 40 (was 50, shipped 10)
+
+      The shipment posting creates:
+        1. Item Ledger Entries (inventory decreased by 10 laptops and 5 monitors)
+        2. Value Entries (cost flows from inventory to interim COGS)
+        3. Posted Sales Shipment document
+
+      IMPORTANT: No customer ledger entry or revenue is recognized yet —
+      that happens when we post the invoice in the next lesson.
+    config_data:
+      posting_action: "Ship"
+      expected_results:
+        item_ledger_entries:
+          - { item_no: "ITEM-1001", entry_type: "Sale", quantity: -10, location: "MAIN" }
+          - { item_no: "ITEM-2001", entry_type: "Sale", quantity: -5, location: "MAIN" }
+        inventory_after:
+          item_1001: 40
+          item_2001: 25
+        sales_order_status:
+          qty_shipped_line1: 10
+          qty_shipped_line2: 5
+          qty_to_invoice_line1: 10
+          qty_to_invoice_line2: 5
+    validation_questions:
+      - question: "After posting the shipment, what is the Quantity on Hand for ITEM-1001?"
+        expected_answer: "40 units — we had 50 from the purchase receipt and shipped 10 to Nordisk Elektronik"
+        hints:
+          - "50 purchased minus 10 shipped = 40 remaining"
+      - question: "Is revenue recognized when we post the shipment?"
+        expected_answer: "No. Revenue is only recognized when the invoice is posted. Shipping only affects inventory (Item Ledger Entries). The customer does not owe us anything until we invoice them."
+        hints:
+          - "Ship = physical movement. Invoice = financial recognition."
+
+  - id: verify_shipment_entries
+    title: "Verify shipment entries and document status"
+    instructions: |
+      Let us confirm what the shipment posting created.
+
+      1. Posted Sales Shipment (Page 142):
+         Open the posted shipment and review:
+           - Sell-to Customer: C10000 Nordisk Elektronik A/S
+           - Posting Date: (your work date)
+           - Lines match the sales order
+           - No amounts (shipments do not carry monetary values)
+
+      2. Item Ledger Entries (Page 38):
+         Filter: Document Type = Sale, Source No. = C10000
+
+         Entry for ITEM-1001:
+           Entry Type: Sale
+           Quantity: -10
+           Invoiced Quantity: 0 (not yet invoiced)
+           Cost Amount (Actual): (negative, representing cost leaving inventory)
+
+         Entry for ITEM-2001:
+           Entry Type: Sale
+           Quantity: -5
+           Invoiced Quantity: 0
+
+      3. Sales Order status:
+         Go back to the Sales Order (Page 42).
+         The order is still open because Qty. to Invoice > 0.
+         This is different from purchasing where the order may disappear.
+         The order will remain until both Qty. to Ship and Qty. to Invoice = 0.
+
+      4. Reservation check:
+         Navigate to Reservation Entries (Page 497):
+         Any reservations for these items should now be consumed by the shipment.
+
+      Note the symmetry with purchasing:
+        Purchase: Receive (inventory IN) → Invoice (vendor payable)
+        Sales:    Ship (inventory OUT) → Invoice (customer receivable + revenue)
+    config_data:
+      verification_pages:
+        posted_sales_shipment: 142
+        item_ledger_entries: 38
+        reservation_entries: 497
+    validation_questions:
+      - question: "Does a Posted Sales Shipment show monetary amounts?"
+        expected_answer: "No — Posted Sales Shipments only show quantities, items, and shipping details. Monetary amounts (revenue, VAT) only appear on the Posted Sales Invoice after the invoice is posted."
+        hints:
+          - "Shipments are about physical movement, not financial transactions"
+      - question: "What is the Invoiced Quantity in the Item Ledger Entry after shipping?"
+        expected_answer: "0 — the items have been shipped (Quantity = -10 or -5) but not yet invoiced. The Invoiced Quantity will be updated when the sales invoice is posted."
+        hints:
+          - "Invoiced Quantity tracks the financial side, separate from the physical quantity"
+
+validation_questions:
+  - question: "What is the total sales order value including VAT?"
+    expected_answer: "87,500.00 DKK (70,000.00 net + 17,500.00 VAT at 25%)"
+    hints: []
+  - question: "How does the Ship-then-Invoice process mirror the purchasing process?"
+    expected_answer: "In purchasing: Receive (goods arrive, inventory increases) then Invoice (vendor payable created). In sales: Ship (goods leave, inventory decreases) then Invoice (customer receivable and revenue recognized). Both separate the physical movement from the financial transaction."
+    hints: []
+  - question: "After shipping 10 laptops and 5 monitors, what inventory remains?"
+    expected_answer: "40 laptops (50 received - 10 shipped) and 25 monitors (30 received - 5 shipped)"
+    hints: []
+
+agent_context: |
+  This is the first sales transaction. The student is now selling from the
+  inventory they purchased in module 06. This creates a satisfying full-cycle
+  experience: purchase → receive → sell → ship.
+
+  Key teaching points:
+  - Sales Orders follow the same header/lines structure as Purchase Orders
+  - Customer selection auto-fills posting groups from the customer card
+  - VAT at 25% is automatically calculated for DOMESTIC customers
+  - The Ship-then-Invoice process mirrors Receive-then-Invoice in purchasing
+  - Shipping reduces inventory but does NOT create revenue or receivables
+  - The Item Ledger Entry for a sale has negative quantity (items leaving)
+
+  Company context:
+  - First sale to Nordisk Elektronik A/S (C10000), their largest Danish customer
+  - 10 ProBook 15 Laptops at 5,800 DKK each = 58,000 DKK
+  - 5 ClearView 27" Monitors at 2,400 DKK each = 12,000 DKK
+  - Subtotal: 70,000 DKK + 17,500 DKK VAT = 87,500 DKK total
+  - Customer's PO reference: NE-PO-2025-108
+  - Payment terms: NET30
+  - This is a DOMESTIC sale: 25% VAT, DKK currency, no currency conversion
+
+  Margin context (for the agent to understand, help explain if asked):
+  - Laptops bought at ~3,562 DKK, sold at 5,800 DKK = 38.6% margin
+  - Monitors bought at ~1,918 DKK, sold at 2,400 DKK = 20.1% margin
+  - Blended order margin: ~35.4%
+
+  Common mistakes:
+  - Entering prices including VAT instead of excluding VAT
+  - Selecting "Ship and Invoice" instead of just "Ship"
+  - Being confused by the stockout warning (if inventory is lower than expected)
+  - Not understanding that shipping does not create revenue
+  - Expecting to see a customer ledger entry after shipping (it does not exist yet)
+
+estimated_duration: "40 minutes"

@@ -1,0 +1,355 @@
+id: credit_memo
+title: "Handling Returns and Credit Memos"
+objectives:
+  - "Create a sales credit memo to handle defective product returns"
+  - "Apply the credit memo to the original posted sales invoice"
+  - "Post the credit memo and review its G/L impact"
+  - "Understand how returns affect inventory, revenue, COGS, and VAT"
+  - "Review the complete return-to-credit workflow"
+prerequisites:
+  - "sales_invoice"
+tasks:
+  - id: understand_returns_workflow
+    title: "Understand the returns and credit memo workflow"
+    instructions: |
+      Before creating the credit memo, let us understand when and why
+      credit memos are used:
+
+      Common scenarios:
+        1. Defective products returned by customer (our scenario)
+        2. Pricing error on original invoice
+        3. Quantity discrepancy (customer received fewer items)
+        4. Customer cancellation after invoicing
+        5. Volume discount adjustment after period end
+
+      In Business Central, there are two ways to handle returns:
+
+      Option A: Sales Credit Memo (Page 44)
+        - Simpler process, suitable for straightforward returns
+        - Can be applied directly to the original invoice
+        - Can optionally return items to inventory
+        - This is what we will use
+
+      Option B: Sales Return Order (Page 6630)
+        - More formal process with two-step posting (Receive Return, then Credit)
+        - Better for complex returns requiring warehouse inspection
+        - Used when you need to track the physical return separately
+
+      Our scenario:
+        Nordisk Elektronik A/S (C10000) is returning 2 ClearView 27" monitors
+        that arrived with cracked screens. We need to:
+        1. Create a credit memo for 2x ITEM-2001 at the original price
+        2. Apply it to the original invoice (PSI-100001)
+        3. Return the items to inventory
+        4. Post and verify the GL impact
+    config_data:
+      return_scenario:
+        customer: "C10000"
+        customer_name: "Nordisk Elektronik A/S"
+        reason: "Defective products — cracked screens on 2 monitors"
+        items_returned:
+          - { item_no: "ITEM-2001", description: "ClearView 27\" Monitor", quantity: 2 }
+        original_invoice: "PSI-100001"
+    validation_questions:
+      - question: "What is the difference between a Sales Credit Memo and a Sales Return Order?"
+        expected_answer: "A Sales Credit Memo is a one-step process (create and post) suitable for simple returns. A Sales Return Order is a two-step process (receive return, then post credit memo) that provides better tracking of the physical return and is suited for complex scenarios requiring warehouse inspection."
+        hints:
+          - "Think about whether you need to track the physical return receipt separately"
+      - question: "Why should a credit memo be applied to the original invoice?"
+        expected_answer: "Applying the credit memo to the original invoice links the two documents, closes or reduces the open balance on the original invoice, provides a clear audit trail, and ensures the customer's account accurately reflects the adjusted amount owed."
+        hints:
+          - "Think about what the customer's outstanding balance should show"
+
+  - id: create_credit_memo
+    title: "Create the sales credit memo"
+    instructions: |
+      Search for "Sales Credit Memos" and click "+ New" (Page 44).
+
+      Header:
+        Sell-to Customer No.:   C10000 (Nordisk Elektronik A/S)
+
+      BC auto-fills customer details.
+
+      IMPORTANT — Use "Copy Document" to pull from the original invoice:
+        Actions → Functions → Copy Document
+        Document Type: Posted Invoice
+        Document No.:  PSI-100001 (your posted invoice number)
+        Include Header: Yes
+        Recalculate Lines: No
+
+      This copies all lines from the original invoice into the credit memo.
+      Now MODIFY the lines:
+
+      Delete the laptop line (ITEM-1001) — we are only returning monitors.
+      Adjust the remaining line:
+        Type:     Item
+        No.:      ITEM-2001
+        Description: ClearView 27" Monitor
+        Quantity: 2 (only 2 of the original 5 are being returned)
+        Unit Price: 2,400.00 DKK (same as original invoice)
+        Line Amount: 4,800.00 DKK
+
+      The credit memo should show:
+        Amount Excl. VAT:    4,800.00 DKK
+        VAT Amount:          1,200.00 DKK (4,800 x 25%)
+        Amount Incl. VAT:    6,000.00 DKK
+
+      Also set:
+        Applies-to Doc. Type:  Invoice
+        Applies-to Doc. No.:   PSI-100001
+
+      This links the credit memo to the original invoice for proper application.
+
+      Before posting, ensure "Return Receipt on Credit Memo" is handled:
+        On the lines, verify the "Return Qty. to Receive" = 2
+        This ensures the 2 monitors are returned to inventory.
+    config_data:
+      credit_memo:
+        customer_no: "C10000"
+        applies_to_doc_type: "Invoice"
+        applies_to_doc_no: "PSI-100001"
+        lines:
+          - { type: "Item", no: "ITEM-2001", description: "ClearView 27\" Monitor", quantity: 2, unit_price: 2400.00, line_amount: 4800.00 }
+        totals:
+          amount_excl_vat: 4800.00
+          vat_amount: 1200.00
+          amount_incl_vat: 6000.00
+    validation_questions:
+      - question: "What is the total credit memo amount including VAT?"
+        expected_answer: "6,000.00 DKK (4,800.00 net + 1,200.00 VAT at 25%)"
+        hints:
+          - "2 monitors x 2,400 DKK = 4,800 + 25% VAT"
+      - question: "Why do we use 'Copy Document' from the original posted invoice?"
+        expected_answer: "Copy Document ensures the credit memo uses the exact same prices, posting groups, and settings as the original invoice. This prevents errors from manually re-entering line details and maintains consistency between the original sale and the return."
+        hints:
+          - "It is faster and more accurate than manually entering the credit memo lines"
+
+  - id: post_credit_memo
+    title: "Post the sales credit memo"
+    instructions: |
+      On the Sales Credit Memo page (Page 44):
+        1. Verify all details are correct
+        2. Go to Actions → Posting → Post
+        3. Confirm the posting
+
+      After posting, find the posted credit memo:
+        Search for "Posted Sales Credit Memos" (Page 134)
+        Open the new posted credit memo (PSCM-100001 or similar)
+
+      The posted credit memo shows:
+        - Sell-to Customer: C10000 Nordisk Elektronik A/S
+        - Amount: 4,800.00 DKK
+        - VAT Amount: 1,200.00 DKK
+        - Amount Incl. VAT: 6,000.00 DKK
+        - Applies-to Doc. No.: PSI-100001
+
+      Now check the Customer Ledger Entries (Page 25):
+      Filter: Customer No. = C10000
+
+      You should see TWO entries:
+        1. Invoice (PSI-100001):
+           Original Amount: 87,500.00
+           Remaining Amount: 81,500.00 (reduced by 6,000)
+           Open: Yes (still has remaining balance)
+
+        2. Credit Memo (PSCM-100001):
+           Original Amount: -6,000.00 (negative = reduces receivable)
+           Remaining Amount: 0.00 (fully applied to the invoice)
+           Open: No (fully applied)
+
+      The credit memo has been APPLIED to the invoice, reducing the
+      customer's outstanding balance from 87,500 to 81,500 DKK.
+    config_data:
+      posted_credit_memo_page: 134
+      expected_customer_ledger:
+        - { document_type: "Invoice", document_no: "PSI-100001", original_amount: 87500.00, remaining_amount: 81500.00, open: true }
+        - { document_type: "Credit Memo", document_no: "PSCM-100001", original_amount: -6000.00, remaining_amount: 0.00, open: false }
+    validation_questions:
+      - question: "After posting the credit memo, what is the Remaining Amount on the original invoice?"
+        expected_answer: "81,500.00 DKK — the original 87,500.00 minus the 6,000.00 credit memo"
+        hints:
+          - "87,500 - 6,000 = 81,500"
+      - question: "Why is the credit memo's Remaining Amount 0.00?"
+        expected_answer: "Because the credit memo was applied to the original invoice. The 6,000.00 was fully used to reduce the invoice balance, so the credit memo has no remaining unapplied amount."
+        hints:
+          - "Applied entries have zero remaining amount"
+
+  - id: review_credit_memo_gl
+    title: "Review G/L entries for the credit memo"
+    instructions: |
+      Search for "G/L Entries" (Page 20).
+      Filter: Document No. = (your posted credit memo number, e.g., PSCM-100001)
+
+      You should see entries that REVERSE the original sale entries (proportionally):
+
+        G/L Account  Account Name               Debit (DKK)  Credit (DKK)
+        ───────────  ─────────────────────────   ───────────  ────────────
+        1300         Trade Receivables           0.00         6,000.00
+        4100         Product Sales               4,800.00     0.00
+        2200         VAT Payable                 1,200.00     0.00
+        5100         COGS - Products             0.00         3,836.00
+        1210         Inventory                   3,836.00     0.00
+
+      Trace each entry:
+
+      1. TRADE RECEIVABLES (1300) — Credit 6,000
+         REVERSES the original debit. Customer owes us LESS now.
+
+      2. PRODUCT SALES (4100) — Debit 4,800
+         REVERSES revenue. We are reducing our sales by 4,800.
+
+      3. VAT PAYABLE (2200) — Debit 1,200
+         REVERSES the VAT we collected. We owe LESS VAT to SKAT.
+
+      4. COGS (5100) — Credit ~3,836
+         REVERSES COGS. The cost of the returned monitors goes back.
+         Amount = 2 monitors x ~1,918 DKK each (original purchase cost)
+
+      5. INVENTORY (1210) — Debit ~3,836
+         Inventory INCREASES because the 2 monitors are returned to stock.
+
+      The accounting equation balances:
+        Debits:  4,800 + 1,200 + 3,836 = 9,836
+        Credits: 6,000 + 3,836 = 9,836  ✓
+
+      Every entry is the exact OPPOSITE of what the original invoice created
+      (but only for the 2 returned monitors, not all 5).
+
+      Also check the Item Ledger Entries (Page 38):
+        Filter: Item No. = ITEM-2001
+        You should see a new entry:
+          Entry Type: Sale (return)
+          Quantity: 2 (positive — items coming BACK into inventory)
+
+      Check the Item Card (Page 30) for ITEM-2001:
+        Quantity on Hand should now be 27 (25 after shipment + 2 returned)
+    config_data:
+      gl_entries:
+        - { account: "1300", name: "Trade Receivables", debit: 0.00, credit: 6000.00 }
+        - { account: "4100", name: "Product Sales", debit: 4800.00, credit: 0.00 }
+        - { account: "2200", name: "VAT Payable", debit: 1200.00, credit: 0.00 }
+        - { account: "5100", name: "COGS - Products", debit: 0.00, credit: 3836.00 }
+        - { account: "1210", name: "Inventory", debit: 3836.00, credit: 0.00 }
+      inventory_after_return:
+        item_2001_qty: 27
+    validation_questions:
+      - question: "How do the credit memo G/L entries relate to the original invoice entries?"
+        expected_answer: "They are exact opposites (reversed). Where the original invoice debited Trade Receivables, the credit memo credits it. Where the invoice credited Revenue, the credit memo debits it. The same reversal applies to VAT, COGS, and Inventory — but only for the quantities being returned (2 monitors, not all 5)."
+        hints:
+          - "A credit memo is essentially an 'undo' of the original transaction"
+      - question: "What happens to inventory when a credit memo with item return is posted?"
+        expected_answer: "Inventory increases — the 2 returned monitors go back into stock. The Inventory account (1210) is debited (increasing the asset) and COGS (5100) is credited (reducing the expense). The Item Ledger Entry shows a positive quantity for the returned items."
+        hints:
+          - "The items physically come back to the warehouse"
+
+  - id: verify_complete_picture
+    title: "Verify the complete picture after the return"
+    instructions: |
+      Let us review the complete state of affairs after processing
+      the return:
+
+      CUSTOMER BALANCE (C10000 — Nordisk Elektronik):
+        Open Ledger Entries: 1 (invoice with 81,500 remaining)
+        Total Outstanding: 81,500.00 DKK
+        Original sale was 87,500 minus 6,000 credit = 81,500
+
+      To verify: Search for "Customer" (Page 21), open C10000,
+      and check the Balance field or the Statistics FactBox.
+
+      INVENTORY STATUS:
+        ITEM-1001 (ProBook 15 Laptop):
+          Purchased: 50
+          Sold to Nordisk: -10
+          Sold to TechSweden: -5
+          On hand: 35
+
+        ITEM-2001 (ClearView 27" Monitor):
+          Purchased: 30
+          Sold to Nordisk: -5
+          Returned by Nordisk: +2
+          On hand: 27
+
+      P&L IMPACT (from the Nordisk sale + credit memo):
+        Gross Revenue: 70,000 - 4,800 = 65,200 DKK
+        VAT Collected: 17,500 - 1,200 = 16,300 DKK (to remit to SKAT)
+        COGS: 45,210 - 3,836 = 41,374 DKK
+        Gross Profit: 65,200 - 41,374 = 23,826 DKK
+
+      Use Navigate (Page 344) on the posted credit memo to see all
+      related entries in one view. This is a good habit for verifying
+      the completeness and correctness of any posted document.
+    config_data:
+      summary:
+        customer_balance: 81500.00
+        inventory:
+          item_1001: 35
+          item_2001: 27
+        pl_impact:
+          net_revenue: 65200.00
+          net_vat: 16300.00
+          net_cogs: 41374.00
+          gross_profit: 23826.00
+    validation_questions:
+      - question: "What is Nordisk Elektronik's outstanding balance after the credit memo?"
+        expected_answer: "81,500.00 DKK — the original invoice of 87,500 minus the 6,000 credit memo"
+        hints:
+          - "Check the customer card or Customer Ledger Entries"
+      - question: "How many ClearView monitors are now in stock?"
+        expected_answer: "27 — we purchased 30, sold 5 to Nordisk, and received 2 back as returns (30 - 5 + 2 = 27)"
+        hints:
+          - "Start from the purchase quantity and track all movements"
+
+validation_questions:
+  - question: "What G/L entries does a sales credit memo create?"
+    expected_answer: "5 entries that reverse the original sale: Credit to Receivables, Debit to Revenue, Debit to VAT Payable, Credit to COGS, and Debit to Inventory"
+    hints: []
+  - question: "Why should you use 'Copy Document' when creating a credit memo?"
+    expected_answer: "To ensure the credit memo uses the same prices, posting groups, VAT treatment, and item details as the original invoice. This prevents discrepancies and maintains a clean audit trail."
+    hints: []
+  - question: "After the credit memo, what is the net revenue from the Nordisk Elektronik sale?"
+    expected_answer: "65,200.00 DKK (original 70,000 minus 4,800 credit for 2 returned monitors)"
+    hints: []
+
+agent_context: |
+  This lesson teaches handling returns — a common real-world scenario that
+  completes the student's understanding of the sales cycle. It also reinforces
+  the posting group concepts by showing them in reverse.
+
+  Key teaching points:
+  - Credit memos reverse the original transaction entries
+  - Every G/L entry from the invoice is mirrored in the credit memo (opposite direction)
+  - Items can be returned to inventory via the credit memo
+  - Applying the credit memo to the invoice is critical for accurate customer balances
+  - Copy Document is the recommended way to create credit memos from posted invoices
+  - The VAT reversal reduces the amount Nordic Traders owes to SKAT
+
+  Company context:
+  - 2 ClearView monitors returned with cracked screens
+  - Original sale: 5 monitors at 2,400 DKK each, returning 2
+  - Credit: 4,800 + 1,200 VAT = 6,000 DKK
+  - Customer balance reduced from 87,500 to 81,500 DKK
+  - Monitors returned to inventory (27 in stock now)
+
+  Teaching the "full cycle" picture:
+  After this lesson, the student has completed:
+    Purchase → Receive → Invoice → Sell → Ship → Invoice → Credit Memo
+  This is the complete procure-to-pay and order-to-cash cycle.
+
+  Common mistakes:
+  - Forgetting to apply the credit memo to the original invoice
+  - Entering the wrong quantity (returning 5 instead of 2)
+  - Not understanding why COGS and Inventory are reversed
+  - Expecting the credit memo to completely close the original invoice
+    (it only partially reduces it)
+  - Deleting the wrong line when modifying the copied document
+  - Not checking that items are actually returned to inventory
+
+  Post-lesson context:
+  After this module, the student should have a clear understanding of:
+  - The complete order-to-cash cycle
+  - How posting groups drive G/L account selection
+  - The difference between domestic and EU VAT treatment
+  - How returns and credit memos work
+  - How to trace any document through the system using Navigate
+
+estimated_duration: "40 minutes"

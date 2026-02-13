@@ -1,0 +1,354 @@
+id: posting_groups
+title: "Setting Up Posting Groups"
+objectives:
+  - "Understand the role of posting groups in Business Central"
+  - "Configure General Posting Setup, Customer, Vendor, and Inventory Posting Groups"
+  - "Set up VAT Posting Setup for Danish VAT rates"
+prerequisites:
+  - "coa_validation"
+tasks:
+  - id: understand_posting_groups
+    title: "Understand posting group architecture"
+    instructions: |
+      Posting groups are the bridge between transactions and the general ledger.
+      They tell BC which G/L account to use when posting a sales invoice,
+      purchase order, inventory transaction, etc.
+
+      There are several types of posting groups:
+
+      1. General Business Posting Groups — categorize your customers/vendors
+         by business type (Domestic, EU, Export)
+      2. General Product Posting Groups — categorize your items/services
+         by product type (RETAIL, SERVICES)
+      3. General Posting Setup — maps the combination of Business + Product
+         groups to specific G/L accounts
+      4. Customer Posting Groups — G/L accounts for receivables
+      5. Vendor Posting Groups — G/L accounts for payables
+      6. Inventory Posting Groups — G/L accounts for inventory valuation
+      7. VAT Business/Product Posting Groups and VAT Posting Setup — for VAT
+
+      Think of it as a matrix: Business Group x Product Group → G/L accounts.
+    config_data: {}
+    validation_questions:
+      - question: "What do General Posting Groups determine?"
+        expected_answer: "Which G/L accounts are used when posting transactions — they map the combination of business type and product type to specific ledger accounts"
+        hints:
+          - "They are the bridge between sub-ledgers and the general ledger"
+
+  - id: create_gen_business_posting_groups
+    title: "Create General Business Posting Groups"
+    instructions: |
+      Search for "General Business Posting Groups" (Page 312).
+
+      Create the following groups:
+
+        Code       Description
+        ─────────  ──────────────────────
+        DOMESTIC   Domestic (Denmark)
+        EU         EU countries
+        EXPORT     Non-EU / Export
+
+      These groups will be assigned to customers and vendors based on
+      where they are located:
+        - Danish customers/vendors → DOMESTIC
+        - Swedish, Norwegian, Finnish, German customers → EU
+        - Asian suppliers (China, Taiwan, Japan) → EXPORT
+    config_data:
+      groups:
+        - { code: "DOMESTIC", description: "Domestic (Denmark)" }
+        - { code: "EU", description: "EU countries" }
+        - { code: "EXPORT", description: "Non-EU / Export" }
+    validation_questions:
+      - question: "How many General Business Posting Groups did you create?"
+        expected_answer: "3"
+        hints:
+          - "DOMESTIC, EU, and EXPORT"
+      - question: "Which group would a Swedish customer belong to?"
+        expected_answer: "EU"
+        hints:
+          - "Sweden is an EU member state"
+
+  - id: create_gen_product_posting_groups
+    title: "Create General Product Posting Groups"
+    instructions: |
+      Search for "General Product Posting Groups" (Page 313).
+
+      Create these groups:
+
+        Code       Description
+        ─────────  ──────────────────────
+        RETAIL     Physical products / goods
+        SERVICES   Services
+        MISC       Miscellaneous / overhead
+
+      These will be assigned to items and G/L accounts for resources.
+    config_data:
+      groups:
+        - { code: "RETAIL", description: "Physical products / goods" }
+        - { code: "SERVICES", description: "Services" }
+        - { code: "MISC", description: "Miscellaneous / overhead" }
+    validation_questions:
+      - question: "What General Product Posting Group will electronics items use?"
+        expected_answer: "RETAIL"
+        hints:
+          - "Physical products are categorized as RETAIL"
+
+  - id: create_general_posting_setup
+    title: "Configure General Posting Setup"
+    instructions: |
+      Search for "General Posting Setup" (Page 314).
+
+      This page is a matrix where you map each combination of Business Group
+      and Product Group to G/L accounts. Create the following entries:
+
+      For DOMESTIC + RETAIL:
+        Sales Account:              4100 (Product Sales)
+        Sales Credit Memo Account:  4100 (Product Sales)
+        Purch. Account:             5100 (COGS - Products)
+        Purch. Credit Memo Account: 5100 (COGS - Products)
+        COGS Account:               5100 (COGS - Products)
+        Inventory Adjmt. Account:   5300 (Inventory Adjustments)
+        Sales Line Disc. Account:   4300 (Sales Discounts)
+        Purch. Line Disc. Account:  5100 (COGS - Products)
+
+      For DOMESTIC + SERVICES:
+        Sales Account:              4200 (Service Revenue)
+        Purch. Account:             6300 (Office Supplies)
+        COGS Account:               (leave blank — services have no COGS)
+
+      For EU + RETAIL:
+        (Same accounts as DOMESTIC + RETAIL)
+
+      For EU + SERVICES:
+        (Same accounts as DOMESTIC + SERVICES)
+
+      For EXPORT + RETAIL:
+        (Same accounts as DOMESTIC + RETAIL)
+
+      For EXPORT + SERVICES:
+        (Same accounts as DOMESTIC + SERVICES)
+
+      Also set up the MISC combinations:
+      For DOMESTIC/EU/EXPORT + MISC:
+        Sales Account:              4200 (Service Revenue)
+        Purch. Account:             6300 (Office Supplies)
+
+      You need 9 lines total (3 Business Groups x 3 Product Groups).
+    config_data:
+      setup:
+        - bus_group: "DOMESTIC"
+          prod_group: "RETAIL"
+          sales_account: "4100"
+          purch_account: "5100"
+          cogs_account: "5100"
+          inventory_adjmt_account: "5300"
+        - bus_group: "DOMESTIC"
+          prod_group: "SERVICES"
+          sales_account: "4200"
+          purch_account: "6300"
+        - bus_group: "EU"
+          prod_group: "RETAIL"
+          sales_account: "4100"
+          purch_account: "5100"
+          cogs_account: "5100"
+          inventory_adjmt_account: "5300"
+    validation_questions:
+      - question: "How many lines did you create in the General Posting Setup?"
+        expected_answer: "9 lines (3 business groups x 3 product groups)"
+        hints:
+          - "Every combination of Business Group and Product Group needs a line"
+      - question: "What Sales Account is used for DOMESTIC + RETAIL?"
+        expected_answer: "4100 (Product Sales)"
+        hints:
+          - "Product sales go to the Product Sales revenue account"
+
+  - id: create_customer_posting_group
+    title: "Create Customer Posting Groups"
+    instructions: |
+      Search for "Customer Posting Groups" (Page 110).
+
+      Create:
+
+        Code       Receivables Account
+        ─────────  ───────────────────
+        DOMESTIC   1300 (Trade Receivables)
+        FOREIGN    1300 (Trade Receivables)
+
+      The Receivables Account is the G/L account where customer balances
+      are posted. For simplicity, we use the same account for all customers.
+
+      Additional fields to set:
+        Payment Disc. Debit Acc.:    8100 (Interest Income)
+        Payment Disc. Credit Acc.:   8200 (Interest Expense)
+        Payment Tolerance Debit Acc.:  8100
+        Payment Tolerance Credit Acc.: 8200
+    config_data:
+      groups:
+        - { code: "DOMESTIC", receivables_account: "1300" }
+        - { code: "FOREIGN", receivables_account: "1300" }
+    validation_questions:
+      - question: "What G/L account is set as the Receivables Account?"
+        expected_answer: "1300 (Trade Receivables)"
+        hints:
+          - "All customer receivable balances post to this account"
+
+  - id: create_vendor_posting_group
+    title: "Create Vendor Posting Groups"
+    instructions: |
+      Search for "Vendor Posting Groups" (Page 111).
+
+      Create:
+
+        Code       Payables Account
+        ─────────  ──────────────────
+        DOMESTIC   2110 (Trade Payables)
+        FOREIGN    2110 (Trade Payables)
+
+      Additional fields:
+        Payment Disc. Debit Acc.:    8200 (Interest Expense)
+        Payment Disc. Credit Acc.:   8100 (Interest Income)
+        Payment Tolerance Debit Acc.:  8200
+        Payment Tolerance Credit Acc.: 8100
+    config_data:
+      groups:
+        - { code: "DOMESTIC", payables_account: "2110" }
+        - { code: "FOREIGN", payables_account: "2110" }
+    validation_questions:
+      - question: "What G/L account is set as the Payables Account for vendors?"
+        expected_answer: "2110 (Trade Payables)"
+        hints:
+          - "Vendor payable balances post to Trade Payables"
+
+  - id: create_inventory_posting_group
+    title: "Create Inventory Posting Group"
+    instructions: |
+      Search for "Inventory Posting Groups" (Page 112).
+
+      Create:
+
+        Code       Description
+        ─────────  ─────────────────────
+        RESALE     Resale items (trading goods)
+
+      Then search for "Inventory Posting Setup" (Page 5826).
+
+      Create a line:
+        Location Code:    (blank — default for all locations)
+        Invt. Posting Group Code: RESALE
+        Inventory Account: 1210 (Inventory)
+        Inventory Account (Interim): 1210 (Inventory)
+
+      This ensures that when inventory is received or shipped, the value
+      posts to the correct G/L account.
+    config_data:
+      group:
+        code: "RESALE"
+        description: "Resale items (trading goods)"
+      posting_setup:
+        inventory_account: "1210"
+    validation_questions:
+      - question: "What Inventory Account is mapped to the RESALE posting group?"
+        expected_answer: "1210 (Inventory)"
+        hints:
+          - "The Inventory account on the balance sheet"
+
+  - id: setup_vat_posting
+    title: "Set up VAT Posting Groups and Setup"
+    instructions: |
+      Denmark has these standard VAT rates:
+        - 25% (standard rate — moms)
+        - 0% (zero-rated / exempt)
+
+      First, search for "VAT Business Posting Groups" (Page 470):
+        Code       Description
+        ─────────  ───────────────────
+        DOMESTIC   Domestic customers/vendors
+        EU         EU customers/vendors
+        EXPORT     Export (non-EU)
+
+      Then search for "VAT Product Posting Groups" (Page 471):
+        Code       Description
+        ─────────  ──────────────────
+        VAT25      Standard 25% VAT
+        VAT0       Zero-rated / Exempt
+        NO VAT     No VAT applicable
+
+      Finally, search for "VAT Posting Setup" (Page 472) and create:
+
+        VAT Bus.   VAT Prod.  VAT%   VAT Calc. Type       Sales VAT Acc.  Purch. VAT Acc.
+        ─────────  ─────────  ─────  ──────────────────    ─────────────   ────────────────
+        DOMESTIC   VAT25      25     Normal VAT            2200            1400
+        DOMESTIC   VAT0       0      Normal VAT            2200            1400
+        DOMESTIC   NO VAT     0      Normal VAT            (blank)         (blank)
+        EU         VAT25      25     Reverse Charge VAT    2200            1400
+        EU         VAT0       0      Normal VAT            2200            1400
+        EU         NO VAT     0      Normal VAT            (blank)         (blank)
+        EXPORT     VAT25      0      Normal VAT            (blank)         (blank)
+        EXPORT     VAT0       0      Normal VAT            (blank)         (blank)
+        EXPORT     NO VAT     0      Normal VAT            (blank)         (blank)
+
+      Key points:
+        - DOMESTIC + VAT25 = 25% Danish moms on domestic transactions
+        - EU + VAT25 = Reverse Charge VAT for EU B2B transactions
+        - EXPORT = always 0% (no VAT on exports outside EU)
+        - Sales VAT Account = 2200 (VAT Payable)
+        - Purchase VAT Account = 1400 (VAT Receivable)
+    config_data:
+      vat_business_groups:
+        - { code: "DOMESTIC", description: "Domestic customers/vendors" }
+        - { code: "EU", description: "EU customers/vendors" }
+        - { code: "EXPORT", description: "Export (non-EU)" }
+      vat_product_groups:
+        - { code: "VAT25", description: "Standard 25% VAT" }
+        - { code: "VAT0", description: "Zero-rated / Exempt" }
+        - { code: "NO VAT", description: "No VAT applicable" }
+      vat_posting_setup:
+        - { bus: "DOMESTIC", prod: "VAT25", pct: 25, sales_account: "2200", purch_account: "1400" }
+        - { bus: "DOMESTIC", prod: "VAT0", pct: 0, sales_account: "2200", purch_account: "1400" }
+        - { bus: "EU", prod: "VAT25", pct: 25, type: "Reverse Charge VAT", sales_account: "2200", purch_account: "1400" }
+        - { bus: "EXPORT", prod: "VAT25", pct: 0 }
+    validation_questions:
+      - question: "What is the standard Danish VAT rate?"
+        expected_answer: "25%"
+        hints:
+          - "Denmark has one of the highest VAT rates in Europe"
+      - question: "What VAT Calculation Type is used for EU + VAT25?"
+        expected_answer: "Reverse Charge VAT"
+        hints:
+          - "EU B2B transactions use the reverse charge mechanism"
+
+validation_questions:
+  - question: "How many General Business Posting Groups exist?"
+    expected_answer: "3 (DOMESTIC, EU, EXPORT)"
+    hints: []
+  - question: "What G/L account do all customer receivables post to?"
+    expected_answer: "1300 (Trade Receivables)"
+    hints: []
+  - question: "What is the Danish VAT rate for standard domestic transactions?"
+    expected_answer: "25%"
+    hints: []
+
+agent_context: |
+  This is one of the most complex and important lessons in the curriculum.
+  Posting groups are fundamental to how BC works. Take time to explain
+  the matrix concept: Business Group x Product Group → G/L Accounts.
+
+  Key teaching points:
+  - Posting groups are the "wiring" of the system — they connect transactions to the GL
+  - The General Posting Setup matrix is the most critical table
+  - Customer/Vendor Posting Groups define where receivables/payables land
+  - VAT Posting Setup is complex but follows a logical pattern
+  - Reverse Charge VAT for EU B2B is a common EU mechanism
+  - Danish standard VAT is 25% (moms)
+
+  Common mistakes:
+  - Mixing up Sales/Purchase accounts in General Posting Setup
+  - Forgetting to create all 9 combinations in the General Posting Setup matrix
+  - Wrong VAT Calculation Type (Normal vs Reverse Charge)
+  - Not linking the correct G/L accounts (especially VAT Receivable vs Payable)
+  - Confusing General Business/Product groups with VAT Business/Product groups
+
+  This lesson has many tasks. If the student seems overwhelmed, suggest
+  taking a break between the posting groups and the VAT setup.
+
+estimated_duration: "60 minutes"

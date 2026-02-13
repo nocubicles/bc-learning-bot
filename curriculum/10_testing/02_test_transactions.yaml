@@ -1,0 +1,295 @@
+id: test_transactions
+title: "End-to-End Transaction Testing"
+objectives:
+  - "Execute a complete purchase-to-payment cycle"
+  - "Execute a complete order-to-cash cycle"
+  - "Verify that all ledger entries are created correctly"
+  - "Confirm the trial balance reflects expected results"
+prerequisites:
+  - "data_validation"
+tasks:
+  - id: purchase_order_cycle
+    title: "Complete a purchase cycle: PO to receipt to invoice"
+    instructions: |
+      We will now test a full purchase cycle. This verifies that your vendor
+      setup, item setup, and posting groups all work together.
+
+      Step 1: Create a Purchase Order
+        Search for "Purchase Orders" (Page 9307) and create a new order.
+        - Vendor: Choose one of your Asian suppliers (e.g., Shanghai Electronics Ltd)
+        - Document Date: Today's date
+        - Add a line:
+          Type: Item
+          No.: Choose one of your electronics items (e.g., USB-C Hub)
+          Quantity: 50
+          Direct Unit Cost: 75.00 (in the vendor's currency)
+
+      Step 2: Post the Receipt
+        Click "Posting" → "Post" and choose "Receive".
+        This creates inventory entries but not the invoice yet.
+
+        Verify: Search for "Item Ledger Entries" (Page 38) and filter by
+        the item number. You should see an entry with Quantity = 50.
+
+      Step 3: Post the Invoice
+        Go back to the Purchase Order (it should still be open for invoicing).
+        Click "Posting" → "Post" and choose "Invoice".
+
+        Verify: Search for "Posted Purchase Invoices" (Page 146).
+        Find your invoice and check:
+        - The total amount including VAT
+        - The vendor ledger entry was created
+
+      After posting, check the G/L entries created:
+        - Inventory account (1210) should be debited
+        - Trade Payables (2110) should be credited
+        - VAT Receivable (1400) may have an entry depending on VAT setup
+    config_data:
+      test_purchase:
+        vendor: "Shanghai Electronics Ltd"
+        item: "USB-C Hub"
+        quantity: 50
+        direct_unit_cost: 75.00
+        expected_gl_entries:
+          - { account: "1210", description: "Inventory", side: "Debit" }
+          - { account: "2110", description: "Trade Payables", side: "Credit" }
+    validation_questions:
+      - question: "After posting the purchase receipt, which ledger was updated?"
+        expected_answer: "The Item Ledger — inventory quantity increased but no G/L entry is created for the receipt alone (the G/L entries are created when the invoice is posted)"
+        hints:
+          - "Receipt affects quantity; invoice affects value and the general ledger"
+      - question: "What G/L accounts are affected when the purchase invoice is posted?"
+        expected_answer: "Inventory (1210) is debited with the cost of goods, and Trade Payables (2110) is credited with the total amount owed to the vendor"
+        hints:
+          - "Think debit what comes in (inventory), credit what you owe (payables)"
+
+  - id: purchase_payment
+    title: "Process payment to the vendor"
+    instructions: |
+      Now we pay the vendor for the posted purchase invoice.
+
+      Search for "Payment Journals" (Page 256).
+
+      Select the batch name (or use the DEFAULT batch).
+
+      Create a payment line:
+        Document Type: Payment
+        Account Type: Vendor
+        Account No.: Shanghai Electronics Ltd
+        Applies-to Doc. Type: Invoice
+        Applies-to Doc. No.: (select the posted purchase invoice number)
+        Amount: (should auto-fill with the invoice amount)
+        Bal. Account Type: Bank Account
+        Bal. Account No.: Your DKK bank account
+
+      Post the journal (F9 or Posting → Post).
+
+      Verify:
+        - Search for "Vendor Ledger Entries" (Page 29) and filter by the vendor.
+          The invoice entry should now show Remaining Amount = 0 (it is closed).
+        - Check G/L entries: Trade Payables (2110) is debited, Bank (1500) is credited.
+    config_data:
+      payment_journal:
+        page: 256
+        document_type: "Payment"
+        account_type: "Vendor"
+        bal_account_type: "Bank Account"
+        bal_account_no: "DKK Bank"
+        expected_gl_entries:
+          - { account: "2110", description: "Trade Payables", side: "Debit" }
+          - { account: "1500", description: "Bank Account - DKK", side: "Credit" }
+    validation_questions:
+      - question: "After posting the payment, what is the Remaining Amount on the vendor ledger entry for the invoice?"
+        expected_answer: "0 — the payment closed the invoice entry"
+        hints:
+          - "When a payment is applied to an invoice, the remaining amount is reduced to zero"
+      - question: "Which G/L accounts are affected by the vendor payment?"
+        expected_answer: "Trade Payables (2110) is debited to reduce the liability, and Bank Account (1500) is credited to reduce the bank balance"
+        hints:
+          - "The payable is cleared (debit) and cash goes out (credit bank)"
+
+  - id: sales_order_cycle
+    title: "Complete a sales cycle: SO to shipment to invoice"
+    instructions: |
+      Now test the sales side. This verifies customer setup and sales posting.
+
+      Step 1: Create a Sales Order
+        Search for "Sales Orders" (Page 9305) and create a new order.
+        - Customer: Choose a Danish customer (e.g., Copenhagen Office Supplies)
+        - Document Date: Today's date
+        - Add a line:
+          Type: Item
+          No.: Same item you purchased (USB-C Hub)
+          Quantity: 10
+          Unit Price: 149.00 (DKK)
+
+      Step 2: Post the Shipment
+        Click "Posting" → "Post" and choose "Ship".
+        This reduces inventory but does not create the invoice yet.
+
+        Verify in Item Ledger Entries (Page 38): you should see a negative
+        entry of -10 for the shipment.
+
+      Step 3: Post the Invoice
+        Go back to the Sales Order and post again, choosing "Invoice".
+
+        Verify in "Posted Sales Invoices" (Page 143):
+        - Find your invoice
+        - Check the total including 25% Danish VAT (moms)
+        - Review the G/L entries:
+          Trade Receivables (1300) — Debit
+          Product Sales (4100) — Credit
+          VAT Payable (2200) — Credit
+          COGS - Products (5100) — Debit
+          Inventory (1210) — Credit
+    config_data:
+      test_sale:
+        customer: "Copenhagen Office Supplies"
+        item: "USB-C Hub"
+        quantity: 10
+        unit_price: 149.00
+        vat_pct: 25
+        expected_gl_entries:
+          - { account: "1300", description: "Trade Receivables", side: "Debit" }
+          - { account: "4100", description: "Product Sales", side: "Credit" }
+          - { account: "2200", description: "VAT Payable", side: "Credit" }
+          - { account: "5100", description: "COGS - Products", side: "Debit" }
+          - { account: "1210", description: "Inventory", side: "Credit" }
+    validation_questions:
+      - question: "How many G/L entries does a sales invoice with items create?"
+        expected_answer: "At least 5 entries: receivable (debit), revenue (credit), VAT payable (credit), COGS (debit), and inventory (credit)"
+        hints:
+          - "A sales invoice with items affects receivables, revenue, VAT, COGS, and inventory"
+      - question: "What is the total invoice amount for 10 units at 149 DKK with 25% VAT?"
+        expected_answer: "1,862.50 DKK (10 x 149 = 1,490 + 25% VAT of 372.50)"
+        hints:
+          - "Calculate the line amount first, then add 25% VAT"
+
+  - id: cash_receipt
+    title: "Process customer payment (cash receipt)"
+    instructions: |
+      Now collect payment from the customer.
+
+      Search for "Cash Receipt Journals" (Page 255).
+
+      Create a receipt line:
+        Document Type: Payment
+        Account Type: Customer
+        Account No.: Copenhagen Office Supplies
+        Applies-to Doc. Type: Invoice
+        Applies-to Doc. No.: (select the posted sales invoice number)
+        Amount: (should auto-fill — it will be negative because customer payments reduce receivables)
+        Bal. Account Type: Bank Account
+        Bal. Account No.: Your DKK bank account
+
+      Post the journal.
+
+      Verify:
+        - Search for "Customer Ledger Entries" (Page 25) and filter by customer.
+          The invoice should now show Remaining Amount = 0.
+        - Check G/L entries: Bank (1500) is debited, Trade Receivables (1300) is credited.
+    config_data:
+      cash_receipt_journal:
+        page: 255
+        document_type: "Payment"
+        account_type: "Customer"
+        bal_account_type: "Bank Account"
+        bal_account_no: "DKK Bank"
+        expected_gl_entries:
+          - { account: "1500", description: "Bank Account - DKK", side: "Debit" }
+          - { account: "1300", description: "Trade Receivables", side: "Credit" }
+    validation_questions:
+      - question: "After the customer pays, what is the status of the customer ledger entry?"
+        expected_answer: "The entry is closed — Remaining Amount is 0 and the Open field is No"
+        hints:
+          - "Applied payments close the original invoice entry"
+
+  - id: verify_trial_balance
+    title: "Run Trial Balance to verify all entries balance"
+    instructions: |
+      Now let us confirm that everything balances.
+
+      Search for "Trial Balance" (Report 6 or Page 22006).
+
+      Run the report with:
+        - Date Filter: the current period (e.g., 01/01/2025..31/01/2025)
+        - No filter on accounts (show all)
+
+      Verify:
+        1. Total Debits = Total Credits (the trial balance must balance)
+        2. Bank account (1500) reflects: starting balance minus vendor payment plus customer receipt
+        3. Inventory (1210) reflects: purchase value minus COGS for sold items
+        4. Trade Receivables (1300) should be 0 (invoice was paid)
+        5. Trade Payables (2110) should be 0 (invoice was paid)
+        6. Revenue (4100) shows the sales amount
+        7. COGS (5100) shows the cost of goods sold
+
+      If debits do not equal credits, something went wrong. Review the
+      G/L entries to find the discrepancy.
+
+      Also run "General Ledger Entries" (Page 20) and sort by Document No.
+      to trace each transaction's complete set of entries.
+    config_data:
+      trial_balance:
+        report_id: 6
+        expected_zero_accounts:
+          - { account: "1300", reason: "Customer paid the invoice" }
+          - { account: "2110", reason: "Vendor was paid" }
+        expected_nonzero_accounts:
+          - { account: "1210", description: "Inventory — remaining stock value" }
+          - { account: "1500", description: "Bank — net of payments in and out" }
+          - { account: "4100", description: "Product Sales — revenue from sales" }
+          - { account: "5100", description: "COGS — cost of goods sold" }
+    validation_questions:
+      - question: "What is the most important thing to check on the Trial Balance?"
+        expected_answer: "That total debits equal total credits — if they do not balance, there is a posting error"
+        hints:
+          - "Double-entry bookkeeping means every debit has an equal credit"
+      - question: "After paying the vendor and receiving customer payment, what should the balance of Trade Receivables (1300) be?"
+        expected_answer: "Zero — because the customer paid the full invoice amount"
+        hints:
+          - "The cash receipt closed the customer ledger entry"
+
+validation_questions:
+  - question: "What is the full purchase-to-payment cycle in BC?"
+    expected_answer: "Purchase Order → Post Receipt (inventory increases) → Post Invoice (G/L entries created, payable recorded) → Payment Journal (payable cleared, bank reduced)"
+    hints: []
+  - question: "What is the full order-to-cash cycle in BC?"
+    expected_answer: "Sales Order → Post Shipment (inventory decreases) → Post Invoice (receivable and revenue recorded, COGS posted) → Cash Receipt Journal (receivable cleared, bank increased)"
+    hints: []
+  - question: "Why do we run the Trial Balance after test transactions?"
+    expected_answer: "To confirm that all postings are balanced (debits = credits) and that account balances make sense, proving the configuration is working correctly"
+    hints: []
+
+agent_context: |
+  This is a hands-on, exciting lesson — the student gets to see all their
+  configuration come to life with real transactions flowing through the system.
+
+  Key teaching points:
+  - The purchase cycle has two distinct phases: receipt (quantity) and invoice (value)
+  - The sales cycle similarly separates shipment from invoicing
+  - Payment journals (Page 256) are for paying vendors
+  - Cash receipt journals (Page 255) are for receiving customer payments
+  - Every posted transaction creates G/L entries that must balance
+  - The trial balance is the ultimate proof that the system is configured correctly
+
+  Approach:
+  - Walk through each step carefully — this is where everything connects
+  - After each posting, have the student verify the ledger entries
+  - Use the Navigate function (Ctrl+Alt+F5 on posted documents) to show
+    all related entries from a single transaction
+  - Celebrate when the trial balance balances — it means their implementation works
+
+  Common issues:
+  - "The posting group setup does not exist" — means a posting group combination
+    is missing from the General Posting Setup
+  - Currency issues with foreign vendors — amounts may need to be in vendor currency
+  - VAT amounts look wrong — double-check VAT Posting Setup
+  - Payment journal amount has wrong sign — BC uses negative amounts for
+    customer payments in cash receipt journals
+
+  If any posting fails, this is actually a valuable learning moment. Walk
+  the student through reading the error message and fixing the underlying
+  configuration issue.
+
+estimated_duration: "45 minutes"

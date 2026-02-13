@@ -1,0 +1,329 @@
+id: purchase_invoice
+title: "Posting the Purchase Invoice"
+objectives:
+  - "Post the purchase invoice for a previously received purchase order"
+  - "Understand invoice-to-receipt matching in Business Central"
+  - "Review vendor ledger entries created by the invoice posting"
+  - "Examine the G/L entries and understand posting group effects"
+  - "Understand VAT treatment for EXPORT (non-EU) vendors"
+prerequisites:
+  - "purchase_order"
+tasks:
+  - id: post_purchase_invoice
+    title: "Post the invoice for the received purchase order"
+    instructions: |
+      Open the purchase order you created in the previous lesson.
+      Search for "Purchase Orders" (Page 9307 — Purchase Order List) and find your order.
+
+      The order should show:
+        - Qty. Received: 50 (laptops) and 30 (monitors)
+        - Qty. to Invoice: 50 and 30
+        - Status: Released
+
+      Before posting the invoice, verify:
+        1. Vendor Invoice No. is filled in: ST-2025-0042
+        2. Posting Date is correct (today's work date)
+        3. The Qty. to Invoice matches what we want to invoice
+
+      Now post the invoice:
+        1. Go to Actions → Posting → Post
+        2. When asked "Receive and/or Invoice?", select "Invoice"
+        3. Confirm the posting
+
+      After posting, the purchase order will be fully posted and may be
+      automatically deleted (depending on setup) or archived.
+
+      If the order disappears from the Purchase Orders list, that is normal —
+      it has been fully received and invoiced, so BC removes it from the
+      open orders list.
+
+      Find the posted invoice:
+        Search for "Posted Purchase Invoices" (Page 138)
+        Find the new posted invoice (PPI-100001 or similar)
+    config_data:
+      posting_action: "Invoice"
+      vendor_invoice_no: "ST-2025-0042"
+      expected_posted_document: "Posted Purchase Invoice"
+      posted_purchase_invoice_page: 138
+    validation_questions:
+      - question: "What happens to the purchase order after it is fully received and invoiced?"
+        expected_answer: "The purchase order is fully posted and typically removed from the open Purchase Orders list. It can be found in the Posted Purchase Invoices and Posted Purchase Receipts lists. If archiving is enabled, an archived version is also kept."
+        hints:
+          - "Fully posted orders are no longer 'open' documents"
+      - question: "What is the Vendor Invoice No. and why is it important?"
+        expected_answer: "ST-2025-0042 — it is the vendor's own reference number for their invoice. It is important for matching, audit trail, and preventing duplicate invoice entry (since we set Ext. Doc. No. Mandatory = Yes)."
+        hints:
+          - "This is the external document number from the vendor"
+
+  - id: review_vendor_ledger_entries
+    title: "Review vendor ledger entries"
+    instructions: |
+      The invoice posting created a Vendor Ledger Entry — this represents
+      the amount we owe to Shenzhen TechParts.
+
+      Search for "Vendor Ledger Entries" (Page 29).
+      Filter: Vendor No. = V20000
+
+      You should see a new entry:
+        Document Type:    Invoice
+        Document No.:     PPI-100001 (or your posted invoice number)
+        Posting Date:     (today's work date)
+        Vendor No.:       V20000
+        Description:      Shenzhen TechParts
+        Currency Code:    USD
+        Original Amount:  -34,400.00 (negative = we owe money)
+        Amount (LCY):     (DKK equivalent, e.g., -235,640.00)
+        Remaining Amount: -34,400.00 (unpaid)
+        Due Date:         (posting date + 60 days, per NET60 terms)
+        Open:             Yes
+
+      Key observations:
+        - Amounts are NEGATIVE because this is a payable (we owe the vendor)
+        - Currency Code = USD shows the original transaction currency
+        - Amount (LCY) shows the DKK equivalent at the posting date rate
+        - Remaining Amount = Original Amount (nothing paid yet)
+        - Due Date is calculated from Posting Date + Payment Terms (NET60)
+        - Open = Yes means this entry has not been fully applied/paid
+
+      You can drill down (click on the amount) to see the Detailed Vendor
+      Ledger Entries, which show the individual application entries.
+    config_data:
+      page: 29
+      expected_entry:
+        document_type: "Invoice"
+        vendor_no: "V20000"
+        currency_code: "USD"
+        original_amount: -34400.00
+        remaining_amount: -34400.00
+        open: true
+    validation_questions:
+      - question: "Why is the vendor ledger entry amount negative?"
+        expected_answer: "Vendor ledger entry amounts are negative for invoices because they represent a liability — money the company owes to the vendor. Credits (payments, credit memos) are positive."
+        hints:
+          - "Think about the accounting equation: liabilities are credit balances"
+      - question: "What is the Due Date for this invoice and how is it calculated?"
+        expected_answer: "The Due Date is 60 days after the Posting Date, calculated from the vendor's Payment Terms Code (NET60). For example, if posted on January 15, the due date is March 16."
+        hints:
+          - "Check the Payment Terms Code on the vendor card: NET60"
+
+  - id: review_gl_entries
+    title: "Review G/L entries created by the purchase invoice"
+    instructions: |
+      The purchase invoice posting creates several G/L entries. Let us trace them.
+
+      Search for "G/L Entries" (Page 20).
+      Filter: Document No. = (your posted invoice number, e.g., PPI-100001)
+
+      You should see entries similar to:
+
+        G/L Account  Account Name             Debit (DKK)    Credit (DKK)
+        ───────────  ─────────────────────    ───────────    ────────────
+        1210         Inventory                235,640.00     0.00
+        2110         Trade Payables           0.00           235,640.00
+
+      (Amounts are approximate DKK equivalents of 34,400 USD)
+
+      Let us understand why these accounts are used:
+
+      1. INVENTORY (1210) — Debit
+         - Source: Inventory Posting Setup (RESALE posting group → G/L Account 1210)
+         - The inventory account is debited because we are ADDING inventory value
+         - This was partially booked at receipt (if Expected Cost Posting is on),
+           but the invoice finalizes the cost
+
+      2. TRADE PAYABLES (2110) — Credit
+         - Source: Vendor Posting Group (FOREIGN → Payables Account 2110)
+         - The payables account is credited because we now OWE the vendor
+         - This is the flip side of the Vendor Ledger Entry
+
+      Notice: There is NO VAT entry because:
+        - Vendor is EXPORT (Gen. Bus. Posting Group = EXPORT)
+        - VAT Posting Setup for EXPORT + VAT25 = 0%
+        - Therefore no VAT is charged on this purchase
+
+      In a DOMESTIC purchase, you would also see:
+        1400  VAT Receivable    Debit (input VAT)
+      But not for EXPORT vendors.
+    config_data:
+      gl_entries_example:
+        - { account: "1210", name: "Inventory", debit: 235640.00, credit: 0.00, source: "Inventory Posting Setup (RESALE)" }
+        - { account: "2110", name: "Trade Payables", debit: 0.00, credit: 235640.00, source: "Vendor Posting Group (FOREIGN)" }
+      no_vat_reason: "EXPORT vendor — VAT Posting Setup EXPORT + VAT25 = 0%"
+    validation_questions:
+      - question: "Which two G/L accounts are affected by this purchase invoice posting?"
+        expected_answer: "1210 (Inventory) is debited and 2110 (Trade Payables) is credited"
+        hints:
+          - "One asset account increases, one liability account increases"
+      - question: "Why is account 1210 debited?"
+        expected_answer: "Account 1210 (Inventory) is debited because posting the purchase invoice increases the value of inventory on the balance sheet. The debit comes from the Inventory Posting Setup, which maps the RESALE inventory posting group to account 1210."
+        hints:
+          - "Debits increase asset accounts. Inventory is an asset."
+
+  - id: understand_posting_group_effects
+    title: "Understand posting group effects on the G/L"
+    instructions: |
+      Let us trace exactly HOW BC determined which G/L accounts to use.
+      This is the posting group chain in action:
+
+      VENDOR CARD (V20000 — Shenzhen TechParts):
+        Gen. Bus. Posting Group:    EXPORT
+        VAT Bus. Posting Group:     EXPORT
+        Vendor Posting Group:       FOREIGN
+
+      ITEM CARD (ITEM-1001 — ProBook 15 Laptop):
+        Gen. Prod. Posting Group:   RETAIL
+        VAT Prod. Posting Group:    VAT25
+        Inventory Posting Group:    RESALE
+
+      BC LOOKS UP:
+
+      1. General Posting Setup: EXPORT x RETAIL
+         → Purch. Account: 5100 (COGS) — used for direct cost on the P&L
+         → But for inventory items, the Inventory account overrides this
+         → So the actual debit goes to Inventory (1210) via Inventory Posting Setup
+
+      2. Vendor Posting Group: FOREIGN
+         → Payables Account: 2110 (Trade Payables)
+
+      3. VAT Posting Setup: EXPORT x VAT25
+         → VAT %: 0
+         → No VAT accounts involved
+
+      4. Inventory Posting Setup: RESALE (blank location)
+         → Inventory Account: 1210
+
+      This is why posting groups are so important — they are the wiring
+      diagram that connects every transaction to the correct G/L accounts.
+      Without them, BC would not know where to post.
+
+      To verify this yourself:
+        - Open General Posting Setup (Page 314) and find EXPORT x RETAIL
+        - Open Vendor Posting Groups (Page 111) and check FOREIGN
+        - Open VAT Posting Setup (Page 472) and find EXPORT x VAT25
+        - Open Inventory Posting Setup (Page 5826) and check RESALE
+    config_data:
+      posting_group_chain:
+        vendor:
+          gen_bus_posting_group: "EXPORT"
+          vat_bus_posting_group: "EXPORT"
+          vendor_posting_group: "FOREIGN"
+        item:
+          gen_prod_posting_group: "RETAIL"
+          vat_prod_posting_group: "VAT25"
+          inventory_posting_group: "RESALE"
+        lookups:
+          general_posting_setup: { bus: "EXPORT", prod: "RETAIL", purch_account: "5100" }
+          vendor_posting_group: { code: "FOREIGN", payables_account: "2110" }
+          vat_posting_setup: { bus: "EXPORT", prod: "VAT25", vat_pct: 0 }
+          inventory_posting_setup: { group: "RESALE", inventory_account: "1210" }
+    validation_questions:
+      - question: "For inventory items, does BC use the Purch. Account from General Posting Setup or the Inventory Account from Inventory Posting Setup?"
+        expected_answer: "For inventory items, BC uses the Inventory Account from Inventory Posting Setup (1210). The Purch. Account from General Posting Setup (5100 - COGS) is used for non-inventory purchases or when the item is expensed at the time of purchase."
+        hints:
+          - "Inventory items are assets, not expenses — they go to the balance sheet first"
+      - question: "Trace the full posting group chain: which 4 setup tables did BC consult for this transaction?"
+        expected_answer: "1) General Posting Setup (EXPORT x RETAIL), 2) Vendor Posting Group (FOREIGN), 3) VAT Posting Setup (EXPORT x VAT25), 4) Inventory Posting Setup (RESALE)"
+        hints:
+          - "There are Business x Product lookups and entity-specific posting groups"
+
+  - id: review_posted_purchase_invoice
+    title: "Review the Posted Purchase Invoice document"
+    instructions: |
+      Search for "Posted Purchase Invoices" (Page 138).
+      Open the posted invoice you just created.
+
+      Review the following on the Posted Purchase Invoice page:
+        Header:
+          - No.: PPI-100001 (from the posted invoice number series)
+          - Buy-from Vendor: V20000 Shenzhen TechParts
+          - Posting Date: (your work date)
+          - Vendor Invoice No.: ST-2025-0042
+          - Currency Code: USD
+          - Amount: 34,400.00 USD
+          - Amount Including VAT: 34,400.00 USD (same, because 0% VAT)
+
+        Lines:
+          - Line 1: ITEM-1001, ProBook 15 Laptop, 50, 520.00 USD
+          - Line 2: ITEM-2001, ClearView 27" Monitor, 30, 280.00 USD
+
+      From the posted invoice, you can navigate to:
+        - Navigate button → shows all related entries (GL, Vendor, Item, Value)
+        - This is a powerful tool for tracing what a document created
+
+      Use Navigate (or "Find Entries" — search for "Navigate" or Page 344):
+        You will see entries created in:
+          - G/L Entry: 2 entries (Inventory debit, Payables credit)
+          - Vendor Ledger Entry: 1 entry (the payable)
+          - Item Ledger Entry: (may show 0 new entries if receipt was separate)
+          - Value Entry: 2 entries (cost entries for each item)
+          - Purch. Inv. Header: 1 entry (the posted invoice itself)
+
+      The Navigate feature is essential for troubleshooting and auditing.
+      Whenever you need to understand what a document did, use Navigate.
+    config_data:
+      page: 138
+      navigate_page: 344
+      expected_navigate_results:
+        - { table: "G/L Entry", count: 2 }
+        - { table: "Vendor Ledger Entry", count: 1 }
+        - { table: "Value Entry", count: 2 }
+        - { table: "Purch. Inv. Header", count: 1 }
+    validation_questions:
+      - question: "What tool in BC lets you see ALL entries created by a single posted document?"
+        expected_answer: "The Navigate function (also called Find Entries, Page 344). It shows all related ledger entries across G/L, vendor/customer, item, value entries, and more — all linked to the same document number."
+        hints:
+          - "Look for a Navigate or Find Entries button on the posted document"
+      - question: "How many G/L entries were created by the purchase invoice posting?"
+        expected_answer: "2 entries — a debit to Inventory (1210) and a credit to Trade Payables (2110)"
+        hints:
+          - "Every G/L posting is a balanced double-entry: debit = credit"
+
+validation_questions:
+  - question: "After posting the invoice, what is the Remaining Amount on the Vendor Ledger Entry?"
+    expected_answer: "-34,400.00 USD (the full invoice amount, because no payment has been made yet)"
+    hints: []
+  - question: "Which posting group determines the Trade Payables account (2110)?"
+    expected_answer: "The Vendor Posting Group (FOREIGN), which maps the Payables Account to G/L account 2110"
+    hints: []
+  - question: "If this had been a DOMESTIC vendor instead of EXPORT, what additional G/L entry would appear?"
+    expected_answer: "A debit to account 1400 (VAT Receivable / Input VAT) for 25% of the purchase amount. For example, on a 34,400 DKK purchase, there would be 8,600 DKK VAT."
+    hints: []
+
+agent_context: |
+  This lesson completes the purchase cycle: the student posted the receipt in
+  the previous lesson, and now posts the invoice. Together, these two steps
+  demonstrate the full purchase-to-payable flow.
+
+  Key teaching points:
+  - Invoice posting creates the Vendor Ledger Entry (the payable)
+  - The G/L entries follow a clear chain from posting groups to accounts
+  - For EXPORT vendors, there is no VAT on the purchase
+  - For inventory items, the cost goes to the Inventory account (balance sheet),
+    not directly to COGS (P&L) — COGS is recognized when items are SOLD
+  - The Navigate feature is the single most useful tool for understanding
+    what a posted document did — teach the student to use it habitually
+
+  Company context:
+  - Shenzhen TechParts invoice ST-2025-0042 for 34,400 USD
+  - Payment is due in 60 days (NET60)
+  - The DKK equivalent depends on the USD/DKK exchange rate at posting date
+  - No VAT because vendor is EXPORT (non-EU)
+  - In real life, Nordic Traders would handle import VAT and customs duty
+    through a separate customs/import declaration process — this is outside
+    the scope of this curriculum but worth mentioning
+
+  Posting group chain (critical to understand):
+    Vendor (EXPORT + FOREIGN) + Item (RETAIL + VAT25 + RESALE)
+    → General Posting Setup: EXPORT x RETAIL
+    → Vendor Posting Group: FOREIGN → 2110
+    → VAT Posting Setup: EXPORT x VAT25 → 0%
+    → Inventory Posting Setup: RESALE → 1210
+
+  Common mistakes:
+  - Trying to post Invoice without having posted Receipt first (if they skipped the previous lesson)
+  - Expecting to see VAT entries for an EXPORT vendor
+  - Confusing the Purch. Account in General Posting Setup with the Inventory account
+  - Not finding the posted invoice because the PO was deleted after full posting
+  - Looking for COGS entries — COGS is only posted when items are SOLD, not purchased
+
+estimated_duration: "40 minutes"

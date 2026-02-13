@@ -1,0 +1,330 @@
+id: item_cards
+title: "Creating Item Cards"
+objectives:
+  - "Understand item card fields and their purpose"
+  - "Choose the correct costing method for a trading company"
+  - "Create all 10 items with correct posting groups, categories, and pricing"
+  - "Understand the relationship between unit cost and unit price"
+prerequisites:
+  - "item_categories"
+tasks:
+  - id: understand_costing_methods
+    title: "Understand costing methods for a trading company"
+    instructions: |
+      Before creating items, you need to understand costing methods.
+      Business Central supports five costing methods:
+
+        Method     Description                           Best for
+        ---------  ------------------------------------  ----------------------
+        FIFO       First In, First Out                   Trading companies
+        LIFO       Last In, First Out                    (rarely used in EU)
+        Average    Weighted average cost                 High-volume commodities
+        Specific   Track individual item costs           Serialized high-value items
+        Standard   Fixed predetermined cost              Manufacturing
+
+      For Nordic Traders, we will use FIFO (First In, First Out) because:
+        1. It is the most common method for trading/distribution companies
+        2. It matches the physical flow of goods (oldest stock sold first)
+        3. It is required or preferred under IFRS and Danish accounting rules
+        4. It provides accurate cost tracking without manual intervention
+
+      How FIFO works:
+        - Each purchase receipt is tracked with its specific cost
+        - When items are sold, BC uses the cost of the oldest receipt first
+        - Example: Buy 10 units at 5,000 DKK, then 10 at 5,200 DKK
+          First 10 sold use cost of 5,000 each, next 10 use 5,200 each
+
+      You set the costing method on each item card. It can also be set as a
+      default in Inventory Setup (Page 461).
+
+      Search for "Inventory Setup" (Page 461) and set:
+        Default Costing Method: FIFO
+
+      This ensures new items default to FIFO unless explicitly changed.
+    config_data:
+      inventory_setup:
+        default_costing_method: "FIFO"
+    validation_questions:
+      - question: "Why is FIFO the best costing method for Nordic Traders?"
+        expected_answer: "FIFO matches the physical flow of goods (oldest inventory sold first), is required/preferred under IFRS and Danish GAAP, and provides accurate cost tracking for a trading company that buys goods at varying prices."
+        hints:
+          - "Think about how a trading company moves inventory"
+          - "Consider Danish/EU accounting standards"
+      - question: "What happens with FIFO when the purchase price changes between two orders?"
+        expected_answer: "Each purchase receipt retains its own cost. When selling, BC applies the cost from the oldest unreserved receipt first. So if you bought 10 at 5,000 and 10 at 5,200, the first 10 sold would use 5,000 as the COGS."
+        hints:
+          - "FIFO means First In, First Out — oldest costs are used first"
+
+  - id: create_first_item
+    title: "Create the first item — ProBook 15 Laptop"
+    instructions: |
+      Search for "Items" (Page 31) to open the Item List.
+
+      Click "New" to create a new item card (Page 30).
+
+      Fill in the following fields:
+
+        General FastTab:
+          No.:                    ITEM-1001
+          Description:            ProBook 15 Laptop
+          Type:                   Inventory
+          Base Unit of Measure:   PCS
+          Item Category Code:     LAPTOPS
+
+        Costs & Posting FastTab:
+          Costing Method:         FIFO
+          Unit Cost:              5400.00
+          Gen. Prod. Posting Group:  RETAIL
+          VAT Prod. Posting Group:   VAT25
+          Inventory Posting Group:   RESALE
+
+        Prices & Sales FastTab:
+          Unit Price:             8999.00
+
+      Explanation of the cost and price fields:
+        - Unit Cost (5,400 DKK): what we pay our vendor for this item.
+          This is approximately 788 USD at the exchange rate of 6.85.
+          The actual cost will be updated by purchase orders.
+        - Unit Price (8,999 DKK): our standard selling price to customers.
+        - Gross Margin: (8,999 - 5,400) / 8,999 = 40.0% margin
+
+      The Unit Cost is an estimate — it will be adjusted by actual purchase
+      orders. FIFO costing means BC will track the real cost per receipt.
+
+      After filling in all fields, you can add the extended description:
+        "15.6 inch business laptop, i7, 16GB RAM, 512GB SSD"
+      in the Description 2 field or as Item Attributes.
+    config_data:
+      item:
+        number: "ITEM-1001"
+        description: "ProBook 15 Laptop"
+        description_2: "15.6\" business laptop, i7, 16GB RAM, 512GB SSD"
+        type: "Inventory"
+        base_unit_of_measure: "PCS"
+        item_category: "LAPTOPS"
+        costing_method: "FIFO"
+        unit_cost: 5400.00
+        unit_price: 8999.00
+        gen_prod_posting_group: "RETAIL"
+        vat_prod_posting_group: "VAT25"
+        inventory_posting_group: "RESALE"
+    validation_questions:
+      - question: "What is the gross margin percentage on the ProBook 15?"
+        expected_answer: "Approximately 40%. Calculation: (8,999 - 5,400) / 8,999 = 0.40 or 40.0%"
+        hints:
+          - "Margin = (Price - Cost) / Price"
+      - question: "What posting groups did you assign to the item?"
+        expected_answer: "Gen. Prod. Posting Group: RETAIL, VAT Prod. Posting Group: VAT25, Inventory Posting Group: RESALE"
+        hints:
+          - "All items use the same three posting groups"
+
+  - id: create_second_laptop
+    title: "Create the second laptop — UltraSlim 14"
+    instructions: |
+      Create the second item using the same process:
+
+        No.:                    ITEM-1002
+        Description:            UltraSlim 14 Laptop
+        Type:                   Inventory
+        Base Unit of Measure:   PCS
+        Item Category Code:     LAPTOPS
+        Costing Method:         FIFO
+        Unit Cost:              3900.00
+        Unit Price:             6499.00
+        Gen. Prod. Posting Group:  RETAIL
+        VAT Prod. Posting Group:   VAT25
+        Inventory Posting Group:   RESALE
+
+      The UltraSlim 14 is a lower-cost laptop than the ProBook 15.
+      Notice the margin: (6,499 - 3,900) / 6,499 = 40.0%
+
+      Both laptops have approximately the same margin percentage.
+      This is common in electronics distribution — the margin percentage
+      stays consistent while the absolute DKK margin varies.
+    config_data:
+      item:
+        number: "ITEM-1002"
+        description: "UltraSlim 14 Laptop"
+        description_2: "14\" ultralight laptop, i5, 8GB RAM, 256GB SSD"
+        type: "Inventory"
+        base_unit_of_measure: "PCS"
+        item_category: "LAPTOPS"
+        costing_method: "FIFO"
+        unit_cost: 3900.00
+        unit_price: 6499.00
+        gen_prod_posting_group: "RETAIL"
+        vat_prod_posting_group: "VAT25"
+        inventory_posting_group: "RESALE"
+    validation_questions:
+      - question: "What is the absolute DKK margin difference between the ProBook 15 and UltraSlim 14?"
+        expected_answer: "ProBook 15 margin: 8,999 - 5,400 = 3,599 DKK. UltraSlim 14 margin: 6,499 - 3,900 = 2,599 DKK. Difference: 1,000 DKK more margin per unit on the ProBook 15."
+        hints:
+          - "Calculate Unit Price minus Unit Cost for each"
+
+  - id: create_monitors_and_accessories
+    title: "Create monitors and accessories (6 items)"
+    instructions: |
+      Create the following items. All use the same posting groups:
+        Gen. Prod. Posting Group: RETAIL
+        VAT Prod. Posting Group:  VAT25
+        Inventory Posting Group:  RESALE
+        Costing Method:           FIFO
+        Type:                     Inventory
+        Base Unit of Measure:     PCS
+
+      MONITORS:
+
+        ITEM-2001  ClearView 27" Monitor
+          Description 2: 27" 4K IPS monitor, USB-C, adjustable stand
+          Item Category: MONITORS
+          Unit Cost: 1980.00    Unit Price: 3299.00
+
+        ITEM-2002  DualScreen 24" Monitor
+          Description 2: 24" Full HD monitor, HDMI/DP, VESA mount
+          Item Category: MONITORS
+          Unit Cost: 1140.00    Unit Price: 1899.00
+
+      ACCESSORIES:
+
+        ITEM-3001  ErgoType Wireless Keyboard
+          Description 2: Ergonomic wireless keyboard, Nordic layout, Bluetooth
+          Item Category: ACCESSORIES
+          Unit Cost: 320.00     Unit Price: 749.00
+
+        ITEM-3002  PrecisionClick Wireless Mouse
+          Description 2: Ergonomic wireless mouse, silent click, USB-C receiver
+          Item Category: ACCESSORIES
+          Unit Cost: 180.00     Unit Price: 449.00
+
+        ITEM-4001  USB-C Docking Station Pro
+          Description 2: Universal USB-C dock, dual 4K, 100W PD, 5x USB-A
+          Item Category: ACCESSORIES
+          Unit Cost: 850.00     Unit Price: 1699.00
+
+        ITEM-4002  HD Pro Webcam
+          Description 2: 1080p webcam with autofocus, noise-cancelling mic
+          Item Category: ACCESSORIES
+          Unit Cost: 240.00     Unit Price: 599.00
+
+      Tip: After creating the first few items, the process becomes repetitive.
+      You can speed it up by using "Copy Item" from the actions menu on an
+      existing item card, then changing the fields that differ.
+    config_data:
+      items:
+        - { number: "ITEM-2001", description: "ClearView 27\" Monitor", category: "MONITORS", unit_cost: 1980.00, unit_price: 3299.00 }
+        - { number: "ITEM-2002", description: "DualScreen 24\" Monitor", category: "MONITORS", unit_cost: 1140.00, unit_price: 1899.00 }
+        - { number: "ITEM-3001", description: "ErgoType Wireless Keyboard", category: "ACCESSORIES", unit_cost: 320.00, unit_price: 749.00 }
+        - { number: "ITEM-3002", description: "PrecisionClick Wireless Mouse", category: "ACCESSORIES", unit_cost: 180.00, unit_price: 449.00 }
+        - { number: "ITEM-4001", description: "USB-C Docking Station Pro", category: "ACCESSORIES", unit_cost: 850.00, unit_price: 1699.00 }
+        - { number: "ITEM-4002", description: "HD Pro Webcam", category: "ACCESSORIES", unit_cost: 240.00, unit_price: 599.00 }
+    validation_questions:
+      - question: "Which item has the highest margin percentage among the monitors and accessories?"
+        expected_answer: "The PrecisionClick Wireless Mouse (ITEM-3002) has the highest margin at approximately 59.9%. Calculation: (449 - 180) / 449 = 59.9%. Accessories generally have higher margins than monitors."
+        hints:
+          - "Calculate the margin for each item: (Price - Cost) / Price"
+          - "Smaller accessories tend to have higher percentage margins"
+      - question: "How many items are now in the ACCESSORIES category?"
+        expected_answer: "5 items: ErgoType Wireless Keyboard, PrecisionClick Wireless Mouse, USB-C Docking Station Pro, HD Pro Webcam, and LaptopGuard Carry Case (the carry case is created in the next task)"
+        hints:
+          - "Count all items with Item Category ACCESSORIES"
+          - "Wait — we have not created the carry case yet. The answer is 4 so far."
+
+  - id: create_remaining_items
+    title: "Create the carry case and networking item"
+    instructions: |
+      Create the final two items:
+
+        ITEM-5001  LaptopGuard Carry Case 15"
+          Description 2: Padded laptop carry case, fits up to 15.6", water-resistant
+          Item Category: ACCESSORIES
+          Unit Cost: 120.00     Unit Price: 349.00
+          (all other posting fields same as above)
+
+        ITEM-6001  Network Switch 24-Port
+          Description 2: Managed 24-port Gigabit switch, PoE+, rack-mount
+          Item Category: NETWORKING
+          Unit Cost: 1500.00    Unit Price: 2499.00
+          (all other posting fields same as above)
+
+      After creating these, open the Item List (Page 31) and verify all 10
+      items are present. You should see:
+
+        No.        Description                    Category      Unit Cost  Unit Price
+        ---------  ----------------------------   -----------   ---------  ----------
+        ITEM-1001  ProBook 15 Laptop              LAPTOPS       5,400.00   8,999.00
+        ITEM-1002  UltraSlim 14 Laptop            LAPTOPS       3,900.00   6,499.00
+        ITEM-2001  ClearView 27" Monitor          MONITORS      1,980.00   3,299.00
+        ITEM-2002  DualScreen 24" Monitor         MONITORS      1,140.00   1,899.00
+        ITEM-3001  ErgoType Wireless Keyboard     ACCESSORIES     320.00     749.00
+        ITEM-3002  PrecisionClick Wireless Mouse  ACCESSORIES     180.00     449.00
+        ITEM-4001  USB-C Docking Station Pro      ACCESSORIES     850.00   1,699.00
+        ITEM-4002  HD Pro Webcam                  ACCESSORIES     240.00     599.00
+        ITEM-5001  LaptopGuard Carry Case 15"     ACCESSORIES     120.00     349.00
+        ITEM-6001  Network Switch 24-Port         NETWORKING    1,500.00   2,499.00
+
+      Personalize the list view to show these columns for easy verification.
+    config_data:
+      items:
+        - { number: "ITEM-5001", description: "LaptopGuard Carry Case 15\"", category: "ACCESSORIES", unit_cost: 120.00, unit_price: 349.00 }
+        - { number: "ITEM-6001", description: "Network Switch 24-Port", category: "NETWORKING", unit_cost: 1500.00, unit_price: 2499.00 }
+    validation_questions:
+      - question: "How many items are now in the system?"
+        expected_answer: "10"
+        hints:
+          - "Count all items in the Item List"
+      - question: "What is the total inventory value if you had 1 of each item (at unit cost)?"
+        expected_answer: "15,630 DKK. Sum of all unit costs: 5,400 + 3,900 + 1,980 + 1,140 + 320 + 180 + 850 + 240 + 120 + 1,500 = 15,630"
+        hints:
+          - "Add up the Unit Cost of all 10 items"
+
+validation_questions:
+  - question: "How many items are in each category?"
+    expected_answer: "LAPTOPS: 2, MONITORS: 2, ACCESSORIES: 5, NETWORKING: 1"
+    hints: []
+  - question: "Why do all items use FIFO as the costing method?"
+    expected_answer: "FIFO is the standard costing method for trading companies because it matches the physical flow of goods, is required/preferred under IFRS and Danish GAAP, and provides accurate COGS tracking when purchase prices vary between orders."
+    hints: []
+  - question: "Why do all items use the same posting groups (RETAIL, RESALE, VAT25)?"
+    expected_answer: "Because all items are physical goods sold at the standard 25% Danish VAT rate. The posting groups determine accounting treatment, and all items have the same accounting treatment. Product differentiation is handled by Item Categories, not posting groups."
+    hints: []
+  - question: "Which product category has the highest average margin percentage?"
+    expected_answer: "ACCESSORIES has the highest average margin, ranging from about 50% to 66% across its 5 items. Laptops are around 40%, Monitors around 40%, and Networking around 40%. Accessories have significantly higher margins."
+    hints: []
+
+agent_context: |
+  This is a data-heavy lesson with 10 items to create. The repetition is
+  intentional — it reinforces the item card layout and fields. Encourage
+  the student to use "Copy Item" after the first few to speed things up.
+
+  Key teaching points:
+  - FIFO is the standard costing method for trading companies
+  - Unit Cost is an estimate that gets updated by actual purchase orders
+  - Unit Price is the standard selling price (can be overridden by price lists)
+  - All items share posting groups because they have the same accounting treatment
+  - Item categories provide the business-level classification
+  - Margin analysis: accessories have much higher margins than hardware
+  - The Type field "Inventory" means the item is tracked in stock
+
+  Common mistakes:
+  - Setting the wrong costing method (Average instead of FIFO)
+  - Forgetting to set the Inventory Posting Group (RESALE)
+  - Entering Unit Cost and Unit Price in the wrong fields (cost vs price)
+  - Not setting the Item Category Code on each item
+  - Forgetting the Base Unit of Measure (PCS)
+  - Using wrong number format (ITEM1001 instead of ITEM-1001)
+  - Setting Type to "Non-Inventory" or "Service" instead of "Inventory"
+  - Mixing up VAT Prod. Posting Group (VAT25 for items) with
+    VAT Bus. Posting Group (DOMESTIC/EU/EXPORT for customers/vendors)
+
+  If the student gets bored with repetitive data entry, remind them that
+  in real implementations, you would use configuration packages or RapidStart
+  to import item data. Manual entry is for learning the field structure.
+
+  Margin analysis discussion points:
+  - Laptops: ~40% margin (3,599 and 2,599 DKK absolute)
+  - Monitors: ~40% margin (1,319 and 759 DKK absolute)
+  - Accessories: 50-66% margin (but lower absolute DKK per unit)
+  - Networking: ~40% margin (999 DKK absolute)
+  - This is typical in electronics: accessories subsidize the lower margins on hardware
+
+estimated_duration: "45 minutes"

@@ -1,0 +1,378 @@
+id: item_pricing
+title: "Setting Up Item Pricing"
+objectives:
+  - "Understand modern pricing in Business Central (price lists)"
+  - "Create a sales price list for Nordic customers"
+  - "Set up purchase prices for vendor-specific costs"
+  - "Analyze the price/cost/margin relationship across the product catalog"
+prerequisites:
+  - "item_cards"
+tasks:
+  - id: understand_bc_pricing
+    title: "Understand the BC modern pricing architecture"
+    instructions: |
+      Business Central has two pricing systems:
+        1. Legacy pricing (Sales Prices / Purchase Prices tables)
+        2. Modern pricing (Price Lists — introduced in BC19 and now the default)
+
+      We will use the modern Price List approach, which is more flexible.
+
+      The pricing hierarchy in BC works as follows:
+
+        Priority  Level              Example
+        --------  -----------------  ---------------------------------
+        1 (high)  Customer-specific  Special price for Nordisk Elektronik
+        2         Customer group     Price for all DOMESTIC customers
+        3         All customers      Standard price list for everyone
+        4 (low)   Item card          Unit Price on the item card
+
+      When BC creates a sales order, it looks for the most specific price
+      first. If no price list matches, it falls back to the Unit Price
+      on the item card.
+
+      Similarly for purchases:
+        Priority  Level              Example
+        --------  -----------------  --------------------------------
+        1 (high)  Vendor-specific    Price from Shenzhen TechParts
+        2         All vendors        Standard vendor price list
+        3 (low)   Item card          Unit Cost on the item card
+
+      To enable modern pricing, search for "Feature Management" (Page 2610)
+      and ensure "Feature Update: New sales and purchase pricing experience"
+      is set to "Enabled for All Users". In newer BC versions this may
+      already be the default.
+    config_data:
+      feature: "New sales and purchase pricing experience"
+      status: "Enabled for All Users"
+    validation_questions:
+      - question: "What is the difference between legacy pricing and modern pricing in BC?"
+        expected_answer: "Legacy pricing uses separate Sales Prices and Purchase Prices tables. Modern pricing uses unified Price Lists that support multiple price types, date ranges, currencies, and more flexible assignment rules. Modern pricing is the recommended approach from BC19 onwards."
+        hints:
+          - "Modern pricing uses the Price Lists feature"
+      - question: "If a customer has a specific price and there is also a price list for all customers, which price does BC use?"
+        expected_answer: "BC uses the customer-specific price because it has higher priority. The pricing engine always uses the most specific match first."
+        hints:
+          - "More specific prices take precedence over general prices"
+
+  - id: create_sales_price_list
+    title: "Create a standard sales price list"
+    instructions: |
+      Search for "Sales Price Lists" (Page 7015) using Alt+Q.
+
+      Click "New" to create a new price list.
+
+      Fill in the header:
+        Code:              SP-NORDIC-STD
+        Description:       Standard Nordic Price List
+        Assign-to Type:    All Customers
+        Currency Code:     (blank — DKK, our local currency)
+        Starting Date:     01/01/2025
+        Status:            Draft (we will activate it after adding lines)
+
+      Then add price lines for all 10 items. Click on "Lines" and add:
+
+        Asset Type   Asset No.    Unit of Measure  Unit Price   Minimum Quantity
+        ----------   ----------   ---------------  ----------   ----------------
+        Item         ITEM-1001    PCS              8,999.00     0
+        Item         ITEM-1002    PCS              6,499.00     0
+        Item         ITEM-2001    PCS              3,299.00     0
+        Item         ITEM-2002    PCS              1,899.00     0
+        Item         ITEM-3001    PCS              749.00       0
+        Item         ITEM-3002    PCS              449.00       0
+        Item         ITEM-4001    PCS              1,699.00     0
+        Item         ITEM-4002    PCS              599.00       0
+        Item         ITEM-5001    PCS              349.00       0
+        Item         ITEM-6001    PCS              2,499.00     0
+
+      These prices match the Unit Price on the item cards. Having them in
+      a price list gives us the flexibility to:
+        - Set effective date ranges (seasonal pricing)
+        - Create customer-specific overrides later
+        - Manage multiple currencies
+        - Set quantity-based pricing tiers
+
+      After adding all lines, change the Status to "Active".
+
+      Note: Minimum Quantity 0 means the price applies to any quantity.
+      You could add quantity breaks later (e.g., price 8,499 for qty >= 10).
+    config_data:
+      price_list:
+        code: "SP-NORDIC-STD"
+        description: "Standard Nordic Price List"
+        assign_to: "All Customers"
+        currency: ""
+        starting_date: "2025-01-01"
+        lines:
+          - { item: "ITEM-1001", unit_price: 8999.00, min_qty: 0 }
+          - { item: "ITEM-1002", unit_price: 6499.00, min_qty: 0 }
+          - { item: "ITEM-2001", unit_price: 3299.00, min_qty: 0 }
+          - { item: "ITEM-2002", unit_price: 1899.00, min_qty: 0 }
+          - { item: "ITEM-3001", unit_price: 749.00, min_qty: 0 }
+          - { item: "ITEM-3002", unit_price: 449.00, min_qty: 0 }
+          - { item: "ITEM-4001", unit_price: 1699.00, min_qty: 0 }
+          - { item: "ITEM-4002", unit_price: 599.00, min_qty: 0 }
+          - { item: "ITEM-5001", unit_price: 349.00, min_qty: 0 }
+          - { item: "ITEM-6001", unit_price: 2499.00, min_qty: 0 }
+    validation_questions:
+      - question: "How many lines are in the standard sales price list?"
+        expected_answer: "10 — one for each item"
+        hints:
+          - "Every item needs a price line"
+      - question: "What does 'Assign-to Type: All Customers' mean?"
+        expected_answer: "It means this price list applies to every customer. Any sales order will use these prices unless a more specific price list exists (e.g., a customer-specific list with higher priority)."
+        hints:
+          - "All Customers is the broadest assignment level"
+      - question: "Why did we set the Status to Active?"
+        expected_answer: "A price list must be Active to be used by the pricing engine. Draft price lists are ignored when BC calculates prices on sales documents. This prevents incomplete price lists from being applied."
+        hints:
+          - "What happens if a price list stays in Draft status?"
+
+  - id: create_purchase_price_list
+    title: "Create purchase price lists per vendor"
+    instructions: |
+      Search for "Purchase Price Lists" (Page 7016).
+
+      Create a purchase price list for each vendor. Since our vendors trade
+      in USD, the purchase prices are in USD.
+
+      Vendor 1 — Shenzhen TechParts (V20000):
+        Code:              PP-SHENZHEN
+        Description:       Shenzhen TechParts Purchase Prices
+        Assign-to Type:    Vendor
+        Assign-to No.:     V20000
+        Currency Code:     USD
+        Starting Date:     01/01/2025
+        Status:            Draft
+
+      Add lines (prices in USD):
+        Asset Type   Asset No.    Unit of Measure  Direct Unit Cost
+        ----------   ----------   ---------------  ----------------
+        Item         ITEM-1001    PCS              788.32
+        Item         ITEM-1002    PCS              569.34
+        Item         ITEM-3001    PCS              46.72
+        Item         ITEM-3002    PCS              26.28
+        Item         ITEM-5001    PCS              17.52
+
+      Set Status to Active.
+
+      Vendor 2 — Sakura Electronics (V20100):
+        Code:              PP-SAKURA
+        Description:       Sakura Electronics Purchase Prices
+        Assign-to Type:    Vendor
+        Assign-to No.:     V20100
+        Currency Code:     USD
+        Starting Date:     01/01/2025
+
+      Lines:
+        Item         ITEM-2001    PCS              289.05
+        Item         ITEM-2002    PCS              166.42
+        Item         ITEM-4002    PCS              35.04
+
+      Set Status to Active.
+
+      Vendor 3 — Seoul Components (V20200):
+        Code:              PP-SEOUL
+        Description:       Seoul Components Purchase Prices
+        Assign-to Type:    Vendor
+        Assign-to No.:     V20200
+        Currency Code:     USD
+        Starting Date:     01/01/2025
+
+      Lines:
+        Item         ITEM-4001    PCS              124.09
+        Item         ITEM-6001    PCS              218.98
+
+      Set Status to Active.
+
+      How we calculated the USD prices:
+        DKK Unit Cost / Exchange Rate = USD price
+        Example: ITEM-1001 cost 5,400 DKK / 6.85 = 788.32 USD
+
+      In practice, vendor prices come from quotations or contracts.
+      We are using back-calculated prices to match our DKK unit costs.
+    config_data:
+      purchase_price_lists:
+        - code: "PP-SHENZHEN"
+          description: "Shenzhen TechParts Purchase Prices"
+          vendor: "V20000"
+          currency: "USD"
+          lines:
+            - { item: "ITEM-1001", cost_usd: 788.32 }
+            - { item: "ITEM-1002", cost_usd: 569.34 }
+            - { item: "ITEM-3001", cost_usd: 46.72 }
+            - { item: "ITEM-3002", cost_usd: 26.28 }
+            - { item: "ITEM-5001", cost_usd: 17.52 }
+        - code: "PP-SAKURA"
+          description: "Sakura Electronics Purchase Prices"
+          vendor: "V20100"
+          currency: "USD"
+          lines:
+            - { item: "ITEM-2001", cost_usd: 289.05 }
+            - { item: "ITEM-2002", cost_usd: 166.42 }
+            - { item: "ITEM-4002", cost_usd: 35.04 }
+        - code: "PP-SEOUL"
+          description: "Seoul Components Purchase Prices"
+          vendor: "V20200"
+          currency: "USD"
+          lines:
+            - { item: "ITEM-4001", cost_usd: 124.09 }
+            - { item: "ITEM-6001", cost_usd: 218.98 }
+    validation_questions:
+      - question: "How many purchase price lists did you create?"
+        expected_answer: "3 — one for each vendor (PP-SHENZHEN, PP-SAKURA, PP-SEOUL)"
+        hints:
+          - "One price list per vendor"
+      - question: "Why are purchase prices in USD while sales prices are in DKK?"
+        expected_answer: "Because the vendors are Asian companies that trade in USD, while Nordic Traders sells primarily in DKK. The sales price list uses blank (DKK) because that is the company's local currency. Purchase prices use USD because that is what vendors charge."
+        hints:
+          - "Match the currency to who you are trading with"
+      - question: "Which vendor supplies the most items?"
+        expected_answer: "Shenzhen TechParts (V20000) supplies 5 items (both laptops, keyboard, mouse, carry case). Sakura Electronics supplies 3 items (both monitors, webcam). Seoul Components supplies 2 items (docking station, network switch)."
+        hints:
+          - "Count the lines in each purchase price list"
+
+  - id: analyze_margins
+    title: "Analyze the price/cost/margin relationship"
+    instructions: |
+      This is an analysis task — no data entry required.
+
+      Review the complete pricing picture for Nordic Traders:
+
+        Item         Sell (DKK)  Cost (DKK)  Margin DKK  Margin %   Vendor
+        -----------  ----------  ----------  ----------  --------   --------
+        ITEM-1001     8,999       5,400       3,599       40.0%     Shenzhen
+        ITEM-1002     6,499       3,900       2,599       40.0%     Shenzhen
+        ITEM-2001     3,299       1,980       1,319       40.0%     Sakura
+        ITEM-2002     1,899       1,140         759       40.0%     Sakura
+        ITEM-3001       749         320         429       57.3%     Shenzhen
+        ITEM-3002       449         180         269       59.9%     Shenzhen
+        ITEM-4001     1,699         850         849       50.0%     Seoul
+        ITEM-4002       599         240         359       59.9%     Seoul
+        ITEM-5001       349         120         229       65.6%     Shenzhen
+        ITEM-6001     2,499       1,500         999       40.0%     Seoul
+
+      Key observations:
+        1. Hardware (laptops, monitors, network switch) has ~40% margin
+        2. Accessories have 50-66% margin — significantly higher
+        3. The carry case has the highest margin at 65.6%
+        4. Total catalog value at standard prices: 26,540 DKK
+        5. Total catalog cost: 15,630 DKK
+        6. Average weighted margin: ~41.1%
+
+      This margin structure is typical for electronics distribution:
+        - High-value hardware has competitive pricing (lower margins)
+        - Accessories are less price-sensitive (higher margins)
+        - The overall business margin is a blend of both
+
+      Understanding this helps in purchasing decisions, pricing negotiations,
+      and overall business strategy.
+    config_data:
+      margin_summary:
+        laptops_avg_margin: "40.0%"
+        monitors_avg_margin: "40.0%"
+        accessories_avg_margin: "58.5%"
+        networking_margin: "40.0%"
+        overall_catalog_margin: "41.1%"
+    validation_questions:
+      - question: "Which single item generates the most margin in DKK per unit?"
+        expected_answer: "ITEM-1001 ProBook 15 Laptop with 3,599 DKK margin per unit. Even though its margin percentage (40%) is lower than accessories, the absolute DKK margin is highest because the selling price is highest."
+        hints:
+          - "High percentage margin does not always mean high absolute margin"
+          - "Compare the Margin DKK column"
+      - question: "If Nordic Traders sells 100 units of the most expensive and 100 units of the cheapest item, what is the total margin?"
+        expected_answer: "100 x ProBook 15 (3,599 DKK) + 100 x LaptopGuard Carry Case (229 DKK) = 359,900 + 22,900 = 382,800 DKK total margin"
+        hints:
+          - "Most expensive: ITEM-1001 at 8,999 DKK, cheapest: ITEM-5001 at 349 DKK"
+      - question: "Why is understanding the margin structure important for a BC implementation?"
+        expected_answer: "It helps set up correct costing methods, plan inventory levels (stock more of high-margin items), negotiate vendor prices, structure sales incentives, and design financial reports that show profitability by product category."
+        hints:
+          - "Think about how this data drives business decisions"
+
+  - id: pricing_for_foreign_customers
+    title: "Understand pricing for foreign currency customers"
+    instructions: |
+      An important consideration: our standard price list is in DKK, but
+      some customers trade in SEK, NOK, or EUR.
+
+      When BC creates a sales order for TechSweden AB (currency SEK):
+        1. BC looks up the DKK price from the price list (e.g., 8,999 for ITEM-1001)
+        2. BC converts to SEK using the current exchange rate
+        3. At rate 100 SEK = 63.50 DKK: 8,999 / 0.635 = 14,172 SEK
+
+      Alternatively, you could create separate price lists per currency:
+        Code:              SP-SEK-STD
+        Description:       Standard SEK Price List
+        Currency Code:     SEK
+        Assign-to Type:    Customer Price Group (or specific customer)
+
+      For Nordic Traders, we will rely on the DKK price list with automatic
+      currency conversion for now. This is simpler and avoids maintaining
+      multiple price lists.
+
+      In a production environment, you might:
+        - Create fixed-price lists in each customer currency (for price stability)
+        - Use automatic exchange rate conversion (simpler but prices fluctuate)
+        - Offer different pricing tiers per market
+
+      The choice depends on the business strategy and how price-sensitive
+      the customers are to exchange rate fluctuations.
+    config_data: {}
+    validation_questions:
+      - question: "What happens when a SEK customer buys an item priced in DKK?"
+        expected_answer: "BC automatically converts the DKK price to SEK using the current exchange rate. The sales order shows the SEK amount, and both currencies are tracked in the customer ledger entries."
+        hints:
+          - "BC handles the conversion automatically"
+      - question: "What is the advantage of a single DKK price list over separate lists per currency?"
+        expected_answer: "Simplicity — you maintain one price list instead of four. When you change a price, it automatically applies to all currencies. The downside is that customer-facing prices fluctuate with exchange rates, which may cause confusion or complaints."
+        hints:
+          - "Think about maintenance effort vs price stability for customers"
+
+validation_questions:
+  - question: "How many price lists did you create in total?"
+    expected_answer: "4 — one sales price list (SP-NORDIC-STD) and three purchase price lists (PP-SHENZHEN, PP-SAKURA, PP-SEOUL)"
+    hints: []
+  - question: "What is the key difference between the Unit Price on the item card and the price in a price list?"
+    expected_answer: "The Unit Price on the item card is a fallback default. The price list is a more flexible pricing mechanism that supports date ranges, currency-specific pricing, quantity breaks, and customer-specific prices. Price lists take precedence over the item card price when they match."
+    hints: []
+  - question: "If exchange rates change by 5%, which side of the business is more affected — purchasing or selling?"
+    expected_answer: "Purchasing is more affected because ALL purchases are in USD (100% foreign currency exposure). Selling is partially affected — only 3 of 5 customers use foreign currencies (SEK, NOK, EUR), while 2 Danish customers pay in DKK. The purchasing exposure is concentrated in one currency (USD), making it easier to hedge."
+    hints: []
+
+agent_context: |
+  This lesson ties together items, pricing, and the multi-currency nature of
+  Nordic Traders' business. It is both practical (creating price lists) and
+  analytical (understanding margins and currency exposure).
+
+  Key teaching points:
+  - Modern price lists are the recommended approach from BC19 onwards
+  - Price lists have a priority hierarchy (specific > general > item card)
+  - Purchase prices are in vendor currency (USD), sales prices in company currency (DKK)
+  - Margin analysis reveals the typical electronics distribution pattern
+  - Currency conversion happens automatically on sales/purchase documents
+  - Price list Status must be Active to take effect
+
+  Common mistakes:
+  - Forgetting to set the price list Status to Active (stays in Draft)
+  - Creating the sales price list in USD instead of DKK
+  - Not linking purchase price lists to specific vendors
+  - Entering DKK amounts in the USD purchase price list
+  - Confusing Unit Price (selling) with Unit Cost (buying)
+  - Not enabling the "New pricing experience" feature
+  - Creating price lines with wrong unit of measure
+
+  The margin analysis task is deliberately analytical. Use it to demonstrate
+  that BC is not just a data entry system — the data tells a business story.
+  If the student is engaged, discuss:
+    - Why accessories have higher margins (less price transparency, bundling)
+    - How exchange rate risk affects both sides of the business
+    - The trade-off between price stability and simplicity in multi-currency pricing
+
+  This completes the item setup. After this lesson, Nordic Traders has:
+    - 5 customers across 3 posting groups
+    - 3 vendors all using EXPORT/USD
+    - 10 items in 4 categories with sales and purchase pricing
+    - 2 dimensions for analytical reporting
+  The company is now ready for transactional processing (sales orders,
+  purchase orders, etc.) in future modules.
+
+estimated_duration: "40 minutes"

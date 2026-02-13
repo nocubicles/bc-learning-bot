@@ -1,0 +1,308 @@
+id: vendor_setup
+title: "Setting Up Vendors"
+objectives:
+  - "Understand the vendor card and how it mirrors the customer card"
+  - "Configure currencies for foreign trade (USD, SEK, NOK, EUR)"
+  - "Create all three Asian vendors with correct posting groups and currency"
+  - "Understand why all vendors use EXPORT posting groups and USD currency"
+prerequisites:
+  - "customer_setup"
+tasks:
+  - id: setup_currencies
+    title: "Set up currencies for foreign trade"
+    instructions: |
+      Before creating vendors who trade in foreign currencies, we need to set up
+      the currency codes in Business Central.
+
+      Search for "Currencies" (Page 5) using Alt+Q.
+
+      Create or verify the following currencies:
+
+        Code   Description          ISO Code  ISO Numeric Code
+        -----  -------------------  --------  ----------------
+        USD    US Dollar            USD       840
+        SEK    Swedish Krona        SEK       752
+        NOK    Norwegian Krone      NOK       578
+        EUR    Euro                 EUR       978
+
+      For each currency, you also need to set up an exchange rate.
+      Click on the currency line, then choose "Exchange Rates" from the actions.
+
+      On the Currency Exchange Rates page (Page 483), enter a starting rate:
+
+        Currency   Starting Date   Exchange Rate Amount  Relational Exch. Rate Amt
+        ---------  --------------  --------------------  -------------------------
+        USD        01/01/2025      100                   685.00
+        SEK        01/01/2025      100                   63.50
+        NOK        01/01/2025      100                   64.00
+        EUR        01/01/2025      100                   745.00
+
+      This means: 100 USD = 685.00 DKK, 100 SEK = 63.50 DKK, etc.
+
+      These are approximate rates. In production you would update exchange rates
+      regularly, but for learning purposes these starting rates are sufficient.
+
+      Note: DKK is the local currency (LCY) and does not appear in the
+      Currencies list. It is defined in General Ledger Setup.
+    config_data:
+      currencies:
+        - { code: "USD", description: "US Dollar", iso_code: "USD", exchange_rate: 685.00 }
+        - { code: "SEK", description: "Swedish Krona", iso_code: "SEK", exchange_rate: 63.50 }
+        - { code: "NOK", description: "Norwegian Krone", iso_code: "NOK", exchange_rate: 64.00 }
+        - { code: "EUR", description: "Euro", iso_code: "EUR", exchange_rate: 745.00 }
+    validation_questions:
+      - question: "How many currencies did you set up?"
+        expected_answer: "4 (USD, SEK, NOK, EUR)"
+        hints:
+          - "DKK is the local currency and is not in the list"
+      - question: "What does the exchange rate 100 USD = 685 DKK mean in practical terms?"
+        expected_answer: "1 USD is worth 6.85 DKK. BC uses a ratio format where the Exchange Rate Amount (100) of the foreign currency equals the Relational Exchange Rate Amount (685) in DKK."
+        hints:
+          - "Divide 685 by 100 to get the rate for 1 unit"
+
+  - id: create_first_vendor
+    title: "Create the first vendor — Shenzhen TechParts Co., Ltd."
+    instructions: |
+      Search for "Vendors" (Page 27) to open the Vendor List.
+
+      Click "New" to create a new vendor card (Page 26).
+
+      Fill in the following fields:
+
+        General FastTab:
+          No.:                   V20000
+          Name:                  Shenzhen TechParts Co., Ltd.
+
+        Address & Contact FastTab:
+          Address:               Building 12, Hi-Tech Park
+          Address 2:             Nanshan District
+          City:                  Shenzhen
+          Post Code:             518057
+          Country/Region Code:   CN
+          Phone No.:             +86 755 8632 1234
+          E-Mail:                sales@sztechparts.cn
+
+        Invoicing FastTab:
+          Gen. Bus. Posting Group:  EXPORT
+          VAT Bus. Posting Group:   EXPORT
+          Vendor Posting Group:     FOREIGN
+          Currency Code:            USD
+
+        Payments FastTab:
+          Payment Terms Code:    30 DAYS
+
+      Important notes about this vendor:
+        - China is outside the EU, so the posting group is EXPORT
+        - All Asian vendors trade in USD (the standard currency for international electronics trade)
+        - Vendor Posting Group FOREIGN maps payables to the correct G/L account (2110)
+        - No VAT Registration No. is needed for non-EU vendors
+    config_data:
+      vendor:
+        number: "V20000"
+        name: "Shenzhen TechParts Co., Ltd."
+        address: "Building 12, Hi-Tech Park"
+        address_2: "Nanshan District"
+        city: "Shenzhen"
+        post_code: "518057"
+        country: "CN"
+        phone: "+86 755 8632 1234"
+        email: "sales@sztechparts.cn"
+        gen_bus_posting_group: "EXPORT"
+        vat_bus_posting_group: "EXPORT"
+        vendor_posting_group: "FOREIGN"
+        currency_code: "USD"
+        payment_terms: "30 DAYS"
+    validation_questions:
+      - question: "Why is the Gen. Bus. Posting Group set to EXPORT for this vendor?"
+        expected_answer: "Because China is outside the European Union. All non-EU countries use the EXPORT posting group, which ensures zero VAT on purchases and correct G/L account mapping."
+        hints:
+          - "China is in Asia — is it in the EU?"
+      - question: "Why do all Asian electronics vendors trade in USD instead of their local currency?"
+        expected_answer: "USD is the standard international trade currency for electronics and many global commodities. Trading in USD simplifies pricing and avoids dealing with multiple exotic currencies (CNY, JPY, KRW)."
+        hints:
+          - "Think about what currency is commonly used in international trade"
+
+  - id: create_remaining_vendors
+    title: "Create the remaining two vendors"
+    instructions: |
+      Create the following two vendors using the same process.
+
+      Vendor 2 — Sakura Electronics Co., Ltd. (Japan):
+        No.:                   V20100
+        Name:                  Sakura Electronics Co., Ltd.
+        Address:               3-14-1 Akihabara
+        City:                  Tokyo
+        Post Code:             101-0021
+        Country/Region Code:   JP
+        Phone No.:             +81 3 5678 1234
+        E-Mail:                export@sakura-elec.co.jp
+        Gen. Bus. Posting Group:  EXPORT
+        VAT Bus. Posting Group:   EXPORT
+        Vendor Posting Group:     FOREIGN
+        Currency Code:            USD
+        Payment Terms Code:       45 DAYS
+
+      Vendor 3 — Seoul Components Corp. (South Korea):
+        No.:                   V20200
+        Name:                  Seoul Components Corp.
+        Address:               256 Digital-ro, Guro-gu
+        City:                  Seoul
+        Post Code:             08381
+        Country/Region Code:   KR
+        Phone No.:             +82 2 1234 5678
+        E-Mail:                trade@seoulcomponents.kr
+        Gen. Bus. Posting Group:  EXPORT
+        VAT Bus. Posting Group:   EXPORT
+        Vendor Posting Group:     FOREIGN
+        Currency Code:            USD
+        Payment Terms Code:       30 DAYS
+
+      Note that Sakura Electronics has 45 DAYS payment terms, which is longer
+      than the other vendors. This is common — Japanese suppliers sometimes
+      offer longer payment terms for established relationships.
+    config_data:
+      vendors:
+        - number: "V20100"
+          name: "Sakura Electronics Co., Ltd."
+          address: "3-14-1 Akihabara"
+          city: "Tokyo"
+          post_code: "101-0021"
+          country: "JP"
+          phone: "+81 3 5678 1234"
+          email: "export@sakura-elec.co.jp"
+          gen_bus_posting_group: "EXPORT"
+          vat_bus_posting_group: "EXPORT"
+          vendor_posting_group: "FOREIGN"
+          currency_code: "USD"
+          payment_terms: "45 DAYS"
+        - number: "V20200"
+          name: "Seoul Components Corp."
+          address: "256 Digital-ro, Guro-gu"
+          city: "Seoul"
+          post_code: "08381"
+          country: "KR"
+          phone: "+82 2 1234 5678"
+          email: "trade@seoulcomponents.kr"
+          gen_bus_posting_group: "EXPORT"
+          vat_bus_posting_group: "EXPORT"
+          vendor_posting_group: "FOREIGN"
+          currency_code: "USD"
+          payment_terms: "30 DAYS"
+    validation_questions:
+      - question: "Which vendor has the longest payment terms and what are they?"
+        expected_answer: "Sakura Electronics Co., Ltd. (V20100) with 45 DAYS payment terms"
+        hints:
+          - "Compare the Payment Terms Code across the three vendors"
+      - question: "Do any of the vendors have different posting groups from each other?"
+        expected_answer: "No. All three vendors use the same posting groups: EXPORT (Gen. Bus.), EXPORT (VAT Bus.), and FOREIGN (Vendor). This is because they are all non-EU Asian companies."
+        hints:
+          - "All vendors are from Asia — what does that mean for their posting groups?"
+
+  - id: verify_vendor_list
+    title: "Verify the complete vendor list"
+    instructions: |
+      Open the Vendor List (Page 27) and verify all 3 vendors are present.
+
+      You should see:
+
+        No.      Name                            Country   Gen. Bus. Group  Currency
+        -------  ------------------------------  --------  ---------------  --------
+        V20000   Shenzhen TechParts Co., Ltd.    CN        EXPORT           USD
+        V20100   Sakura Electronics Co., Ltd.    JP        EXPORT           USD
+        V20200   Seoul Components Corp.          KR        EXPORT           USD
+
+      Open each vendor card and verify:
+        1. Address and contact details are correct
+        2. Posting groups are all EXPORT / FOREIGN
+        3. Currency is USD for all vendors
+        4. Payment terms are correct (30, 45, 30 days)
+
+      Compare the vendor setup to the customer setup:
+        - Customers span three posting groups (DOMESTIC, EU, EXPORT)
+        - Vendors are all EXPORT (since all suppliers are Asian)
+        - Customers use various currencies (DKK, SEK, NOK, EUR)
+        - Vendors all use USD
+    config_data: {}
+    validation_questions:
+      - question: "How many vendors are now in the system?"
+        expected_answer: "3"
+        hints:
+          - "Count the rows in the Vendor List"
+      - question: "What is the key difference in posting group diversity between customers and vendors?"
+        expected_answer: "Customers use three different Gen. Bus. Posting Groups (DOMESTIC, EU, EXPORT) based on their country, while all vendors use the same group (EXPORT) because they are all non-EU Asian companies."
+        hints:
+          - "Think about the geographic spread of customers vs vendors"
+
+  - id: understand_currency_impact
+    title: "Understand the impact of foreign currency on vendor transactions"
+    instructions: |
+      This is a conceptual task — no data entry required.
+
+      When Nordic Traders creates a purchase order to Shenzhen TechParts:
+        1. The order amount is in USD (the vendor's currency)
+        2. BC converts USD to DKK using the exchange rate for posting
+        3. The payable (what we owe) is tracked in both USD and DKK
+        4. When we pay, any exchange rate difference creates a gain or loss
+
+      Example:
+        - Purchase order: 1,000 USD at rate 6.85 = 6,850 DKK
+        - Payment 30 days later: rate has changed to 6.90
+        - Payment in DKK: 1,000 x 6.90 = 6,900 DKK
+        - Exchange rate loss: 50 DKK (we paid more DKK than expected)
+
+      This exchange rate gain/loss posts to the G/L accounts configured in
+      the Currency card (typically account 8300 or similar).
+
+      Understanding this is important because Nordic Traders buys in USD
+      but sells in DKK, SEK, NOK, and EUR — so exchange rate risk is
+      a constant factor in the business.
+    config_data: {}
+    validation_questions:
+      - question: "If Nordic Traders buys goods for 10,000 USD at rate 6.85 and pays when the rate is 6.92, is there an exchange rate gain or loss?"
+        expected_answer: "Exchange rate loss of 700 DKK. At purchase: 10,000 x 6.85 = 68,500 DKK. At payment: 10,000 x 6.92 = 69,200 DKK. The loss is 69,200 - 68,500 = 700 DKK."
+        hints:
+          - "If DKK weakens (rate goes up), you need more DKK to pay the same USD amount"
+          - "Loss means you paid more than originally expected"
+      - question: "Why is exchange rate management especially important for Nordic Traders?"
+        expected_answer: "Because the company buys all goods in USD from Asian vendors but sells in multiple Nordic currencies (DKK, SEK, NOK, EUR). Exchange rate fluctuations affect both the purchase cost and sales revenue, creating double exposure."
+        hints:
+          - "Think about the currencies on both the buying and selling side"
+
+validation_questions:
+  - question: "How many vendors did you create and what do they all have in common?"
+    expected_answer: "3 vendors, all from Asia (China, Japan, South Korea), all using EXPORT posting groups, all trading in USD"
+    hints: []
+  - question: "What is the Vendor Posting Group and what G/L account does FOREIGN map to?"
+    expected_answer: "The Vendor Posting Group determines which G/L account is used for trade payables. FOREIGN maps to account 2110 (Trade Payables)."
+    hints: []
+  - question: "Why were currencies set up in this lesson rather than the customer lesson?"
+    expected_answer: "Currencies could have been set up earlier, but they are most relevant when creating vendors because all vendors trade in USD. The customer lesson could have set up SEK, NOK, and EUR, but grouping all currency setup here makes the lesson flow better."
+    hints: []
+
+agent_context: |
+  This lesson mirrors the customer setup but focuses on vendors. Students should
+  notice the symmetry between customer and vendor cards.
+
+  Key teaching points:
+  - Vendor card structure is very similar to customer card
+  - All three vendors use EXPORT because they are all non-EU Asian companies
+  - USD is the standard international trade currency for electronics
+  - Currency exchange rates are entered as a ratio (100 foreign = X DKK)
+  - Exchange rate gains/losses are a real business concern for importers
+  - Payment Terms are shared between customers and vendors (already created)
+  - Vendor Posting Group is analogous to Customer Posting Group
+
+  Common mistakes:
+  - Forgetting to set up exchange rates after creating the currency codes
+  - Using the wrong exchange rate format (entering 6.85 instead of 685.00 for 100 USD)
+  - Setting vendor Gen. Bus. Posting Group to DOMESTIC instead of EXPORT
+  - Trying to enter a VAT Registration No. for non-EU vendors (not needed)
+  - Confusing the Vendor Posting Group with the Gen. Bus. Posting Group
+  - Not creating the 45 DAYS payment term before assigning it to Sakura Electronics
+
+  The currency exchange rate concept may be new to some students.
+  Use the example in the last task to make it concrete. Emphasize that
+  Nordic Traders faces exchange rate risk on both sides (buying in USD,
+  selling in SEK/NOK/EUR).
+
+estimated_duration: "40 minutes"

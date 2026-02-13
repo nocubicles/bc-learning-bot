@@ -1,0 +1,229 @@
+id: purchase_setup
+title: "Purchases & Payables Setup"
+objectives:
+  - "Configure the Purchases & Payables Setup page for Nordic Traders"
+  - "Set up number series for purchase documents (orders, invoices, credit memos, return orders)"
+  - "Understand vendor payment terms and their effect on cash flow"
+  - "Review approval setup basics for purchase documents"
+prerequisites:
+  - "item_pricing"
+tasks:
+  - id: configure_purchases_payables_setup
+    title: "Configure Purchases & Payables Setup"
+    instructions: |
+      Search for "Purchases & Payables Setup" (Page 460).
+
+      This page controls global defaults for all purchasing activity. Configure
+      the following fields:
+
+      General section:
+        Discount Posting:         All Discounts
+        Receipt on Invoice:       No
+        Return Shipment on Cr. Memo: No
+        Invoice Rounding:         Yes
+        Ext. Doc. No. Mandatory:  Yes
+        Exact Cost Reversing Mandatory: Yes
+        Allow VAT Difference:     No
+
+      Default Posting Date:       Work Date
+      Default Qty. to Receive:    Remainder
+
+      Why these settings matter:
+        - Ext. Doc. No. Mandatory: requires the vendor's invoice number, preventing
+          duplicate invoice posting — critical for audit compliance
+        - Exact Cost Reversing Mandatory: ensures purchase returns reverse at the
+          original cost, keeping inventory valuation accurate
+        - Discount Posting: "All Discounts" means line and invoice discounts both
+          post to the discount G/L account defined in the General Posting Setup
+        - Receipt on Invoice = No: we want to use a two-step process (receive first,
+          then invoice) for better control over goods receipt vs. invoice matching
+    config_data:
+      page: 460
+      settings:
+        discount_posting: "All Discounts"
+        receipt_on_invoice: false
+        return_shipment_on_cr_memo: false
+        invoice_rounding: true
+        ext_doc_no_mandatory: true
+        exact_cost_reversing: true
+        allow_vat_difference: false
+        default_posting_date: "Work Date"
+        default_qty_to_receive: "Remainder"
+    validation_questions:
+      - question: "Why do we set 'Ext. Doc. No. Mandatory' to Yes?"
+        expected_answer: "To require the vendor's external invoice number on every purchase invoice, which prevents duplicate invoice entry and supports audit trail compliance"
+        hints:
+          - "Think about what happens if you accidentally enter the same vendor invoice twice"
+      - question: "What does 'Receipt on Invoice = No' mean for our purchasing process?"
+        expected_answer: "It means we use a two-step process: first receive goods (creating a posted receipt), then post the invoice separately. This gives better control over goods receipt and three-way matching."
+        hints:
+          - "Think about separating the physical receipt of goods from the financial recording"
+
+  - id: setup_purchase_number_series
+    title: "Set up number series for purchase documents"
+    instructions: |
+      Search for "No. Series" (Page 456).
+
+      Purchase documents need their own number series. Create the following:
+
+        Code          Description                  Starting No.  Ending No.     Increment
+        ────────────  ─────────────────────────    ────────────  ─────────────  ─────────
+        P-ORD         Purchase Orders              PO-100001     PO-199999      1
+        P-INV         Purchase Invoices             PI-100001     PI-199999      1
+        P-CM          Purchase Credit Memos         PCM-100001    PCM-199999     1
+        P-RO          Purchase Return Orders        PRO-100001    PRO-199999     1
+        P-RCPT        Posted Purchase Receipts      PR-100001     PR-199999      1
+        P-PINV        Posted Purchase Invoices      PPI-100001    PPI-199999     1
+        P-PCM         Posted Purchase Credit Memos  PPCM-100001   PPCM-199999   1
+
+      For each series, check "Default Nos." = Yes.
+
+      Then go back to Purchases & Payables Setup (Page 460), Numbering tab,
+      and assign:
+        Order Nos.:                 P-ORD
+        Invoice Nos.:               P-INV
+        Credit Memo Nos.:           P-CM
+        Return Order Nos.:          P-RO
+        Posted Receipt Nos.:        P-RCPT
+        Posted Invoice Nos.:        P-PINV
+        Posted Credit Memo Nos.:    P-PCM
+    config_data:
+      number_series:
+        - { code: "P-ORD", description: "Purchase Orders", starting_no: "PO-100001", ending_no: "PO-199999" }
+        - { code: "P-INV", description: "Purchase Invoices", starting_no: "PI-100001", ending_no: "PI-199999" }
+        - { code: "P-CM", description: "Purchase Credit Memos", starting_no: "PCM-100001", ending_no: "PCM-199999" }
+        - { code: "P-RO", description: "Purchase Return Orders", starting_no: "PRO-100001", ending_no: "PRO-199999" }
+        - { code: "P-RCPT", description: "Posted Purchase Receipts", starting_no: "PR-100001", ending_no: "PR-199999" }
+        - { code: "P-PINV", description: "Posted Purchase Invoices", starting_no: "PPI-100001", ending_no: "PPI-199999" }
+        - { code: "P-PCM", description: "Posted Purchase Credit Memos", starting_no: "PPCM-100001", ending_no: "PPCM-199999" }
+    validation_questions:
+      - question: "How many number series did you create for purchasing?"
+        expected_answer: "7 — covering purchase orders, invoices, credit memos, return orders, and three posted document series"
+        hints:
+          - "Count both the unposted document series and the posted document series"
+      - question: "Why do posted documents have separate number series from unposted documents?"
+        expected_answer: "Because unposted documents can be modified or deleted, while posted documents are permanent ledger entries. Separate series makes it clear which documents are finalized."
+        hints:
+          - "Think about the legal status of posted vs. unposted documents"
+
+  - id: review_vendor_payment_terms
+    title: "Review vendor payment terms"
+    instructions: |
+      Search for "Payment Terms" (Page 4).
+
+      Verify or create the following payment terms that our Asian vendors use:
+
+        Code      Description                Due Date Calculation  Discount %  Discount Date Calc.
+        ────────  ─────────────────────────  ────────────────────  ──────────  ───────────────────
+        NET30     Net 30 days                30D                   0           (blank)
+        NET60     Net 60 days                60D                   0           (blank)
+        2/10N30   2% 10 days, net 30         30D                   2           10D
+        COD       Cash on delivery           0D                    0           (blank)
+
+      Our vendors use:
+        - Shenzhen TechParts: NET60 (standard for large Chinese electronics suppliers)
+        - Sakura Electronics: NET30 (Japanese suppliers typically shorter terms)
+        - Seoul Components: 2/10N30 (offers early payment discount)
+
+      After reviewing, go to each vendor card (Page 26) and verify the
+      Payment Terms Code is correctly assigned.
+    config_data:
+      payment_terms:
+        - { code: "NET30", description: "Net 30 days", due_date_calc: "30D" }
+        - { code: "NET60", description: "Net 60 days", due_date_calc: "60D" }
+        - { code: "2/10N30", description: "2% 10 days, net 30", due_date_calc: "30D", discount_pct: 2, discount_date_calc: "10D" }
+        - { code: "COD", description: "Cash on delivery", due_date_calc: "0D" }
+      vendor_assignments:
+        - { vendor: "V20000", name: "Shenzhen TechParts", payment_terms: "NET60" }
+        - { vendor: "V30000", name: "Sakura Electronics", payment_terms: "NET30" }
+        - { vendor: "V40000", name: "Seoul Components", payment_terms: "2/10N30" }
+    validation_questions:
+      - question: "Which vendor offers an early payment discount, and what are the terms?"
+        expected_answer: "Seoul Components (V40000) offers 2% discount if paid within 10 days, otherwise net 30"
+        hints:
+          - "Look for the 2/10N30 payment terms code"
+      - question: "Why would Shenzhen TechParts have longer payment terms (NET60) than the others?"
+        expected_answer: "Large Chinese electronics manufacturers often offer longer payment terms (60 days) to attract bulk buyers and account for the longer shipping times from Asia to Europe"
+        hints:
+          - "Consider the geography and shipping logistics from China to Denmark"
+
+  - id: review_approval_setup
+    title: "Review approval setup basics"
+    instructions: |
+      Search for "Approval User Setup" (Page 663).
+
+      For this learning environment, we will keep approvals simple. However,
+      understand the concept:
+
+      In a production environment, you would set up:
+        1. Approval User Setup — defines who can approve what amounts
+        2. Workflows — automate the approval routing
+        3. Approval limits — set maximum amounts users can approve
+
+      For now, verify that your current user is listed with:
+        - Approver ID: (your own User ID — self-approval for learning)
+        - Purchase Amount Approval Limit: 999999999 (unlimited for learning)
+        - Unlimited Purchase Approval: Yes
+
+      Also review the purchase document flow in BC:
+
+        Purchase Quote → Purchase Order → Posted Receipt + Posted Invoice
+                                        ↘ Purchase Return Order → Posted Return Shipment + Posted Credit Memo
+
+      Each stage has distinct purposes:
+        - Quote: preliminary pricing negotiation (optional)
+        - Order: committed purchase with expected receipt date
+        - Receipt: goods physically received in warehouse
+        - Invoice: vendor's bill matched to receipt, creates payable
+        - Return Order / Credit Memo: handles returns and price adjustments
+    config_data:
+      approval_setup:
+        purchase_amount_limit: 999999999
+        unlimited_purchase_approval: true
+    validation_questions:
+      - question: "What is the standard purchase document flow from order to payment?"
+        expected_answer: "Purchase Order → Post Receipt (goods received) → Post Invoice (matched to receipt, creates vendor ledger entry / payable) → Payment"
+        hints:
+          - "Think about the two-step posting: receive first, then invoice"
+      - question: "Why would a company separate the receipt posting from the invoice posting?"
+        expected_answer: "Separating receipt from invoice enables three-way matching (PO vs. receipt vs. invoice), gives the warehouse time to verify quantities before finance posts the invoice, and provides better internal controls"
+        hints:
+          - "Think about who handles goods receipt (warehouse) vs. who handles invoices (finance)"
+
+validation_questions:
+  - question: "What page is used for Purchases & Payables Setup?"
+    expected_answer: "Page 460"
+    hints: []
+  - question: "Name the three purchase document types that create posted records."
+    expected_answer: "Purchase Orders (create Posted Receipts and Posted Invoices), Purchase Credit Memos (create Posted Credit Memos), and Purchase Return Orders (create Posted Return Shipments)"
+    hints: []
+  - question: "Why is Ext. Doc. No. Mandatory important for purchasing?"
+    expected_answer: "It prevents duplicate vendor invoice entry by requiring the vendor's unique invoice reference number on every purchase document"
+    hints: []
+
+agent_context: |
+  This lesson introduces the purchasing module. The student should have already
+  completed item setup and pricing. The focus is on configuration before we
+  start transacting.
+
+  Key teaching points:
+  - The Purchases & Payables Setup page controls global purchasing behavior
+  - Number series keep documents organized and auditable
+  - The two-step posting process (Receive then Invoice) is standard best practice
+    for trading companies — it separates warehouse operations from finance
+  - Payment terms directly affect cash flow forecasting and vendor relationships
+  - Ext. Doc. No. Mandatory is a critical control to prevent duplicate invoices
+
+  Company context for this lesson:
+  - Nordic Traders imports from 3 Asian vendors, all invoiced in USD
+  - Currency conversion is handled automatically by BC using exchange rates
+  - Shenzhen TechParts is the primary vendor for laptops and monitors
+  - All vendors are set up with Gen. Bus. Posting Group = EXPORT and
+    VAT Bus. Posting Group = EXPORT (0% VAT on purchases from outside EU)
+
+  Common mistakes to watch for:
+  - Forgetting to set Default Nos. = Yes on number series
+  - Not assigning number series to the setup page after creating them
+  - Confusing the document number series (P-ORD) with posted number series (P-RCPT)
+
+estimated_duration: "35 minutes"

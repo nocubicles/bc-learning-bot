@@ -1,0 +1,59 @@
+No.,Name,Account Type,Account Category,Account Subcategory
+10100,Cash,Posting,Assets,Cash
+10200,Bank - DKK Operating,Posting,Assets,Cash
+10300,Bank - DKK Savings,Posting,Assets,Cash
+10400,Bank - EUR,Posting,Assets,Cash
+12100,Accounts Receivable - Domestic,Posting,Assets,Accounts Receivable
+12200,Accounts Receivable - Foreign,Posting,Assets,Accounts Receivable
+13100,Inventory - Electronics,Posting,Assets,Inventory
+13200,Inventory - Accessories,Posting,Assets,Inventory
+13300,Inventory in Transit,Posting,Assets,Inventory
+14100,Prepaid Expenses,Posting,Assets,Prepaid Expenses
+14200,VAT Receivable,Posting,Assets,Prepaid Expenses
+15100,Equipment,Posting,Assets,Fixed Assets
+15200,Accumulated Depreciation - Equipment,Posting,Assets,Accumulated Depreciation
+15300,Vehicles,Posting,Assets,Fixed Assets
+15400,Accumulated Depreciation - Vehicles,Posting,Assets,Accumulated Depreciation
+20000,Current Liabilities,Begin-Total,Liabilities,
+20100,Accounts Payable - Domestic,Posting,Liabilities,Current Liabilities
+20200,Accounts Payable - Foreign,Posting,Liabilities,Current Liabilities
+21100,VAT Payable,Posting,Liabilities,Current Liabilities
+21200,VAT Settlement,Posting,Liabilities,Current Liabilities
+22100,Employee Payables,Posting,Liabilities,Current Liabilities
+22200,Tax Withholdings Payable,Posting,Liabilities,Current Liabilities
+22300,ATP Pension Payable,Posting,Liabilities,Current Liabilities
+23100,Accrued Expenses,Posting,Liabilities,Current Liabilities
+24100,Short-term Loans,Posting,Liabilities,Current Liabilities
+24999,Current Liabilities Total,End-Total,Liabilities,
+25100,Long-term Bank Loans,Posting,Liabilities,Long Term Liabilities
+30100,Share Capital,Posting,Equity,Common Stock
+30200,Retained Earnings,Posting,Equity,Retained Earnings
+30300,Current Year Earnings,Posting,Equity,Retained Earnings
+30400,Dividends Paid,Posting,Equity,Distributions
+40000,Revenue,Begin-Total,Income,
+40100,Sales - Electronics,Posting,Income,Income - Sales
+40200,Sales - Accessories,Posting,Income,Income - Sales
+40300,Sales - Services,Posting,Income,Income - Service
+40400,Sales Discounts,Posting,Income,Income - Sales Discounts
+40500,Sales Returns,Posting,Income,Income - Sales Discounts
+40999,Revenue Total,End-Total,Income,
+50000,Cost of Goods Sold,Begin-Total,Cost of Goods Sold,
+50100,COGS - Electronics,Posting,Cost of Goods Sold,Cost of Materials
+50200,COGS - Accessories,Posting,Cost of Goods Sold,Cost of Materials
+50300,Inventory Adjustments,Posting,Cost of Goods Sold,Cost of Materials
+50400,Freight and Customs,Posting,Cost of Goods Sold,Cost of Materials
+50999,Cost of Goods Sold Total,End-Total,Cost of Goods Sold,
+60100,Salaries and Wages,Posting,Expense,Payroll Expense
+60200,Employer Social Contributions,Posting,Expense,Payroll Expense
+60300,Pension Costs,Posting,Expense,Payroll Expense
+61100,Rent,Posting,Expense,Rent Expense
+61200,Utilities,Posting,Expense,Utilities Expense
+62100,Office Supplies,Posting,Expense,Office Expenses
+62200,IT and Software,Posting,Expense,Office Expenses
+63100,Marketing and Advertising,Posting,Expense,Advertising Expense
+63200,Travel Expenses,Posting,Expense,Travel Expense
+64100,Insurance,Posting,Expense,Insurance Expense
+64200,Depreciation,Posting,Expense,Depreciation Expense
+65100,Bank Fees,Posting,Expense,Other Income Expense
+65200,Currency Exchange Gains/Losses,Posting,Expense,Other Income Expense
+65300,Interest Expense,Posting,Expense,Interest Expense

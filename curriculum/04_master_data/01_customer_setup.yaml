@@ -1,0 +1,356 @@
+id: customer_setup
+title: "Setting Up Customers"
+objectives:
+  - "Configure payment terms for Nordic Traders"
+  - "Understand customer card fields and their relationship to posting groups"
+  - "Create all five sample customers with correct posting group assignments"
+  - "Understand the difference between DOMESTIC, EU, and EXPORT customers"
+prerequisites:
+  - "posting_groups"
+tasks:
+  - id: setup_payment_terms
+    title: "Set up Payment Terms"
+    instructions: |
+      Before creating customers, we need to define the payment terms they will use.
+
+      Search for "Payment Terms" (Page 4) using Alt+Q.
+
+      Create the following payment terms:
+
+        Code       Due Date Calculation  Discount %  Description
+        ---------  --------------------  ----------  --------------------------
+        14 DAYS    14D                   0           Net 14 days
+        30 DAYS    30D                   0           Net 30 days
+        45 DAYS    45D                   0           Net 45 days
+
+      The Due Date Calculation field uses a date formula:
+        - 14D means 14 days from the document date
+        - 30D means 30 days from the document date
+        - 45D means 45 days from the document date
+
+      We need 45 DAYS as well because one of our Asian vendors uses it.
+      Payment terms are shared between customers and vendors.
+    config_data:
+      payment_terms:
+        - { code: "14 DAYS", due_date_calc: "14D", discount_pct: 0, description: "Net 14 days" }
+        - { code: "30 DAYS", due_date_calc: "30D", discount_pct: 0, description: "Net 30 days" }
+        - { code: "45 DAYS", due_date_calc: "45D", discount_pct: 0, description: "Net 45 days" }
+    validation_questions:
+      - question: "How many payment terms did you create?"
+        expected_answer: "3 (14 DAYS, 30 DAYS, 45 DAYS)"
+        hints:
+          - "We need terms for both customers and vendors"
+      - question: "What date formula did you enter for 30 DAYS?"
+        expected_answer: "30D"
+        hints:
+          - "D stands for days in BC date formulas"
+
+  - id: create_first_domestic_customer
+    title: "Create the first Danish customer — Nordisk Elektronik A/S"
+    instructions: |
+      Search for "Customers" (Page 22) to open the Customer List.
+
+      Click "New" to create a new customer card (Page 21).
+
+      Fill in the following fields:
+
+        General FastTab:
+          No.:                   C10000
+          Name:                  Nordisk Elektronik A/S
+          Document Sending Profile: (leave default)
+
+        Address & Contact FastTab:
+          Address:               Vesterbrogade 42
+          City:                  Copenhagen
+          Post Code:             1620
+          Country/Region Code:   DK
+          Phone No.:             +45 33 12 45 67
+          E-Mail:                order@nordiskelektronik.dk
+
+        Invoicing FastTab:
+          VAT Registration No.:  DK12345678
+          Gen. Bus. Posting Group:  DOMESTIC
+          VAT Bus. Posting Group:   DOMESTIC
+          Customer Posting Group:   DOMESTIC
+
+        Payments FastTab:
+          Payment Terms Code:    30 DAYS
+
+      Key points about this customer:
+        - It is a Danish company, so all posting groups are DOMESTIC
+        - Currency Code is left blank, which means DKK (the local currency)
+        - The VAT Registration No. starts with "DK" which is the Danish format
+
+      After filling in all fields, close the card to save.
+    config_data:
+      customer:
+        number: "C10000"
+        name: "Nordisk Elektronik A/S"
+        address: "Vesterbrogade 42"
+        city: "Copenhagen"
+        post_code: "1620"
+        country: "DK"
+        phone: "+45 33 12 45 67"
+        email: "order@nordiskelektronik.dk"
+        vat_reg_no: "DK12345678"
+        gen_bus_posting_group: "DOMESTIC"
+        vat_bus_posting_group: "DOMESTIC"
+        customer_posting_group: "DOMESTIC"
+        currency_code: ""
+        payment_terms: "30 DAYS"
+    validation_questions:
+      - question: "What Customer Posting Group did you assign to Nordisk Elektronik?"
+        expected_answer: "DOMESTIC"
+        hints:
+          - "Danish companies use the DOMESTIC posting group"
+      - question: "Why is the Currency Code left blank for this customer?"
+        expected_answer: "Because DKK is the local currency (LCY) of the company. When the currency is the same as the company's local currency, it is left blank in BC."
+        hints:
+          - "Nordic Traders is a Danish company — what is its local currency?"
+          - "In BC, blank currency means the company's local currency"
+
+  - id: create_eu_customer
+    title: "Create the first EU customer — TechSweden AB"
+    instructions: |
+      Back on the Customer List (Page 22), click "New" again.
+
+      Fill in the following fields:
+
+        General FastTab:
+          No.:                   C10100
+          Name:                  TechSweden AB
+
+        Address & Contact FastTab:
+          Address:               Kungsgatan 18
+          City:                  Stockholm
+          Post Code:             111 43
+          Country/Region Code:   SE
+          Phone No.:             +46 8 555 12 34
+          E-Mail:                inkop@techsweden.se
+
+        Invoicing FastTab:
+          VAT Registration No.:  SE556677889901
+          Gen. Bus. Posting Group:  EU
+          VAT Bus. Posting Group:   EU
+          Customer Posting Group:   FOREIGN
+          Currency Code:            SEK
+
+        Payments FastTab:
+          Payment Terms Code:    30 DAYS
+
+      Notice the differences from the Danish customer:
+        - Gen. Bus. Posting Group is EU (not DOMESTIC)
+        - VAT Bus. Posting Group is EU (triggers Reverse Charge VAT)
+        - Customer Posting Group is FOREIGN (not DOMESTIC)
+        - Currency Code is SEK (Swedish Krona) — invoices will be in SEK
+        - VAT Registration No. starts with "SE" (Swedish format)
+    config_data:
+      customer:
+        number: "C10100"
+        name: "TechSweden AB"
+        address: "Kungsgatan 18"
+        city: "Stockholm"
+        post_code: "111 43"
+        country: "SE"
+        phone: "+46 8 555 12 34"
+        email: "inkop@techsweden.se"
+        vat_reg_no: "SE556677889901"
+        gen_bus_posting_group: "EU"
+        vat_bus_posting_group: "EU"
+        customer_posting_group: "FOREIGN"
+        currency_code: "SEK"
+        payment_terms: "30 DAYS"
+    validation_questions:
+      - question: "Why is the Gen. Bus. Posting Group set to EU instead of DOMESTIC?"
+        expected_answer: "Because Sweden is an EU member state. The EU posting group ensures correct VAT handling (Reverse Charge) and correct G/L account mapping for intra-EU transactions."
+        hints:
+          - "Think about where Sweden is geographically and politically"
+          - "EU membership determines the business posting group"
+      - question: "Why is the Customer Posting Group FOREIGN instead of DOMESTIC?"
+        expected_answer: "Because TechSweden is not a Danish company. The Customer Posting Group FOREIGN is used for all non-Danish customers, whether EU or Export."
+        hints:
+          - "Customer Posting Group relates to where receivables are posted"
+          - "We only created two Customer Posting Groups: DOMESTIC and FOREIGN"
+
+  - id: create_remaining_customers
+    title: "Create the remaining three customers"
+    instructions: |
+      Now create the remaining three customers using the same process.
+
+      Customer 3 — Bergen IT Solutions AS (Norwegian — EXPORT):
+        No.:                   C10200
+        Name:                  Bergen IT Solutions AS
+        Address:               Bryggen 7
+        City:                  Bergen
+        Post Code:             5003
+        Country/Region Code:   NO
+        Phone No.:             +47 55 23 45 67
+        E-Mail:                post@bergenitsolutions.no
+        VAT Registration No.:  NO987654321MVA
+        Gen. Bus. Posting Group:  EXPORT
+        VAT Bus. Posting Group:   EXPORT
+        Customer Posting Group:   FOREIGN
+        Currency Code:            NOK
+        Payment Terms Code:       14 DAYS
+
+      Customer 4 — Helsinki Digital Oy (Finnish — EU):
+        No.:                   C10300
+        Name:                  Helsinki Digital Oy
+        Address:               Mannerheimintie 12
+        City:                  Helsinki
+        Post Code:             00100
+        Country/Region Code:   FI
+        Phone No.:             +358 9 123 4567
+        E-Mail:                tilaukset@helsinkidigital.fi
+        VAT Registration No.:  FI11223344
+        Gen. Bus. Posting Group:  EU
+        VAT Bus. Posting Group:   EU
+        Customer Posting Group:   FOREIGN
+        Currency Code:            EUR
+        Payment Terms Code:       30 DAYS
+
+      Customer 5 — Aarhus Computere ApS (Danish — DOMESTIC):
+        No.:                   C10400
+        Name:                  Aarhus Computere ApS
+        Address:               Sondergade 25
+        City:                  Aarhus
+        Post Code:             8000
+        Country/Region Code:   DK
+        Phone No.:             +45 86 12 34 56
+        E-Mail:                salg@aarhuscomputere.dk
+        VAT Registration No.:  DK87654321
+        Gen. Bus. Posting Group:  DOMESTIC
+        VAT Bus. Posting Group:   DOMESTIC
+        Customer Posting Group:   DOMESTIC
+        Currency Code:            (blank — DKK)
+        Payment Terms Code:       14 DAYS
+
+      Pay careful attention to Norway: it is NOT in the EU, so Bergen IT
+      Solutions uses EXPORT posting groups, not EU.
+    config_data:
+      customers:
+        - number: "C10200"
+          name: "Bergen IT Solutions AS"
+          address: "Bryggen 7"
+          city: "Bergen"
+          post_code: "5003"
+          country: "NO"
+          phone: "+47 55 23 45 67"
+          email: "post@bergenitsolutions.no"
+          vat_reg_no: "NO987654321MVA"
+          gen_bus_posting_group: "EXPORT"
+          vat_bus_posting_group: "EXPORT"
+          customer_posting_group: "FOREIGN"
+          currency_code: "NOK"
+          payment_terms: "14 DAYS"
+        - number: "C10300"
+          name: "Helsinki Digital Oy"
+          address: "Mannerheimintie 12"
+          city: "Helsinki"
+          post_code: "00100"
+          country: "FI"
+          phone: "+358 9 123 4567"
+          email: "tilaukset@helsinkidigital.fi"
+          vat_reg_no: "FI11223344"
+          gen_bus_posting_group: "EU"
+          vat_bus_posting_group: "EU"
+          customer_posting_group: "FOREIGN"
+          currency_code: "EUR"
+          payment_terms: "30 DAYS"
+        - number: "C10400"
+          name: "Aarhus Computere ApS"
+          address: "Sondergade 25"
+          city: "Aarhus"
+          post_code: "8000"
+          country: "DK"
+          phone: "+45 86 12 34 56"
+          email: "salg@aarhuscomputere.dk"
+          vat_reg_no: "DK87654321"
+          gen_bus_posting_group: "DOMESTIC"
+          vat_bus_posting_group: "DOMESTIC"
+          customer_posting_group: "DOMESTIC"
+          currency_code: ""
+          payment_terms: "14 DAYS"
+    validation_questions:
+      - question: "Why does Bergen IT Solutions use EXPORT and not EU posting groups?"
+        expected_answer: "Because Norway is not a member of the European Union. Even though it is in the EEA, for VAT purposes in BC it is treated as a non-EU export country."
+        hints:
+          - "Norway is a Nordic country but not an EU member"
+          - "EXPORT is used for countries outside the EU"
+      - question: "How many of the 5 customers use blank (DKK) currency vs a foreign currency?"
+        expected_answer: "2 customers use blank/DKK (Nordisk Elektronik and Aarhus Computere), 3 use foreign currencies (SEK, NOK, EUR)"
+        hints:
+          - "Only the Danish customers trade in DKK"
+
+  - id: verify_customer_list
+    title: "Verify the complete customer list"
+    instructions: |
+      Open the Customer List (Page 22) and verify all 5 customers are present.
+
+      You should see:
+
+        No.      Name                     Country   Gen. Bus. Group  Currency
+        -------  -----------------------  --------  ---------------  --------
+        C10000   Nordisk Elektronik A/S   DK        DOMESTIC         (blank)
+        C10100   TechSweden AB            SE        EU               SEK
+        C10200   Bergen IT Solutions AS   NO        EXPORT           NOK
+        C10300   Helsinki Digital Oy      FI        EU               EUR
+        C10400   Aarhus Computere ApS     DK        DOMESTIC         (blank)
+
+      You can personalize the list view to show these columns by clicking
+      the Settings gear icon on the list and choosing "Columns".
+
+      Verify each customer by opening the card and checking:
+        1. Address and contact details are correct
+        2. Posting groups are correct
+        3. Payment terms are correct
+        4. Currency code is correct
+    config_data: {}
+    validation_questions:
+      - question: "How many customers are now in the system?"
+        expected_answer: "5"
+        hints:
+          - "Count the rows in the Customer List"
+      - question: "How are the customers split by posting group — how many DOMESTIC, EU, and EXPORT?"
+        expected_answer: "2 DOMESTIC (DK), 2 EU (SE and FI), 1 EXPORT (NO)"
+        hints:
+          - "Group them by their Gen. Bus. Posting Group"
+
+validation_questions:
+  - question: "What determines whether a customer gets DOMESTIC, EU, or EXPORT as their Gen. Bus. Posting Group?"
+    expected_answer: "The country where the customer is located. Danish customers are DOMESTIC, customers in EU member states (Sweden, Finland) are EU, and customers outside the EU (Norway) are EXPORT."
+    hints: []
+  - question: "What is the relationship between Gen. Bus. Posting Group and VAT Bus. Posting Group?"
+    expected_answer: "They often align — DOMESTIC/DOMESTIC, EU/EU, EXPORT/EXPORT — because both are determined by the business relationship type. The Gen. Bus. Posting Group controls G/L account mapping, while the VAT Bus. Posting Group controls VAT calculation."
+    hints: []
+  - question: "Why do all non-Danish customers use the FOREIGN Customer Posting Group?"
+    expected_answer: "Because the Customer Posting Group determines which G/L account is used for receivables. We use DOMESTIC for Danish customers and FOREIGN for all others, since the receivables tracking distinction is domestic vs foreign."
+    hints: []
+
+agent_context: |
+  This lesson introduces customers, which is the first time students work with
+  master data cards. Take time to explain the card layout and FastTabs.
+
+  Key teaching points:
+  - The customer card has multiple FastTabs (General, Address, Invoicing, Payments)
+  - Posting groups on the customer card connect to the setup done in the posting_groups lesson
+  - Currency Code blank means LCY (local currency = DKK for this company)
+  - Norway is NOT in the EU — this is a common mistake for Nordic setups
+  - Payment Terms are shared records used by both customers and vendors
+  - VAT Registration No. format varies by country (DK, SE, FI, NO prefixes)
+
+  Common mistakes:
+  - Setting Norway as EU instead of EXPORT (Norway is EEA but not EU)
+  - Forgetting to set the Currency Code for foreign customers
+  - Mixing up Customer Posting Group (DOMESTIC/FOREIGN) with Gen. Bus. Posting Group (DOMESTIC/EU/EXPORT)
+  - Entering the wrong number series (e.g., starting with V instead of C)
+  - Leaving Payment Terms blank (BC may default to immediate payment)
+  - Not understanding that blank Currency Code means DKK, not "no currency"
+
+  If the student is confused about the three-tier posting group system
+  (Gen. Bus., VAT Bus., Customer Posting Group), draw a parallel:
+    Gen. Bus. Posting Group → controls revenue/cost account selection
+    VAT Bus. Posting Group → controls VAT calculation
+    Customer Posting Group → controls receivables account
+
+estimated_duration: "45 minutes"

@@ -1,0 +1,160 @@
+id: company_information
+title: "Configuring Company Information"
+objectives:
+  - "Fill in the Company Information page with Nordic Traders' details"
+  - "Understand the purpose of each key field on the Company Information page"
+  - "Set up VAT registration, bank details, and communication information"
+prerequisites:
+  - "create_company"
+tasks:
+  - id: open_company_info
+    title: "Open the Company Information page"
+    instructions: |
+      Search for "Company Information" (Page 1) using the search bar (Alt+Q).
+
+      This page holds the master details about your company — address, tax
+      registration, bank account, and communication details. All of this
+      information appears on printed documents (invoices, orders, etc.).
+    config_data: {}
+    validation_questions:
+      - question: "What page number is the Company Information page?"
+        expected_answer: "Page 1"
+        hints:
+          - "It is one of the lowest-numbered pages in BC"
+
+  - id: fill_general_section
+    title: "Fill in the General section"
+    instructions: |
+      In the General section of Company Information, enter the following:
+
+        Name:             Nordic Traders ApS
+        Address:          Havnegade 42
+        Address 2:        (leave blank)
+        City:             Copenhagen
+        Post Code:        1058
+        Country/Region:   DK
+        Phone No.:        +45 33 12 34 56
+        E-Mail:           info@nordictraders.dk
+        Home Page:        www.nordictraders.dk
+
+      Make sure the Country/Region Code is set to "DK" — this drives
+      localization features like VAT formatting and local address layout.
+    config_data:
+      name: "Nordic Traders ApS"
+      address: "Havnegade 42"
+      city: "Copenhagen"
+      post_code: "1058"
+      country_region_code: "DK"
+      phone_no: "+45 33 12 34 56"
+      email: "info@nordictraders.dk"
+      home_page: "www.nordictraders.dk"
+    validation_questions:
+      - question: "What post code did you enter for the company?"
+        expected_answer: "1058"
+        hints:
+          - "Copenhagen K area, near the harbour"
+      - question: "What country/region code is set?"
+        expected_answer: "DK"
+        hints:
+          - "Denmark's ISO country code"
+
+  - id: fill_tax_registration
+    title: "Enter VAT and registration numbers"
+    instructions: |
+      Still on the Company Information page, fill in:
+
+        VAT Registration No.:  DK12345678
+        Registration No.:      12345678
+
+      In Denmark, the CVR number (Central Business Register) is an 8-digit
+      number. The VAT Registration No. is prefixed with "DK" followed by the
+      same 8 digits for EU VAT purposes (VIES format).
+
+      Note: In a real scenario you would use the actual company's CVR number.
+      For this training exercise, we use a fictitious number.
+    config_data:
+      vat_registration_no: "DK12345678"
+      registration_no: "12345678"
+    validation_questions:
+      - question: "What is the VAT Registration No. you entered?"
+        expected_answer: "DK12345678"
+        hints:
+          - "Danish VAT numbers start with 'DK' followed by 8 digits"
+
+  - id: fill_bank_details
+    title: "Enter bank account information"
+    instructions: |
+      On the Payments tab of the Company Information page, enter:
+
+        Bank Name:            Danske Bank
+        Bank Branch No.:      3409
+        Bank Account No.:     12345678
+        SWIFT Code:           DABADKKK
+        IBAN:                 DK50 3000 0012 3456 78
+
+      These details appear on printed invoices so customers know where to pay.
+    config_data:
+      bank_name: "Danske Bank"
+      bank_branch_no: "3409"
+      bank_account_no: "12345678"
+      swift_code: "DABADKKK"
+      iban: "DK50 3000 0012 3456 78"
+    validation_questions:
+      - question: "What bank name did you enter?"
+        expected_answer: "Danske Bank"
+        hints:
+          - "One of the largest Danish banks"
+      - question: "What SWIFT code did you use?"
+        expected_answer: "DABADKKK"
+        hints:
+          - "Danske Bank's SWIFT/BIC code"
+
+  - id: set_fiscal_year
+    title: "Verify the fiscal year start date"
+    instructions: |
+      On the Company Information page, check the "Fiscal Year Start Date" field.
+
+      For Nordic Traders, we follow the calendar year. If the field is empty,
+      you will set up accounting periods later. For now, just be aware that
+      Nordic Traders' fiscal year runs January 1 to December 31.
+
+      Also check the "Allow Posting From" and "Allow Posting To" fields.
+      These should be left blank for now — we will configure them after
+      setting up the chart of accounts.
+    config_data:
+      fiscal_year_start: "01-01"
+      fiscal_year_end: "12-31"
+    validation_questions:
+      - question: "Does Nordic Traders use a calendar fiscal year (Jan-Dec)?"
+        expected_answer: "Yes"
+        hints:
+          - "Most Danish companies use a calendar year"
+
+validation_questions:
+  - question: "If you search for 'Company Information' and open the page, what company name is shown?"
+    expected_answer: "Nordic Traders ApS"
+    hints:
+      - "It should match exactly what we configured"
+  - question: "What is the country/region code on the Company Information page?"
+    expected_answer: "DK"
+    hints: []
+
+agent_context: |
+  The Company Information page (Page 1) is one of the most fundamental setup
+  pages in BC. Emphasize that this data flows to all printed documents.
+
+  Key teaching points:
+  - Country/Region Code drives localization (VAT format, address format)
+  - VAT Registration No. format varies by country — Denmark uses DK + 8 digits
+  - IBAN format: DK + 2 check digits + 14 digits
+  - Bank details on invoices are critical for getting paid
+
+  Common mistakes:
+  - Entering country name instead of code ("Denmark" vs "DK")
+  - Forgetting the "DK" prefix on the VAT number
+  - Leaving bank details empty (they'll need them for invoicing later)
+
+  If the student asks about the "Picture" field, it's optional — they can
+  upload a company logo later if they want.
+
+estimated_duration: "20 minutes"

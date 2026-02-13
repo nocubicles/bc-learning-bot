@@ -1,0 +1,347 @@
+id: analysis_views
+title: "Analysis Views, Dimensions, and Budgets"
+objectives:
+  - "Create an Analysis View for dimension-based reporting"
+  - "Analyze financial data by department and region dimensions"
+  - "Create a simple G/L budget for next month"
+  - "Compare actual results to budget using Financial Reports"
+prerequisites:
+  - "balance_sheet"
+tasks:
+  - id: understand_analysis_views
+    title: "Understand Analysis Views and dimension-based reporting"
+    instructions: |
+      Analysis Views in Business Central let you slice and dice G/L data
+      by dimensions — giving you insights that a standard Chart of Accounts
+      cannot provide.
+
+      Recall that dimensions are tags on transactions (like departments,
+      regions, projects, cost centres). If you set up dimensions in earlier
+      lessons, your posted entries may already carry dimension values.
+
+      An Analysis View:
+        1. Selects a set of G/L entries based on date and account filters
+        2. Aggregates the data by up to 4 dimensions
+        3. Presents it in a matrix that you can pivot and explore
+
+      Common use cases for Nordic Traders:
+        - Sales by region (Denmark, EU, Export)
+        - Profitability by product line (Laptops vs Monitors)
+        - Expenses by department (Sales, Admin, Warehouse)
+        - Revenue by customer group
+
+      If you did not set up dimensions earlier, this lesson will create
+      them. Dimensions are one of BC's most powerful analytical features
+      and are heavily used in real implementations.
+    config_data: {}
+    validation_questions:
+      - question: "What is the purpose of an Analysis View?"
+        expected_answer: "To aggregate and analyze G/L entries by dimensions, allowing you to see financial data from different perspectives like department, region, or product line"
+        hints:
+          - "Think of it as a pivot table for your accounting data"
+      - question: "How many dimensions can an Analysis View use simultaneously?"
+        expected_answer: "Up to 4 dimensions"
+        hints:
+          - "Each analysis view has slots for Dimension 1 through Dimension 4"
+
+  - id: setup_dimensions
+    title: "Verify or create dimensions for analysis"
+    instructions: |
+      Search for "Dimensions" (Page 209).
+
+      Verify that the following dimensions exist (create them if not):
+
+        Code          Name                  Code Caption
+        ────────────  ───────────────────   ───────────────
+        DEPARTMENT    Department            Department Code
+        REGION        Region                Region Code
+
+      Then search for "Dimension Values" (Page 560) for each dimension:
+
+      DEPARTMENT dimension values:
+        Code       Name
+        ─────────  ──────────────
+        SALES      Sales Department
+        ADMIN      Administration
+        WAREHOUSE  Warehouse Operations
+
+      REGION dimension values:
+        Code       Name
+        ─────────  ──────────────
+        DK         Denmark
+        EU         European Union
+        EXPORT     Export (non-EU)
+
+      If these dimensions already exist from earlier setup, verify
+      the values and move on.
+
+      To make dimensions truly useful, they should be assigned on
+      transactions. For this exercise, we will set default dimensions
+      on G/L accounts so that future transactions automatically carry
+      the right dimension values.
+
+      Search for any revenue account (e.g. 4100), open the G/L Account Card,
+      and go to Account > Dimensions. Set a default dimension:
+        Dimension Code: DEPARTMENT
+        Dimension Value Code: SALES
+        Value Posting: Same Code
+
+      This means all entries to account 4100 will automatically get
+      the SALES department tag.
+    config_data:
+      dimensions:
+        - code: "DEPARTMENT"
+          name: "Department"
+          values:
+            - { code: "SALES", name: "Sales Department" }
+            - { code: "ADMIN", name: "Administration" }
+            - { code: "WAREHOUSE", name: "Warehouse Operations" }
+        - code: "REGION"
+          name: "Region"
+          values:
+            - { code: "DK", name: "Denmark" }
+            - { code: "EU", name: "European Union" }
+            - { code: "EXPORT", name: "Export (non-EU)" }
+    validation_questions:
+      - question: "What two dimensions did you set up for Nordic Traders?"
+        expected_answer: "DEPARTMENT (Sales, Admin, Warehouse) and REGION (DK, EU, Export)"
+        hints:
+          - "One is organizational, the other is geographical"
+      - question: "What does 'Value Posting = Same Code' mean on a default dimension?"
+        expected_answer: "It forces all entries posted to that G/L account to use the specified dimension value. The user cannot change it or leave it blank."
+        hints:
+          - "It is the strictest enforcement — the dimension value is mandatory and fixed"
+
+  - id: create_analysis_view
+    title: "Create an Analysis View by Department"
+    instructions: |
+      Search for "Analysis Views" (Page 556).
+
+      Click New and create:
+        Code:                 DEPT-ANALYSIS
+        Name:                 Analysis by Department
+        Starting Date:        (first day of your fiscal year, e.g. 01/01/2026)
+        Date Compression:     Month
+        Dimension 1 Code:     DEPARTMENT
+        Dimension 2 Code:     REGION
+
+      Click "Update" to populate the analysis view with existing G/L entries.
+      This may take a moment depending on the volume of data.
+
+      After updating, click "Edit Analysis View" or search for
+      "Analysis by Dimensions" (Page 554) and select your view.
+
+      In the analysis matrix:
+        - Rows show the dimension values (departments)
+        - Columns can show periods, other dimensions, or accounts
+        - You can pivot by changing the "Show as Lines" and "Show as Columns"
+          settings
+
+      Experiment with the view:
+        1. Set Show as Lines = DEPARTMENT, Show as Columns = Period
+           → See spending by department over time
+        2. Set Show as Lines = REGION, Show as Columns = DEPARTMENT
+           → See a cross-tabulation of region vs department
+        3. Apply a G/L Account filter to show only revenue accounts (4100..4300)
+           → See revenue by department and region
+
+      Note: If your existing transactions do not have dimension values
+      (because they were posted before setting up default dimensions),
+      the analysis view may show most data under a "blank" dimension.
+      This is expected — going forward, new transactions will carry dimensions.
+    config_data:
+      analysis_view:
+        code: "DEPT-ANALYSIS"
+        name: "Analysis by Department"
+        date_compression: "Month"
+        dimension_1: "DEPARTMENT"
+        dimension_2: "REGION"
+    validation_questions:
+      - question: "What does Date Compression control in an Analysis View?"
+        expected_answer: "It determines the granularity of data aggregation — Month means data is grouped by month. Other options include Day, Week, Quarter, Year, or Period."
+        hints:
+          - "Higher compression = more summarized data"
+      - question: "Why might your analysis view show most data under a blank dimension?"
+        expected_answer: "Because transactions posted before setting up default dimensions did not have dimension values assigned. Only transactions posted after configuring default dimensions will carry dimension tags."
+        hints:
+          - "Dimensions are only applied to new entries or when explicitly set on documents"
+
+  - id: create_gl_budget
+    title: "Create a G/L Budget for next month"
+    instructions: |
+      Search for "G/L Budgets" (Page 121).
+
+      Click New to create a budget:
+        Name:         BUDGET-2026
+        Description:  Nordic Traders 2026 Budget
+
+      Open the budget to enter budget figures.
+
+      The budget page shows a matrix similar to financial reports.
+      Set the date filter to next month (e.g. 01/03/2026..31/03/2026).
+
+      Enter budget amounts for key accounts based on Nordic Traders'
+      recent activity. Use your Income Statement as a guide:
+
+        Account    Description            Budget Amount (DKK)
+        ────────   ─────────────────────  ───────────────────
+        4100       Product Sales           -300,000  (credit = negative)
+        5100       COGS - Products          180,000  (debit = positive)
+        6100       Salaries & Wages          50,000
+        6200       Rent                      15,000
+        6300       Office Supplies            3,000
+        6400       Marketing                  8,000
+
+      Note: Revenue accounts are entered as negative because they have
+      credit balances. Expense accounts are entered as positive (debit).
+
+      You can also enter budgets with dimensions:
+        - Change the "Budget Dimension 1 Filter" to DEPARTMENT
+        - Enter budget amounts per department
+
+      After entering the budget, close the page. The budget is saved
+      automatically as you enter values.
+    config_data:
+      budget:
+        name: "BUDGET-2026"
+        description: "Nordic Traders 2026 Budget"
+        entries:
+          - { account: "4100", amount: -300000, description: "Product Sales target" }
+          - { account: "5100", amount: 180000, description: "Expected COGS" }
+          - { account: "6100", amount: 50000, description: "Salaries" }
+          - { account: "6200", amount: 15000, description: "Rent" }
+          - { account: "6300", amount: 3000, description: "Office supplies" }
+          - { account: "6400", amount: 8000, description: "Marketing spend" }
+    validation_questions:
+      - question: "Why are revenue budget amounts entered as negative numbers?"
+        expected_answer: "Because revenue accounts have credit balances in BC, which are represented as negative. A budget of -300,000 for Product Sales means you are targeting 300,000 DKK in revenue."
+        hints:
+          - "BC follows debit=positive, credit=negative convention"
+      - question: "What is the budgeted net operating income (revenue - COGS - expenses)?"
+        expected_answer: "300,000 - 180,000 - 50,000 - 15,000 - 3,000 - 8,000 = 44,000 DKK budgeted operating income"
+        hints:
+          - "Subtract all costs and expenses from the revenue target"
+
+  - id: budget_vs_actual
+    title: "Compare actual results to budget using Financial Reports"
+    instructions: |
+      Now create a column definition that includes budget comparison.
+
+      Search for "Financial Report Column Definitions" and create:
+        Name: NT-BUDGET-COLS
+        Description: Actual vs Budget Comparison
+
+      Add these columns:
+
+        Column No.  Column Header      Column Type    Ledger Entry Type  Formula
+        ──────────  ────────────────   ────────────   ─────────────────  ───────
+        10          Actual MTD         Net Change     Entries            (blank)
+        20          Budget MTD         Net Change     Budget Entries     (blank)
+        30          Variance           Formula        (blank)            10-20
+        40          Variance %         Formula        (blank)            30/20*100
+
+      The key difference is the "Ledger Entry Type" field:
+        - "Entries" pulls from actual G/L entries
+        - "Budget Entries" pulls from the G/L budget you just created
+
+      Now go to Financial Reports (Page 103) and either:
+        a) Modify the NT-INCOME-STMT to use the NT-BUDGET-COLS column definition, or
+        b) Create a new Financial Report:
+           Name: NT-BUDGET-COMPARE
+           Row Definition: NT-IS-ROWS
+           Column Definition: NT-BUDGET-COLS
+
+      Run the report with the date filter for next month (or the month
+      where you entered budget figures).
+
+      Review the comparison:
+        - Actual column shows real transactions (may be zero if next month
+          has not started)
+        - Budget column shows your budget amounts
+        - Variance shows the difference (negative = under budget)
+        - Variance % shows the percentage deviation
+
+      This actual-vs-budget comparison is a fundamental management
+      accounting tool used in virtually every business.
+    config_data:
+      column_definition:
+        name: "NT-BUDGET-COLS"
+        description: "Actual vs Budget Comparison"
+        columns:
+          - { column_no: 10, header: "Actual MTD", type: "Net Change", entry_type: "Entries" }
+          - { column_no: 20, header: "Budget MTD", type: "Net Change", entry_type: "Budget Entries" }
+          - { column_no: 30, header: "Variance", type: "Formula", formula: "10-20" }
+          - { column_no: 40, header: "Variance %", type: "Formula", formula: "30/20*100" }
+    validation_questions:
+      - question: "What Ledger Entry Type do you use to pull budget data into a Financial Report column?"
+        expected_answer: "Budget Entries"
+        hints:
+          - "Standard entries come from 'Entries', budget data comes from 'Budget Entries'"
+      - question: "What does a negative variance mean in an actual-vs-budget report for an expense account?"
+        expected_answer: "It means actual spending is less than budgeted — the company is under budget on that expense, which is typically favourable"
+        hints:
+          - "Variance = Actual - Budget. Negative means actual is less than plan."
+      - question: "Why is budget vs actual comparison important for management?"
+        expected_answer: "It enables performance monitoring against plan, early identification of cost overruns or revenue shortfalls, and informed decision-making about resource allocation"
+        hints:
+          - "It is a feedback loop between planning and execution"
+
+validation_questions:
+  - question: "What are the three analytical tools covered in this lesson?"
+    expected_answer: "Analysis Views (dimension-based reporting), G/L Budgets (financial planning), and Budget vs Actual comparison (performance monitoring)"
+    hints: []
+  - question: "How do dimensions enhance financial reporting in BC?"
+    expected_answer: "Dimensions add analytical tags to transactions (department, region, project, etc.) enabling multi-dimensional analysis beyond what the Chart of Accounts alone provides"
+    hints: []
+  - question: "What is the difference between a Financial Report and an Analysis View?"
+    expected_answer: "A Financial Report uses a fixed row/column structure to present formatted financial statements. An Analysis View provides an interactive pivot-table-like experience for exploring data by dimensions."
+    hints: []
+
+agent_context: |
+  This is the final lesson in the Financial Reporting module. It introduces
+  three related but distinct concepts: Analysis Views, G/L Budgets, and
+  budget-vs-actual comparison. Each builds on the Financial Reports framework
+  from the previous two lessons.
+
+  Key teaching points:
+  - Analysis Views are BC's built-in pivot table for G/L data by dimensions
+  - Dimensions must be assigned on transactions to be useful in analysis
+  - Default dimensions on accounts/customers/vendors automate dimension assignment
+  - G/L Budgets are entered at the account level, optionally by dimension
+  - Budget vs Actual comparison uses the same Financial Report framework with
+    different Ledger Entry Types (Entries vs Budget Entries)
+  - Revenue budgets are entered as negative (credit balance convention)
+
+  Common mistakes:
+  - Expecting analysis views to show data when no dimensions were assigned
+    on transactions (results in blank or "no dimension" buckets)
+  - Entering revenue budgets as positive numbers (they must be negative/credit)
+  - Forgetting to click "Update" on the Analysis View after creating it
+  - Setting Date Compression too granularly (Day) on large data sets, causing
+    slow performance
+  - Confusing Analysis Views (dimension pivot) with Financial Reports (formatted
+    statements) — they are complementary tools
+  - Division by zero on the Variance % column when budget is zero (BC may show
+    an error or blank — this is expected)
+
+  For the Nordic Traders scenario:
+  - Most existing transactions may not have dimension values because dimensions
+    were not set up from the start. This is a realistic scenario — dimensions
+    are often added later in an implementation. Explain that going forward,
+    new transactions will pick up the default dimensions.
+  - The budget figures are estimates based on the company's activity level.
+    In reality, budgeting is a collaborative process involving management.
+  - The Variance % column may show errors for lines with zero budget. The
+    student can handle this by adding an IF condition or accepting blank values.
+
+  If the student is engaged, mention these advanced topics briefly:
+  - Account Schedules can also pull from cost accounting entries
+  - Cash Flow forecasting is available in BC
+  - Power BI integration provides more sophisticated analytical dashboards
+  - Consolidation features support multi-company reporting
+
+  This lesson completes the financial reporting cycle: the student has now
+  built an Income Statement, Balance Sheet, dimensional analysis, and
+  budget comparison — the core toolkit of management accounting in BC.
+
+estimated_duration: "40 minutes"

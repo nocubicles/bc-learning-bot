@@ -1,0 +1,258 @@
+id: item_journal
+title: "Item Journals and Inventory Adjustments"
+objectives:
+  - "Understand the purpose and types of item journal entries"
+  - "Create positive and negative adjustments in the Item Journal"
+  - "Post item journal lines and review the resulting ledger entries"
+  - "Read and interpret Item Ledger Entries"
+prerequisites:
+  - "locations"
+tasks:
+  - id: understand_item_journals
+    title: "Understand item journals and entry types"
+    instructions: |
+      Item Journals in Business Central are used for inventory transactions
+      that happen outside the normal purchase/sales document flow.
+
+      Common uses:
+        - Physical inventory counts (correcting stock levels)
+        - Positive adjustments (found extra stock, gifts received)
+        - Negative adjustments (damaged goods, theft, write-offs)
+        - Reclassification (changing location, lot, or serial number)
+        - Transfers between locations (simple method)
+
+      The Item Journal creates Item Ledger Entries with these entry types:
+        - Purchase         (from posted purchase orders)
+        - Sale             (from posted sales orders)
+        - Positive Adjmt.  (increases stock without a purchase)
+        - Negative Adjmt.  (decreases stock without a sale)
+        - Transfer         (moves stock between locations)
+        - Output           (manufacturing output — not used by traders)
+        - Consumption      (manufacturing consumption — not used by traders)
+
+      For Nordic Traders, the item journal is useful for:
+        - Recording initial physical stock counts at the MAIN warehouse
+        - Adjusting stock when physical counts do not match system quantities
+        - Writing off damaged demo units at the DISPLAY showroom
+    config_data: {}
+    validation_questions:
+      - question: "Name three scenarios where you would use an Item Journal instead of a purchase or sales order."
+        expected_answer: "Physical inventory count adjustments, writing off damaged goods, and recording stock found during a warehouse audit"
+        hints:
+          - "Think about inventory changes that are not related to buying or selling"
+      - question: "What is the difference between a Positive Adjustment and a Purchase entry type?"
+        expected_answer: "A Purchase entry comes from posting a purchase order and involves a vendor transaction. A Positive Adjustment is a direct inventory increase without any vendor involvement — used for corrections, gifts, or count adjustments"
+        hints:
+          - "One involves a vendor, the other does not"
+
+  - id: open_item_journal
+    title: "Open the Item Journal and understand the layout"
+    instructions: |
+      Search for "Item Journals" (Page 40).
+
+      The Item Journal has a standard journal layout with these key fields:
+        - Posting Date:     When the entry is recorded
+        - Entry Type:       The type of transaction (Positive Adjmt., Negative Adjmt., etc.)
+        - Document No.:     A reference number for the entry
+        - Item No.:         The item being adjusted
+        - Location Code:    Where the adjustment applies
+        - Quantity:          How many units (always positive — the Entry Type determines direction)
+        - Unit Amount:       The cost per unit
+        - Amount:            Total value (Quantity x Unit Amount)
+
+      Important: In the Item Journal, the Quantity field is always entered as
+      a positive number. The Entry Type determines whether stock goes up or down:
+        - Positive Adjmt. = stock increases
+        - Negative Adjmt. = stock decreases
+
+      Select the journal batch name "DEFAULT" or create a new batch if needed.
+      You can manage batches via the Batch Name dropdown.
+    config_data: {}
+    validation_questions:
+      - question: "If you want to reduce inventory by 2 units, what Entry Type do you use, and what Quantity do you enter?"
+        expected_answer: "Entry Type = Negative Adjmt., Quantity = 2 (positive number — the entry type determines the direction)"
+        hints:
+          - "The quantity is always positive in item journals"
+
+  - id: create_positive_adjustments
+    title: "Create positive adjustment entries for initial stock at MAIN"
+    instructions: |
+      We will record a physical inventory count at the MAIN warehouse.
+      The system already has inventory from the purchase orders you posted
+      (50 laptops received, 30 monitors received, minus units sold).
+
+      However, let us assume that during a physical count at the DISPLAY
+      showroom, you found 2 laptops and 1 monitor that were moved there
+      informally and never recorded in the system.
+
+      In the Item Journal (Page 40), create the following lines:
+
+        Line 1:
+          Posting Date:   (today's date)
+          Entry Type:     Positive Adjmt.
+          Document No.:   ADJ-001
+          Item No.:       (your laptop item number, e.g. LAPTOP-01)
+          Location Code:  DISPLAY
+          Quantity:        2
+          Unit Amount:     (the cost from your purchase order, e.g. 5500 DKK)
+
+        Line 2:
+          Posting Date:   (today's date)
+          Entry Type:     Positive Adjmt.
+          Document No.:   ADJ-001
+          Item No.:       (your monitor item number, e.g. MONITOR-27)
+          Location Code:  DISPLAY
+          Quantity:        1
+          Unit Amount:     (the cost from your purchase order, e.g. 2800 DKK)
+
+      Do NOT post yet — we will add one more line first.
+    config_data:
+      journal_entries:
+        - entry_type: "Positive Adjmt."
+          document_no: "ADJ-001"
+          item: "LAPTOP-01"
+          location: "DISPLAY"
+          quantity: 2
+          unit_amount: 5500
+        - entry_type: "Positive Adjmt."
+          document_no: "ADJ-001"
+          item: "MONITOR-27"
+          location: "DISPLAY"
+          quantity: 1
+          unit_amount: 2800
+    validation_questions:
+      - question: "What Location Code did you use for these adjustments?"
+        expected_answer: "DISPLAY — because the items were found at the showroom"
+        hints:
+          - "The items were physically located at the showroom, not the main warehouse"
+
+  - id: create_negative_adjustment
+    title: "Create a negative adjustment for a damaged item"
+    instructions: |
+      Now add a negative adjustment to write off a damaged monitor at
+      the main warehouse. Assume one monitor was found with a cracked
+      screen during the physical count.
+
+      Add this line to the same journal:
+
+        Line 3:
+          Posting Date:   (today's date)
+          Entry Type:     Negative Adjmt.
+          Document No.:   ADJ-002
+          Item No.:       (your monitor item number, e.g. MONITOR-27)
+          Location Code:  MAIN
+          Quantity:        1
+          Unit Amount:     (cost per unit, e.g. 2800 DKK)
+
+      Now you should have 3 lines in the journal. Review them carefully:
+        - 2 positive adjustments at DISPLAY (found items)
+        - 1 negative adjustment at MAIN (damaged item)
+
+      When you are satisfied, click Post (or press F9) to post all lines.
+      Confirm the posting when prompted.
+
+      After posting, the journal lines will disappear (they have been
+      processed into ledger entries).
+    config_data:
+      journal_entries:
+        - entry_type: "Negative Adjmt."
+          document_no: "ADJ-002"
+          item: "MONITOR-27"
+          location: "MAIN"
+          quantity: 1
+          unit_amount: 2800
+    validation_questions:
+      - question: "After posting, where did the journal lines go?"
+        expected_answer: "They were processed into Item Ledger Entries and Value Entries — the journal lines are cleared after successful posting"
+        hints:
+          - "Journals are temporary workspaces; posting creates permanent ledger entries"
+      - question: "What G/L account is affected by the negative adjustment?"
+        expected_answer: "The Inventory Adjustments account (5300) is debited, and the Inventory account (1210) is credited — reducing inventory value on the balance sheet"
+        hints:
+          - "Check the Inventory Adjmt. Account in the General Posting Setup"
+
+  - id: review_item_ledger_entries
+    title: "Review Item Ledger Entries"
+    instructions: |
+      Search for "Item Ledger Entries" (Page 38).
+
+      This page shows every inventory transaction that has ever occurred.
+      You can filter by Item No. to see entries for a specific item.
+
+      Filter by your laptop item number and review the entries. You should see:
+        - Purchase entries from the posted purchase order (50 units at MAIN)
+        - Sale entries from the posted sales orders (units sold)
+        - Positive Adjmt. entry (2 units at DISPLAY from our journal)
+
+      Filter by your monitor item number and you should see:
+        - Purchase entries (30 units at MAIN)
+        - Sale entries (units sold)
+        - Positive Adjmt. (1 unit at DISPLAY)
+        - Negative Adjmt. (1 unit written off at MAIN)
+
+      Key columns to review:
+        - Entry Type:       Shows what kind of transaction created this entry
+        - Document No.:     Links back to the source document
+        - Quantity:          Positive = in, Negative = out
+        - Remaining Quantity: Units still "open" for cost application
+        - Location Code:     Where the transaction occurred
+        - Cost Amount (Actual): The total cost value of the entry
+
+      Understanding Item Ledger Entries is essential — this is the detailed
+      audit trail of all inventory movements in the system.
+    config_data: {}
+    validation_questions:
+      - question: "In Item Ledger Entries, what does a negative Quantity mean?"
+        expected_answer: "It means inventory was reduced — either through a sale, negative adjustment, transfer out, or consumption"
+        hints:
+          - "Negative quantity = stock went out"
+      - question: "What is the Remaining Quantity field used for?"
+        expected_answer: "It shows how many units from that entry have not yet been applied (matched) to an outbound entry. It is used by the costing engine to apply costs using FIFO or other costing methods"
+        hints:
+          - "It relates to cost application — how BC matches inbound and outbound entries"
+
+validation_questions:
+  - question: "What are the two main Entry Types you used in the Item Journal?"
+    expected_answer: "Positive Adjmt. and Negative Adjmt."
+    hints: []
+  - question: "Where can you see the full history of inventory movements for an item?"
+    expected_answer: "Item Ledger Entries (Page 38)"
+    hints: []
+  - question: "What is the G/L impact of a positive inventory adjustment?"
+    expected_answer: "Debit to Inventory account (1210) and credit to Inventory Adjustments account (5300) — increasing the inventory asset on the balance sheet"
+    hints: []
+
+agent_context: |
+  This lesson introduces item journals as a way to make inventory corrections
+  outside of normal purchase/sales flows. The student already has inventory
+  from prior purchase orders and sales, so the adjustments build on that context.
+
+  Key teaching points:
+  - Item journals are for corrections and adjustments, not routine transactions
+  - The Quantity field is always positive; Entry Type determines direction
+  - Every journal posting creates Item Ledger Entries (inventory sub-ledger)
+    and Value Entries (cost tracking) and G/L Entries (general ledger impact)
+  - Item Ledger Entries are the detailed audit trail — teach the student to
+    use filters and understand the columns
+  - The Remaining Quantity concept is important for understanding costing
+
+  Common mistakes:
+  - Entering a negative number in the Quantity field for a negative adjustment
+    (this will cause an error or unexpected results)
+  - Forgetting to set the Location Code on journal lines
+  - Not understanding that the Unit Amount should reflect the item's cost,
+    not its selling price
+  - Using the wrong Document No. convention (suggest a consistent pattern)
+  - Posting without reviewing all lines first (journal posting is irreversible)
+
+  If the student asks about the "Calculate Inventory" function on the Item
+  Journal, explain that it is a batch job that compares system stock to a
+  target quantity, generating adjustment lines automatically. This is very
+  useful for physical inventory counts but is beyond the scope of this lesson.
+
+  Regarding G/L impact: positive adjustments debit Inventory (1210) and credit
+  Inventory Adjustments (5300). Negative adjustments do the reverse. The
+  specific accounts come from the Inventory Posting Setup and General Posting
+  Setup configured in earlier lessons.
+
+estimated_duration: "30 minutes"

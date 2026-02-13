@@ -1,0 +1,243 @@
+id: locations
+title: "Setting Up Locations and Warehouse Basics"
+objectives:
+  - "Understand why locations are essential for inventory tracking"
+  - "Create warehouse and showroom locations in Business Central"
+  - "Configure Inventory Posting Setup per location"
+  - "Assign default locations to items"
+prerequisites:
+  - "credit_memo"
+tasks:
+  - id: understand_locations
+    title: "Understand the role of locations in Business Central"
+    instructions: |
+      Locations in Business Central represent physical places where you store
+      inventory — warehouses, showrooms, retail shops, or distribution centres.
+
+      Without locations, all inventory is treated as if it exists in one place.
+      With locations, you can:
+        - Track exactly how many units are in each warehouse
+        - Ship from different locations
+        - Receive goods into specific locations
+        - Transfer stock between locations
+        - Run location-specific reports
+
+      Nordic Traders ApS operates from two locations:
+        1. A main warehouse in Copenhagen where all stock is received and stored
+        2. A smaller display showroom where demo units are kept for customers
+
+      In a trading company like Nordic Traders, knowing where your inventory
+      is at all times is critical — especially when you are shipping to
+      customers across the Nordic region.
+
+      Business Central also supports advanced warehouse management (bins,
+      picks, put-aways), but we will start with basic location tracking.
+    config_data: {}
+    validation_questions:
+      - question: "Why would a trading company need multiple locations?"
+        expected_answer: "To track where inventory physically is — for example, separating warehouse stock from showroom demo units, enabling accurate shipping and replenishment decisions"
+        hints:
+          - "Think about the difference between stock available to sell and display units"
+
+  - id: create_main_warehouse
+    title: "Create the MAIN warehouse location"
+    instructions: |
+      Search for "Locations" (Page 15) and click New to create a location.
+
+      Fill in the following fields:
+
+        Code:                MAIN
+        Name:                Copenhagen Warehouse
+        Address:             Havnegade 42
+        City:                Copenhagen
+        Post Code:           1058
+        Country/Region Code: DK
+
+      On the Warehouse tab:
+        Require Receive:     No  (we keep it simple for now)
+        Require Shipment:    No
+        Require Pick:        No
+        Require Put-away:    No
+
+      Leave the advanced warehouse settings off. Nordic Traders does not
+      need full warehouse management at this stage — basic location tracking
+      is sufficient.
+
+      This will be the primary location where all purchase orders are received.
+    config_data:
+      location:
+        code: "MAIN"
+        name: "Copenhagen Warehouse"
+        address: "Havnegade 42"
+        city: "Copenhagen"
+        post_code: "1058"
+        country: "DK"
+        require_receive: false
+        require_shipment: false
+    validation_questions:
+      - question: "What code did you assign to the main warehouse?"
+        expected_answer: "MAIN"
+        hints:
+          - "Location codes are short identifiers — check the Code field"
+      - question: "Did you enable any advanced warehouse features (Require Receive, Shipment, Pick, Put-away)?"
+        expected_answer: "No, all are set to No — we are using basic location tracking"
+        hints:
+          - "For a small trading company, basic locations are sufficient"
+
+  - id: create_display_showroom
+    title: "Create the DISPLAY showroom location"
+    instructions: |
+      Still on the Locations page (Page 15), create another location:
+
+        Code:                DISPLAY
+        Name:                Showroom
+        Address:             Stroeget 15
+        City:                Copenhagen
+        Post Code:           1100
+        Country/Region Code: DK
+
+      Leave all warehouse settings as No, same as the main warehouse.
+
+      The showroom is where Nordic Traders keeps a few demo units for
+      customers to see and test before ordering. Stock here is not
+      meant for direct sale — it is transferred from the main warehouse.
+    config_data:
+      location:
+        code: "DISPLAY"
+        name: "Showroom"
+        address: "Stroeget 15"
+        city: "Copenhagen"
+        post_code: "1100"
+        country: "DK"
+    validation_questions:
+      - question: "How many locations have you created in total?"
+        expected_answer: "2 (MAIN and DISPLAY)"
+        hints:
+          - "One warehouse and one showroom"
+
+  - id: inventory_posting_setup_locations
+    title: "Configure Inventory Posting Setup for each location"
+    instructions: |
+      Search for "Inventory Posting Setup" (Page 5826).
+
+      You should already have a line with a blank Location Code and
+      the RESALE posting group mapped to account 1210 (Inventory).
+      This serves as the default for any location not explicitly configured.
+
+      Now add location-specific lines:
+
+        Location Code: MAIN
+        Invt. Posting Group Code: RESALE
+        Inventory Account: 1210 (Inventory)
+        Inventory Account (Interim): 1210
+
+        Location Code: DISPLAY
+        Invt. Posting Group Code: RESALE
+        Inventory Account: 1210 (Inventory)
+        Inventory Account (Interim): 1210
+
+      For Nordic Traders, both locations use the same Inventory account.
+      In larger companies, you might use separate accounts per warehouse
+      to track inventory value by location on the balance sheet.
+
+      Note: The Inventory Account (Interim) is used when Expected Cost
+      Posting is enabled — it holds the value between receipt and invoice.
+    config_data:
+      posting_setup:
+        - { location: "MAIN", posting_group: "RESALE", inventory_account: "1210" }
+        - { location: "DISPLAY", posting_group: "RESALE", inventory_account: "1210" }
+    validation_questions:
+      - question: "How many lines are now in the Inventory Posting Setup?"
+        expected_answer: "3 — the original blank-location default plus MAIN and DISPLAY"
+        hints:
+          - "The blank location line was created in the posting groups lesson"
+      - question: "Why might a larger company use different inventory accounts per location?"
+        expected_answer: "To track the inventory value held at each warehouse separately on the balance sheet, enabling location-level financial analysis"
+        hints:
+          - "Think about balance sheet reporting by warehouse"
+
+  - id: set_default_location_on_items
+    title: "Configure default location on items"
+    instructions: |
+      Open the Item List (Page 31) and edit each item to set a default location.
+
+      For the laptop item (e.g. LAPTOP-01 or whatever code you used):
+        Open the Item Card (Page 30)
+        On the Warehouse tab, there is no direct "Default Location" field.
+        Instead, locations are typically managed through:
+          1. Stockkeeping Units (SKUs) — for location-specific settings
+          2. Default location on purchase/sales documents
+
+      For now, let us create Stockkeeping Units for our items:
+        On the Item Card, go to Actions > Item > Stockkeeping Units,
+        or search for "Stockkeeping Units" (Page 5700).
+
+      Create SKUs for each item at the MAIN location:
+        Item No.:      (your laptop item number)
+        Location Code: MAIN
+        Replenishment System: Purchase
+
+        Item No.:      (your monitor item number)
+        Location Code: MAIN
+        Replenishment System: Purchase
+
+      SKUs allow you to define location-specific planning and replenishment
+      parameters for each item. This is especially useful when you have items
+      stocked at multiple locations with different reorder policies.
+    config_data:
+      skus:
+        - { item: "LAPTOP-01", location: "MAIN", replenishment: "Purchase" }
+        - { item: "MONITOR-27", location: "MAIN", replenishment: "Purchase" }
+    validation_questions:
+      - question: "What is a Stockkeeping Unit (SKU) in Business Central?"
+        expected_answer: "An SKU is a location-specific variant of an item that allows you to define separate planning, replenishment, and warehouse parameters for each item at each location"
+        hints:
+          - "Think of it as an item-location combination with its own settings"
+      - question: "Why did we set the Replenishment System to Purchase on the SKUs?"
+        expected_answer: "Because Nordic Traders is a trading company that purchases these items from vendors rather than manufacturing them"
+        hints:
+          - "Nordic Traders buys electronics from Asian manufacturers"
+
+validation_questions:
+  - question: "How many locations did you configure for Nordic Traders?"
+    expected_answer: "2 — MAIN (Copenhagen Warehouse) and DISPLAY (Showroom)"
+    hints: []
+  - question: "Why is location tracking important for inventory management?"
+    expected_answer: "It lets you know exactly where stock is physically located, enabling accurate shipping, replenishment, and transfer decisions"
+    hints: []
+  - question: "What is the purpose of the Inventory Posting Setup per location?"
+    expected_answer: "It defines which G/L accounts are debited and credited when inventory transactions occur at each location"
+    hints: []
+
+agent_context: |
+  This lesson introduces the concept of locations and basic warehouse management.
+  The student has already completed purchasing and sales, so they have inventory
+  on hand from the 50 laptops and 30 monitors received, minus items already sold.
+
+  Key teaching points:
+  - Locations are physical places where inventory is stored
+  - Even simple companies benefit from separating warehouse vs showroom stock
+  - Inventory Posting Setup per location controls G/L account mapping
+  - Stockkeeping Units (SKUs) provide location-specific item settings
+  - Transfer orders (mentioned conceptually) move stock between locations
+  - Advanced warehouse features (bins, picks, put-aways) exist but are not needed here
+
+  Common mistakes:
+  - Enabling Require Receive/Shipment/Pick/Put-away when not needed (this adds
+    complexity that a small trading company does not need yet)
+  - Forgetting to set up Inventory Posting Setup for new locations (this causes
+    posting errors when transactions reference the location)
+  - Confusing Location Code with Bin Code (bins are sub-divisions within a location)
+  - Not understanding that the blank-location line in Inventory Posting Setup
+    serves as the fallback default
+
+  If the student asks about transfer orders, explain the concept briefly:
+  transfer orders move stock from one location to another and create item ledger
+  entries at both locations. We will not create one in this lesson but the student
+  can explore it on their own (Page 5740).
+
+  The student may wonder why existing purchase receipts did not have a location.
+  Explain that without locations configured, BC treats all inventory as being in
+  a "blank" location. Going forward, they should specify locations on documents.
+
+estimated_duration: "30 minutes"

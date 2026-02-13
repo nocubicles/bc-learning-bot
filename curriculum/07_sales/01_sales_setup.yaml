@@ -1,0 +1,269 @@
+id: sales_setup
+title: "Sales & Receivables Setup"
+objectives:
+  - "Configure the Sales & Receivables Setup page for Nordic Traders"
+  - "Set up number series for sales documents (orders, invoices, credit memos, return orders)"
+  - "Configure stockout warnings and credit limit warnings"
+  - "Understand the sales document types and their relationships"
+prerequisites:
+  - "purchase_invoice"
+tasks:
+  - id: configure_sales_receivables_setup
+    title: "Configure Sales & Receivables Setup"
+    instructions: |
+      Search for "Sales & Receivables Setup" (Page 459).
+
+      This page controls global defaults for all sales activity. Configure
+      the following fields:
+
+      General section:
+        Discount Posting:             All Discounts
+        Credit Warnings:              Both Warnings
+        Stockout Warning:             Yes
+        Shipment on Invoice:          No
+        Return Receipt on Credit Memo: No
+        Invoice Rounding:             Yes
+        Allow VAT Difference:         No
+        Calc. Inv. Discount:          Yes
+        Exact Cost Reversing Mandatory: Yes
+
+      Default Posting Date:           Work Date
+      Default Quantity to Ship:       Remainder
+
+      Why these settings matter:
+        - Credit Warnings = Both Warnings: BC warns if a customer exceeds their
+          credit limit AND if they have overdue balances — essential for cash flow
+        - Stockout Warning = Yes: BC warns when a sales order line exceeds
+          available inventory — prevents promising items you cannot deliver
+        - Shipment on Invoice = No: we use a two-step process (ship first,
+          then invoice) for better warehouse control, mirroring our purchase process
+        - Calc. Inv. Discount = Yes: automatically calculates invoice discounts
+          based on the Invoice Discount Setup on the customer card
+        - Exact Cost Reversing: ensures sales returns use the original cost
+    config_data:
+      page: 459
+      settings:
+        discount_posting: "All Discounts"
+        credit_warnings: "Both Warnings"
+        stockout_warning: true
+        shipment_on_invoice: false
+        return_receipt_on_credit_memo: false
+        invoice_rounding: true
+        allow_vat_difference: false
+        calc_inv_discount: true
+        exact_cost_reversing: true
+        default_posting_date: "Work Date"
+        default_qty_to_ship: "Remainder"
+    validation_questions:
+      - question: "What does 'Credit Warnings = Both Warnings' do?"
+        expected_answer: "It configures BC to warn the user both when a customer exceeds their credit limit AND when the customer has overdue balances. This provides dual protection for credit risk management."
+        hints:
+          - "There are multiple types of credit warnings: Credit Limit, Overdue Balance, Both, or No Warning"
+      - question: "Why do we set 'Shipment on Invoice = No'?"
+        expected_answer: "To use a two-step process: ship goods first (creating a posted shipment), then invoice separately. This gives the warehouse time to confirm the shipment before finance creates the invoice, providing better internal controls."
+        hints:
+          - "This mirrors the two-step process we set up for purchasing (Receive, then Invoice)"
+
+  - id: setup_sales_number_series
+    title: "Set up number series for sales documents"
+    instructions: |
+      Search for "No. Series" (Page 456).
+
+      Create the following number series for sales documents:
+
+        Code          Description                   Starting No.   Ending No.     Increment
+        ────────────  ───────────────────────────   ────────────   ─────────────  ─────────
+        S-ORD         Sales Orders                  SO-100001      SO-199999      1
+        S-INV         Sales Invoices                SI-100001      SI-199999      1
+        S-CM          Sales Credit Memos            SCM-100001     SCM-199999     1
+        S-RO          Sales Return Orders           SRO-100001     SRO-199999     1
+        S-SHPT        Posted Sales Shipments        SS-100001      SS-199999      1
+        S-PINV        Posted Sales Invoices         PSI-100001     PSI-199999     1
+        S-PCM         Posted Sales Credit Memos     PSCM-100001    PSCM-199999   1
+        S-QUO         Sales Quotes                  SQ-100001      SQ-199999      1
+
+      For each series, check "Default Nos." = Yes.
+
+      Then go back to Sales & Receivables Setup (Page 459), Numbering tab,
+      and assign:
+        Quote Nos.:                 S-QUO
+        Order Nos.:                 S-ORD
+        Invoice Nos.:               S-INV
+        Credit Memo Nos.:           S-CM
+        Return Order Nos.:          S-RO
+        Posted Shipment Nos.:       S-SHPT
+        Posted Invoice Nos.:        S-PINV
+        Posted Credit Memo Nos.:    S-PCM
+    config_data:
+      number_series:
+        - { code: "S-ORD", description: "Sales Orders", starting_no: "SO-100001", ending_no: "SO-199999" }
+        - { code: "S-INV", description: "Sales Invoices", starting_no: "SI-100001", ending_no: "SI-199999" }
+        - { code: "S-CM", description: "Sales Credit Memos", starting_no: "SCM-100001", ending_no: "SCM-199999" }
+        - { code: "S-RO", description: "Sales Return Orders", starting_no: "SRO-100001", ending_no: "SRO-199999" }
+        - { code: "S-SHPT", description: "Posted Sales Shipments", starting_no: "SS-100001", ending_no: "SS-199999" }
+        - { code: "S-PINV", description: "Posted Sales Invoices", starting_no: "PSI-100001", ending_no: "PSI-199999" }
+        - { code: "S-PCM", description: "Posted Sales Credit Memos", starting_no: "PSCM-100001", ending_no: "PSCM-199999" }
+        - { code: "S-QUO", description: "Sales Quotes", starting_no: "SQ-100001", ending_no: "SQ-199999" }
+    validation_questions:
+      - question: "How many number series did you create for sales?"
+        expected_answer: "8 — covering quotes, orders, invoices, credit memos, return orders, and three posted document series (shipments, invoices, credit memos)"
+        hints:
+          - "Sales has one more than purchasing because we also have a Quote series"
+      - question: "What is the difference between S-INV (Sales Invoices) and S-PINV (Posted Sales Invoices)?"
+        expected_answer: "S-INV is for unposted/draft sales invoices that can still be modified or deleted. S-PINV is for posted (finalized) sales invoices that are permanent ledger entries and cannot be modified."
+        hints:
+          - "The P prefix on the code stands for 'Posted'"
+
+  - id: configure_stockout_credit_warnings
+    title: "Configure stockout and credit limit warnings"
+    instructions: |
+      Stockout warnings and credit limit warnings are critical controls for
+      a trading company like Nordic Traders.
+
+      STOCKOUT WARNING:
+      Already enabled in the setup (Stockout Warning = Yes).
+      When you create a sales order line, BC checks:
+        Available Inventory = Quantity on Hand - Reserved Qty. - Qty. on Sales Orders
+      If the line quantity exceeds available inventory, a warning appears.
+
+      To test: After we create our first sales order, try entering a quantity
+      larger than what we purchased (e.g., 100 laptops when we only have 50).
+      BC should warn you about the stockout.
+
+      CREDIT LIMIT WARNING:
+      Already enabled (Credit Warnings = Both Warnings).
+      Credit limits are set per customer on the Customer Card (Page 21):
+
+        Customer            Credit Limit (LCY)
+        ──────────────────  ──────────────────
+        C10000 Nordisk Elektronik A/S     500,000 DKK
+        C20000 Dansk IT ApS              250,000 DKK
+        C30000 TechSweden AB             400,000 SEK (LCY equiv.)
+        C40000 Helsinki Digital Oy       300,000 EUR (LCY equiv.)
+        C50000 Bergen Teknologi AS       350,000 NOK (LCY equiv.)
+
+      When creating a sales order, BC checks if the new order would push
+      the customer's total outstanding balance over their credit limit.
+      If so, a warning is shown (but the order can still be processed
+      if the user confirms).
+
+      Go to each customer card (Page 21) and set the Credit Limit (LCY)
+      field to the values above.
+    config_data:
+      credit_limits:
+        - { customer_no: "C10000", name: "Nordisk Elektronik A/S", credit_limit_lcy: 500000, currency: "DKK" }
+        - { customer_no: "C20000", name: "Dansk IT ApS", credit_limit_lcy: 250000, currency: "DKK" }
+        - { customer_no: "C30000", name: "TechSweden AB", credit_limit_lcy: 400000, currency: "SEK" }
+        - { customer_no: "C40000", name: "Helsinki Digital Oy", credit_limit_lcy: 300000, currency: "EUR" }
+        - { customer_no: "C50000", name: "Bergen Teknologi AS", credit_limit_lcy: 350000, currency: "NOK" }
+    validation_questions:
+      - question: "What triggers a stockout warning?"
+        expected_answer: "A stockout warning is triggered when a sales order line quantity exceeds the available inventory (Quantity on Hand minus quantities already reserved or committed on other sales orders)."
+        hints:
+          - "It compares what you want to sell with what is actually available"
+      - question: "If Nordisk Elektronik has a credit limit of 500,000 DKK and already has 480,000 DKK outstanding, what happens when you create a 50,000 DKK sales order?"
+        expected_answer: "BC displays a credit limit warning because the new order (50,000) plus outstanding balance (480,000 = 530,000) would exceed the credit limit (500,000). The user can still proceed but must acknowledge the warning."
+        hints:
+          - "The warning is not a hard block — it is a notification"
+
+  - id: understand_sales_document_types
+    title: "Understand sales document types and flow"
+    instructions: |
+      Before we start creating sales orders, let us understand the full
+      sales document flow in Business Central:
+
+        Sales Quote → Sales Order → Posted Shipment + Posted Invoice
+                                  ↘ Sales Return Order → Posted Return Receipt + Posted Credit Memo
+
+      Alternatively, for simple sales without an order:
+        Sales Invoice (standalone) → Posted Sales Invoice
+
+      Document types and their purposes:
+
+      1. Sales Quote (Page 41):
+         - Non-binding offer to a customer
+         - Can be converted to a Sales Order with one click
+         - No inventory reservation, no financial impact
+
+      2. Sales Order (Page 42):
+         - Confirmed order from customer
+         - Reserves inventory (optional)
+         - Can be partially shipped and invoiced
+         - Two-step posting: Ship, then Invoice
+
+      3. Sales Invoice (Page 43):
+         - Standalone invoice (no shipment tracking)
+         - Used for services or when order management is not needed
+         - One-step posting: posts both shipment and invoice at once
+
+      4. Sales Credit Memo (Page 44):
+         - Reverses a previously posted invoice (fully or partially)
+         - Can return items to inventory
+         - Should be applied to the original invoice
+
+      5. Sales Return Order (Page 6630):
+         - Formal return process with receipt tracking
+         - Used when physical return of goods is expected
+         - Two-step: Receive return, then post credit memo
+
+      For Nordic Traders, we will primarily use:
+        - Sales Orders (for standard product sales)
+        - Sales Credit Memos (for handling returns)
+    config_data:
+      document_types:
+        - { type: "Sales Quote", page: 41, purpose: "Non-binding offer" }
+        - { type: "Sales Order", page: 42, purpose: "Confirmed order, two-step posting" }
+        - { type: "Sales Invoice", page: 43, purpose: "Standalone invoice" }
+        - { type: "Sales Credit Memo", page: 44, purpose: "Reverse posted invoice" }
+        - { type: "Sales Return Order", page: 6630, purpose: "Formal return process" }
+    validation_questions:
+      - question: "What is the difference between a Sales Order and a Sales Invoice?"
+        expected_answer: "A Sales Order supports two-step posting (ship then invoice separately), inventory reservation, partial shipments, and shipment tracking. A Sales Invoice is a one-step document that posts everything at once and is better suited for services or simple transactions."
+        hints:
+          - "Think about whether you need to track the physical shipment separately"
+      - question: "Which sales document type should Nordic Traders use for selling electronics to customers?"
+        expected_answer: "Sales Orders — because they need to track inventory shipments, support partial deliveries, and maintain the two-step ship-then-invoice process for better warehouse and finance control."
+        hints:
+          - "Physical goods need shipment tracking"
+
+validation_questions:
+  - question: "What page is used for Sales & Receivables Setup?"
+    expected_answer: "Page 459"
+    hints: []
+  - question: "Name two critical warnings that BC provides during sales order entry."
+    expected_answer: "Stockout Warning (when order quantity exceeds available inventory) and Credit Limit Warning (when the order would push the customer over their credit limit)"
+    hints: []
+  - question: "What is the standard sales document flow for a trading company?"
+    expected_answer: "Sales Order → Post Shipment (goods leave warehouse) → Post Invoice (creates customer receivable and revenue recognition)"
+    hints: []
+
+agent_context: |
+  This lesson introduces the sales module. The student should now have inventory
+  from the previous purchasing lessons (50 laptops and 30 monitors) and is ready
+  to start selling.
+
+  Key teaching points:
+  - The Sales & Receivables Setup mirrors the Purchases & Payables Setup in structure
+  - Two-step posting (Ship then Invoice) is the recommended process for trading companies
+  - Stockout warnings prevent over-promising inventory
+  - Credit limit warnings help manage credit risk
+  - The sales document flow (Quote → Order → Shipment + Invoice) is fundamental
+
+  Company context:
+  - Nordic Traders has 5 customers across the Nordics:
+    - 2 Danish (DKK): Nordisk Elektronik A/S (C10000), Dansk IT ApS (C20000)
+    - 1 Swedish (SEK): TechSweden AB (C30000)
+    - 1 Finnish (EUR): Helsinki Digital Oy (C40000)
+    - 1 Norwegian (NOK): Bergen Teknologi AS (C50000)
+  - Customer posting groups: DOMESTIC (Danish) and FOREIGN (others)
+  - Gen. Bus. Posting Groups: DOMESTIC (Danish), EU (Swedish, Finnish, Norwegian)
+  - VAT: 25% for DOMESTIC, Reverse Charge for EU customers
+  - Available inventory: 50 laptops (ITEM-1001) and 30 monitors (ITEM-2001)
+
+  Common mistakes:
+  - Setting up too many or too few number series
+  - Confusing Sales Invoice (standalone) with Posted Sales Invoice (result of posting)
+  - Not understanding that Stockout Warning is a warning, not a hard block
+  - Forgetting to assign number series in the Setup page after creating them
+
+estimated_duration: "35 minutes"

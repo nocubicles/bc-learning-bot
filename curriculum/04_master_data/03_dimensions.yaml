@@ -1,0 +1,275 @@
+id: dimensions
+title: "Setting Up Dimensions"
+objectives:
+  - "Understand the concept of dimensions in Business Central"
+  - "Create DEPARTMENT and REGION dimensions with values"
+  - "Configure default dimensions on customers and vendors"
+  - "Understand how dimensions enable multidimensional reporting"
+prerequisites:
+  - "vendor_setup"
+tasks:
+  - id: understand_dimensions
+    title: "Understand the dimensions concept"
+    instructions: |
+      Dimensions in Business Central are tags you can attach to transactions
+      to enable analysis and reporting beyond what the Chart of Accounts provides.
+
+      Think of it this way:
+        - The G/L account tells you WHAT happened (e.g., revenue, cost of goods)
+        - Dimensions tell you WHO, WHERE, or WHY it happened
+
+      For example, a sale of 10,000 DKK posted to account 4100 (Product Sales):
+        - Without dimensions: you know revenue was 10,000
+        - With dimensions: you know it was 10,000 from SALES department in the DK region
+
+      Business Central supports multiple dimensions simultaneously.
+      The two most common are called "Global Dimension 1" and "Global Dimension 2",
+      which appear directly on document lines and ledger entries.
+
+      Additional dimensions beyond the first two are called "Shortcut Dimensions"
+      and require one extra click to access.
+
+      For Nordic Traders, we will create:
+        - DEPARTMENT (Global Dimension 1) — which department is responsible
+        - REGION (Global Dimension 2) — which geographic region is involved
+    config_data: {}
+    validation_questions:
+      - question: "What is the difference between a G/L account and a dimension?"
+        expected_answer: "A G/L account classifies the type of transaction (revenue, expense, asset, liability), while a dimension adds analytical tags like department or region. G/L accounts are mandatory for posting; dimensions are optional analytical labels."
+        hints:
+          - "G/L accounts answer WHAT, dimensions answer WHO/WHERE/WHY"
+
+  - id: create_department_dimension
+    title: "Create the DEPARTMENT dimension"
+    instructions: |
+      Search for "Dimensions" (Page 536) using Alt+Q.
+
+      Click "New" and create a dimension:
+        Code:        DEPARTMENT
+        Name:        Department
+        Code Caption: Department Code
+        Filter Caption: Department Filter
+
+      After creating the dimension, click on the "Dimension Values" action
+      (or navigate to Page 537) to add the values:
+
+        Code       Name         Dimension Value Type
+        ---------  -----------  --------------------
+        SALES      Sales        Standard
+        PURCHASE   Purchase     Standard
+        ADMIN      Administration  Standard
+
+      These represent the three main departments at Nordic Traders:
+        - SALES: handles customer relationships and order processing
+        - PURCHASE: handles vendor relationships and procurement
+        - ADMIN: handles finance, HR, and general administration
+    config_data:
+      dimension:
+        code: "DEPARTMENT"
+        name: "Department"
+      values:
+        - { code: "SALES", name: "Sales", type: "Standard" }
+        - { code: "PURCHASE", name: "Purchase", type: "Standard" }
+        - { code: "ADMIN", name: "Administration", type: "Standard" }
+    validation_questions:
+      - question: "How many dimension values did you create for DEPARTMENT?"
+        expected_answer: "3 (SALES, PURCHASE, ADMIN)"
+        hints:
+          - "One for each department in the company"
+      - question: "What is the Dimension Value Type for all three values?"
+        expected_answer: "Standard — this means they are regular posting values. Other types like Heading, Total, Begin-Total, and End-Total are used for reporting structure only."
+        hints:
+          - "Standard is the default type for values you post to"
+
+  - id: create_region_dimension
+    title: "Create the REGION dimension"
+    instructions: |
+      Back on the Dimensions page (Page 536), click "New" again and create:
+
+        Code:        REGION
+        Name:        Region
+        Code Caption: Region Code
+        Filter Caption: Region Filter
+
+      Then add dimension values:
+
+        Code       Name            Dimension Value Type
+        ---------  --------------  --------------------
+        DK         Denmark         Standard
+        NORDIC     Nordic (excl. DK)  Standard
+        ASIA       Asia            Standard
+
+      These represent the geographic regions Nordic Traders operates in:
+        - DK: domestic Danish business
+        - NORDIC: Sweden, Norway, Finland (other Nordic countries)
+        - ASIA: China, Japan, South Korea (vendor countries)
+
+      This dimension will help answer questions like:
+        "How much revenue comes from Nordic customers vs Danish customers?"
+        "What is our total purchasing spend in Asia?"
+    config_data:
+      dimension:
+        code: "REGION"
+        name: "Region"
+      values:
+        - { code: "DK", name: "Denmark", type: "Standard" }
+        - { code: "NORDIC", name: "Nordic (excl. DK)", type: "Standard" }
+        - { code: "ASIA", name: "Asia", type: "Standard" }
+    validation_questions:
+      - question: "Why did we create a separate NORDIC region instead of individual country codes?"
+        expected_answer: "For simplicity and because Nordic Traders groups Sweden, Norway, and Finland together for reporting purposes. In a real implementation you might have individual country codes, but for a small trading company, grouping them is practical."
+        hints:
+          - "Think about how many customers we have per Nordic country"
+          - "Reporting at too granular a level can be noise rather than insight"
+
+  - id: set_global_dimensions
+    title: "Configure Global Dimensions"
+    instructions: |
+      Now we need to tell Business Central which dimensions are our two
+      Global Dimensions. These will appear directly on document lines.
+
+      Search for "General Ledger Setup" (Page 118).
+
+      On the Dimensions FastTab, set:
+        Global Dimension 1 Code:  DEPARTMENT
+        Global Dimension 2 Code:  REGION
+
+      Click Yes if BC asks to update related tables.
+
+      This is important because:
+        - Global Dimension 1 and 2 appear as columns on document lines
+          (sales lines, purchase lines, journal lines)
+        - They can be filtered directly in ledger entries without extra clicks
+        - Additional dimensions would need to be accessed via the
+          "Dimensions" action on each line
+
+      After setting this, search for "Change Global Dimensions" (Page 577)
+      to verify the setup. You should see DEPARTMENT as Dimension 1 and
+      REGION as Dimension 2.
+    config_data:
+      global_dimensions:
+        dimension_1: "DEPARTMENT"
+        dimension_2: "REGION"
+    validation_questions:
+      - question: "What are the two Global Dimensions you configured?"
+        expected_answer: "Global Dimension 1 is DEPARTMENT, Global Dimension 2 is REGION"
+        hints:
+          - "Check the General Ledger Setup page, Dimensions FastTab"
+      - question: "Why are Global Dimensions special compared to other dimensions?"
+        expected_answer: "Global Dimensions appear directly on document lines and ledger entries as filterable columns. Other dimensions require navigating to a separate dimensions page. This makes Global Dimensions faster to enter and easier to report on."
+        hints:
+          - "Think about how often you would use these dimensions"
+
+  - id: set_default_dimensions
+    title: "Set default dimensions on customers and vendors"
+    instructions: |
+      Default dimensions automatically fill in when you create a document
+      for a customer or vendor. This saves time and reduces errors.
+
+      For each customer, open the customer card and click
+      "Dimensions" in the Navigate menu (or use the action bar).
+      This opens the Default Dimensions page (Page 540).
+
+      Set the following default dimensions:
+
+      Customer C10000 (Nordisk Elektronik, DK):
+        Dimension Code: REGION    Dimension Value Code: DK     Value Posting: Code Mandatory
+
+      Customer C10100 (TechSweden, SE):
+        Dimension Code: REGION    Dimension Value Code: NORDIC  Value Posting: Code Mandatory
+
+      Customer C10200 (Bergen IT, NO):
+        Dimension Code: REGION    Dimension Value Code: NORDIC  Value Posting: Code Mandatory
+
+      Customer C10300 (Helsinki Digital, FI):
+        Dimension Code: REGION    Dimension Value Code: NORDIC  Value Posting: Code Mandatory
+
+      Customer C10400 (Aarhus Computere, DK):
+        Dimension Code: REGION    Dimension Value Code: DK     Value Posting: Code Mandatory
+
+      For vendors, do the same:
+
+      Vendor V20000 (Shenzhen TechParts, CN):
+        Dimension Code: REGION    Dimension Value Code: ASIA   Value Posting: Code Mandatory
+
+      Vendor V20100 (Sakura Electronics, JP):
+        Dimension Code: REGION    Dimension Value Code: ASIA   Value Posting: Code Mandatory
+
+      Vendor V20200 (Seoul Components, KR):
+        Dimension Code: REGION    Dimension Value Code: ASIA   Value Posting: Code Mandatory
+
+      The "Value Posting" field controls enforcement:
+        - Code Mandatory: the dimension must have a value when posting
+        - Same Code: the dimension must use this exact value
+        - No Code: the dimension must be blank
+        - (blank): no restriction, the default value is just a suggestion
+
+      We use "Code Mandatory" to ensure the REGION dimension is always filled
+      but allow the user to change it if needed.
+
+      Note: We do NOT set a default DEPARTMENT dimension on customers/vendors
+      because the department depends on the transaction, not the customer.
+      A sale to Nordisk Elektronik might be processed by SALES, but a credit
+      memo might be processed by ADMIN.
+    config_data:
+      customer_defaults:
+        - { customer: "C10000", dimension: "REGION", value: "DK", posting: "Code Mandatory" }
+        - { customer: "C10100", dimension: "REGION", value: "NORDIC", posting: "Code Mandatory" }
+        - { customer: "C10200", dimension: "REGION", value: "NORDIC", posting: "Code Mandatory" }
+        - { customer: "C10300", dimension: "REGION", value: "NORDIC", posting: "Code Mandatory" }
+        - { customer: "C10400", dimension: "REGION", value: "DK", posting: "Code Mandatory" }
+      vendor_defaults:
+        - { vendor: "V20000", dimension: "REGION", value: "ASIA", posting: "Code Mandatory" }
+        - { vendor: "V20100", dimension: "REGION", value: "ASIA", posting: "Code Mandatory" }
+        - { vendor: "V20200", dimension: "REGION", value: "ASIA", posting: "Code Mandatory" }
+    validation_questions:
+      - question: "Why did we set default REGION dimensions but not default DEPARTMENT dimensions on customers?"
+        expected_answer: "Because the REGION is always the same for a given customer (determined by their country), but the DEPARTMENT varies by transaction type. A sales order would use SALES, while a credit memo might use ADMIN."
+        hints:
+          - "Is the region of a customer fixed or variable?"
+          - "Is the department handling a transaction fixed or variable?"
+      - question: "What does 'Code Mandatory' mean as a Value Posting rule?"
+        expected_answer: "It means the dimension must have a value when posting a transaction. The default value is pre-filled but can be changed to another valid value. If someone tries to post without a REGION value, BC will show an error."
+        hints:
+          - "Think about what happens if someone forgets to fill in the dimension"
+
+validation_questions:
+  - question: "What two dimensions did you create for Nordic Traders?"
+    expected_answer: "DEPARTMENT (with values SALES, PURCHASE, ADMIN) and REGION (with values DK, NORDIC, ASIA)"
+    hints: []
+  - question: "How do dimensions help a trading company like Nordic Traders?"
+    expected_answer: "Dimensions enable analysis of financial data across multiple perspectives. Nordic Traders can analyze revenue by region (DK vs Nordic vs Asia), costs by department (Sales vs Purchase vs Admin), or any combination — without needing separate G/L accounts for each breakdown."
+    hints: []
+  - question: "What is the total number of default dimension entries you created?"
+    expected_answer: "8 — five for customers (REGION on each) and three for vendors (REGION on each)"
+    hints: []
+
+agent_context: |
+  Dimensions are a powerful but sometimes confusing concept. The key analogy is
+  that G/L accounts are the "what" and dimensions are the "who/where/why".
+
+  Key teaching points:
+  - Dimensions are analytical tags, not accounts
+  - Global Dimension 1 and 2 are special because they appear on document lines
+  - Default dimensions save time and enforce consistency
+  - Value Posting rules control how strictly dimensions are enforced
+  - You can have many dimensions, but only 2 global + 6 shortcut = 8 easily accessible
+  - Dimensions do not affect the G/L balance — they add analytical depth
+
+  Common mistakes:
+  - Confusing dimensions with posting groups (posting groups route to accounts,
+    dimensions add analytical tags)
+  - Setting too many dimensions — start with 2 global dimensions and expand later
+  - Using "Same Code" when "Code Mandatory" is more appropriate (Same Code
+    prevents any changes, which is too restrictive for most cases)
+  - Forgetting to set Global Dimensions in General Ledger Setup
+  - Not understanding that changing Global Dimensions later requires a
+    potentially slow update of all existing entries (via Change Global Dimensions)
+  - Setting DEPARTMENT as a default on customers — this does not make sense
+    because the department depends on who processes the transaction, not the customer
+
+  If the student asks about Shortcut Dimensions (3-8), explain that they work
+  similarly but require clicking "Dimensions" on the document line to access them.
+  For Nordic Traders, two dimensions are sufficient.
+
+estimated_duration: "35 minutes"

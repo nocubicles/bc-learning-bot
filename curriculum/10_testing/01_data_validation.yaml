@@ -1,0 +1,202 @@
+id: data_validation
+title: "Validating Your Implementation Data"
+objectives:
+  - "Understand why data validation is critical before processing transactions"
+  - "Verify Chart of Accounts setup for completeness and correctness"
+  - "Confirm master data posting group assignments"
+  - "Identify and fix missing or inconsistent posting group combinations"
+prerequisites:
+  - "analysis_views"
+tasks:
+  - id: validate_chart_of_accounts
+    title: "Validate Chart of Accounts setup"
+    instructions: |
+      Before we start testing transactions, we need to verify that every piece
+      of configuration is correct. A single missing posting group combination
+      or wrong account category will cause errors later.
+
+      Search for "Chart of Accounts" (Page 16).
+
+      Review every Posting-type account and verify:
+        1. Account Category is set (Assets, Liabilities, Equity, Income, COGS, Expense)
+        2. Account Subcategory is set where appropriate
+        3. Income/Balance field matches the account's nature:
+           - Accounts 1000-3999 should be "Balance Sheet"
+           - Accounts 4000-9999 should be "Income Statement"
+        4. Direct Posting is enabled for accounts that receive transactions
+           (e.g., 4100, 5100, 6100) and disabled for system-only accounts
+        5. Begin-Total / End-Total accounts are properly paired
+
+      Check specifically:
+        - 1210 (Inventory) — Balance Sheet, Assets
+        - 1300 (Trade Receivables) — Balance Sheet, Assets
+        - 2110 (Trade Payables) — Balance Sheet, Liabilities
+        - 4100 (Product Sales) — Income Statement, Income
+        - 5100 (COGS - Products) — Income Statement, COGS
+        - 3200 (Retained Earnings) — Balance Sheet, Equity
+
+      If any account has a missing category, correct it now.
+    config_data:
+      key_accounts_to_verify:
+        - { account: "1210", name: "Inventory", expected_category: "Assets", expected_type: "Balance Sheet" }
+        - { account: "1300", name: "Trade Receivables", expected_category: "Assets", expected_type: "Balance Sheet" }
+        - { account: "2110", name: "Trade Payables", expected_category: "Liabilities", expected_type: "Balance Sheet" }
+        - { account: "4100", name: "Product Sales", expected_category: "Income", expected_type: "Income Statement" }
+        - { account: "5100", name: "COGS - Products", expected_category: "COGS", expected_type: "Income Statement" }
+        - { account: "3200", name: "Retained Earnings", expected_category: "Equity", expected_type: "Balance Sheet" }
+    validation_questions:
+      - question: "What Account Category should account 5100 (COGS - Products) have?"
+        expected_answer: "Cost of Goods Sold (COGS)"
+        hints:
+          - "This is a cost account that tracks the cost of sold inventory"
+      - question: "Why is it important that the Income/Balance field is correct?"
+        expected_answer: "Because it determines whether the account appears on the Balance Sheet or Income Statement, and it affects how the Close Income Statement batch job treats the account at year-end"
+        hints:
+          - "Think about what happens during fiscal year closing"
+
+  - id: validate_customer_vendor_setup
+    title: "Validate customer and vendor master data"
+    instructions: |
+      Search for "Customers" (Page 22) and review the customer list.
+
+      For each customer, verify:
+        1. Gen. Bus. Posting Group is assigned (DOMESTIC, EU, or EXPORT)
+        2. VAT Bus. Posting Group is assigned (DOMESTIC, EU, or EXPORT)
+        3. Customer Posting Group is assigned (DOMESTIC or FOREIGN)
+        4. Payment Terms Code is set
+        5. Currency Code is correct (blank for DKK, EUR for EU customers)
+
+      Then search for "Vendors" (Page 27) and do the same:
+        1. Gen. Bus. Posting Group is assigned
+        2. VAT Bus. Posting Group is assigned
+        3. Vendor Posting Group is assigned
+        4. Payment Terms Code is set
+        5. Currency Code is correct
+
+      Pay special attention to:
+        - Danish customers should have DOMESTIC for both Gen. Bus. and VAT Bus. groups
+        - EU customers (Sweden, Norway, Finland, Germany) should have EU groups
+        - Asian suppliers should have EXPORT groups
+    config_data: {}
+    validation_questions:
+      - question: "What happens if you try to post a sales invoice for a customer with no Gen. Bus. Posting Group?"
+        expected_answer: "BC will give an error because it cannot find the General Posting Setup line to determine which G/L accounts to use for the transaction"
+        hints:
+          - "The posting groups are required to map transactions to G/L accounts"
+      - question: "What currency code should Danish customers have?"
+        expected_answer: "Blank — because DKK is the local currency (LCY), it does not need a currency code"
+        hints:
+          - "The local currency is implied when the field is empty"
+
+  - id: validate_item_setup
+    title: "Validate item master data"
+    instructions: |
+      Search for "Items" (Page 31) and review the item list.
+
+      For each item, verify:
+        1. Gen. Prod. Posting Group is assigned (RETAIL for physical goods)
+        2. VAT Prod. Posting Group is assigned (VAT25 for standard items)
+        3. Inventory Posting Group is assigned (RESALE)
+        4. Costing Method is set (FIFO for Nordic Traders)
+        5. Unit Cost and Unit Price are reasonable
+        6. Base Unit of Measure is set (PCS, BOX, etc.)
+
+      Also check the Replenishment System:
+        - Items you buy from vendors should be set to "Purchase"
+        - The Vendor No. field should reference the correct default supplier
+
+      Use the "Item Card" (Page 30) to drill into each item for detailed review.
+    config_data: {}
+    validation_questions:
+      - question: "What Inventory Posting Group should all trading items have?"
+        expected_answer: "RESALE — because Nordic Traders is a trading company that buys and resells goods"
+        hints:
+          - "We created one inventory posting group for resale items"
+      - question: "Why is the Costing Method important to verify?"
+        expected_answer: "Because it determines how BC calculates COGS when items are sold — FIFO means the oldest purchased units are costed out first"
+        hints:
+          - "Different costing methods (FIFO, Average, Standard) produce different COGS figures"
+
+  - id: validate_posting_setup_matrix
+    title: "Check for missing posting group combinations"
+    instructions: |
+      Search for "General Posting Setup" (Page 314).
+
+      This is the most critical validation step. You need to ensure every
+      combination of Gen. Bus. Posting Group x Gen. Prod. Posting Group has a line.
+
+      We have 3 business groups (DOMESTIC, EU, EXPORT) and 3 product groups
+      (RETAIL, SERVICES, MISC), so we need 9 lines.
+
+      Verify that every line has at minimum:
+        - Sales Account
+        - Purch. Account
+        - COGS Account (for RETAIL lines)
+
+      Then check "VAT Posting Setup" (Page 472):
+        - We need 9 lines (3 VAT Bus. Groups x 3 VAT Prod. Groups)
+        - Verify VAT% is correct (25% for DOMESTIC+VAT25, 0% for exports)
+        - Verify VAT Calculation Type (Reverse Charge for EU+VAT25)
+
+      Also verify "Inventory Posting Setup" (Page 5826):
+        - RESALE group should map to account 1210 (Inventory)
+
+      If any combination is missing, add it now. A missing line will cause
+      a runtime error when you try to post a transaction with that combination.
+    config_data:
+      expected_general_posting_setup_lines: 9
+      expected_vat_posting_setup_lines: 9
+      required_combinations:
+        - { bus: "DOMESTIC", prod: "RETAIL" }
+        - { bus: "DOMESTIC", prod: "SERVICES" }
+        - { bus: "DOMESTIC", prod: "MISC" }
+        - { bus: "EU", prod: "RETAIL" }
+        - { bus: "EU", prod: "SERVICES" }
+        - { bus: "EU", prod: "MISC" }
+        - { bus: "EXPORT", prod: "RETAIL" }
+        - { bus: "EXPORT", prod: "SERVICES" }
+        - { bus: "EXPORT", prod: "MISC" }
+    validation_questions:
+      - question: "How many lines should the General Posting Setup have?"
+        expected_answer: "9 lines — one for each combination of 3 business groups and 3 product groups"
+        hints:
+          - "3 x 3 = 9"
+      - question: "What error would you see if the EXPORT + RETAIL combination were missing?"
+        expected_answer: "A posting error when trying to post a transaction for an export customer buying a retail product — BC would report that the General Posting Setup line does not exist"
+        hints:
+          - "BC looks up the posting setup during posting and fails if the combination is not found"
+
+validation_questions:
+  - question: "What are the main areas you should validate before go-live?"
+    expected_answer: "Chart of Accounts (categories, types), master data posting groups (customers, vendors, items), posting setup matrices (General Posting Setup, VAT Posting Setup, Inventory Posting Setup), and payment/delivery terms"
+    hints: []
+  - question: "Why should validation happen before test transactions?"
+    expected_answer: "Because fixing configuration errors after transactions have been posted is much harder — you may need to reverse entries or even start over"
+    hints: []
+
+agent_context: |
+  This lesson is about careful, methodical verification. The student has built
+  a lot of configuration over the previous modules, and now it is time to
+  check everything before testing with real transactions.
+
+  Key teaching points:
+  - Data validation is a professional practice — consultants always validate
+    before go-live
+  - The posting group matrix must be complete — missing combinations cause
+    runtime errors that are confusing for end users
+  - Account categories affect financial reporting and year-end closing
+  - Master data (customers, vendors, items) must have all posting groups assigned
+
+  Approach:
+  - Be systematic: go through each area one by one
+  - If the student finds errors, help them fix the issues immediately
+  - Use this as a review opportunity — reconnect earlier lessons to the big picture
+  - Emphasize that in real implementations, a validation checklist is standard practice
+
+  Common issues at this stage:
+  - Missing posting group combinations (especially the MISC lines)
+  - Account categories not set (happens if accounts were created manually)
+  - Items missing Inventory Posting Group
+  - VAT Posting Setup missing for edge combinations (e.g., EXPORT + NO VAT)
+
+estimated_duration: "30 minutes"

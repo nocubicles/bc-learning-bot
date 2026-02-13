@@ -1,0 +1,190 @@
+id: item_categories
+title: "Setting Up Item Categories"
+objectives:
+  - "Understand how item categories organize products in Business Central"
+  - "Create item categories for Nordic Traders' product lines"
+  - "Set up units of measure for trading goods"
+  - "Understand the relationship between categories and reporting"
+prerequisites:
+  - "dimensions"
+tasks:
+  - id: understand_item_categories
+    title: "Understand item categories in Business Central"
+    instructions: |
+      Item categories in Business Central provide a way to group and classify
+      your items (products). They serve several purposes:
+
+        1. Organization — quickly filter and find items by category
+        2. Reporting — analyze sales, inventory, and costs by product group
+        3. Attributes — define category-specific attributes (e.g., screen size for monitors)
+        4. Default values — categories can set default posting groups for new items
+
+      Nordic Traders sells four types of products:
+        - Laptops (high-value computing devices)
+        - Monitors (display equipment)
+        - Accessories (peripherals, docking stations, webcams, cases)
+        - Networking (switches and network equipment)
+
+      We will create a category for each product line.
+
+      Note: Item categories are different from Gen. Product Posting Groups.
+        - Gen. Product Posting Group (RETAIL) controls which G/L accounts are used
+        - Item Category (LAPTOPS, MONITORS, etc.) is for product classification
+    config_data: {}
+    validation_questions:
+      - question: "What is the difference between an Item Category and a Gen. Product Posting Group?"
+        expected_answer: "The Gen. Product Posting Group (e.g., RETAIL) determines which G/L accounts transactions post to. The Item Category (e.g., LAPTOPS) is a classification for organizing, filtering, and reporting on items. All Nordic Traders items use RETAIL as their posting group, but they have different categories."
+        hints:
+          - "One affects accounting, the other affects classification"
+          - "All our items post to the same accounts but belong to different product lines"
+
+  - id: create_item_categories
+    title: "Create the four item categories"
+    instructions: |
+      Search for "Item Categories" (Page 5730) using Alt+Q.
+
+      Create the following categories:
+
+        Code          Description                Parent Category
+        ------------  -------------------------  ---------------
+        LAPTOPS       Laptop Computers           (blank)
+        MONITORS      Computer Monitors          (blank)
+        ACCESSORIES   Computer Accessories       (blank)
+        NETWORKING    Networking Equipment        (blank)
+
+      For each category, leave the Parent Category blank — these are all
+      top-level categories. In a larger company you might create a hierarchy
+      (e.g., ELECTRONICS > LAPTOPS), but for Nordic Traders the flat
+      structure is sufficient.
+
+      After creating all four, you can optionally add attributes to each
+      category by clicking "Attributes" on the category card. For now,
+      we will skip attributes and add them later if needed.
+    config_data:
+      categories:
+        - { code: "LAPTOPS", description: "Laptop Computers" }
+        - { code: "MONITORS", description: "Computer Monitors" }
+        - { code: "ACCESSORIES", description: "Computer Accessories" }
+        - { code: "NETWORKING", description: "Networking Equipment" }
+    validation_questions:
+      - question: "How many item categories did you create?"
+        expected_answer: "4 (LAPTOPS, MONITORS, ACCESSORIES, NETWORKING)"
+        hints:
+          - "One for each product line Nordic Traders carries"
+      - question: "How many of the 10 items in sample data belong to each category?"
+        expected_answer: "LAPTOPS: 2, MONITORS: 2, ACCESSORIES: 5, NETWORKING: 1"
+        hints:
+          - "Count the items from the sample data by their itemCategoryCode"
+
+  - id: setup_units_of_measure
+    title: "Set up Units of Measure"
+    instructions: |
+      Before creating items, we need units of measure defined.
+
+      Search for "Units of Measure" (Page 209).
+
+      Create or verify the following unit of measure:
+
+        Code   Description          International Standard Code
+        -----  -------------------  --------------------------
+        PCS    Pieces               PCE
+
+      All Nordic Traders items are sold in pieces (PCS). This is standard
+      for electronics trading — you sell 1 laptop, 2 monitors, 5 keyboards, etc.
+
+      The International Standard Code (PCE) follows the UN/ECE Recommendation 20
+      standard for units of measurement, which is used in electronic invoicing.
+
+      In more complex scenarios you might have:
+        - BOX (for bulk packaging)
+        - PALLET (for warehouse operations)
+        - SET (for bundles)
+
+      But for Nordic Traders, PCS is sufficient for all items.
+
+      Note: If PCS already exists (it is included in some BC configurations),
+      simply verify that it is set up correctly.
+    config_data:
+      units_of_measure:
+        - { code: "PCS", description: "Pieces", international_code: "PCE" }
+    validation_questions:
+      - question: "What unit of measure will all Nordic Traders items use?"
+        expected_answer: "PCS (Pieces)"
+        hints:
+          - "Electronics are sold as individual units"
+      - question: "What is the International Standard Code for Pieces?"
+        expected_answer: "PCE — this follows the UN/ECE Recommendation 20 standard and is used for electronic invoicing (e.g., PEPPOL, EHF)."
+        hints:
+          - "This is relevant for electronic invoicing in the Nordic countries"
+
+  - id: verify_setup
+    title: "Verify categories and units of measure"
+    instructions: |
+      Let us verify everything is ready for item creation.
+
+      1. Open Item Categories (Page 5730) and confirm you see all 4 categories:
+         LAPTOPS, MONITORS, ACCESSORIES, NETWORKING
+
+      2. Open Units of Measure (Page 209) and confirm PCS exists.
+
+      3. Review the posting groups from the earlier lesson:
+         - Gen. Product Posting Group: RETAIL (for all items)
+         - Inventory Posting Group: RESALE (for all items)
+         - VAT Product Posting Group: VAT25 (standard 25% Danish VAT)
+
+      All items will use the same posting groups because Nordic Traders
+      is purely a trading company selling physical goods. The item category
+      provides the product differentiation, not the posting group.
+
+      This is an important design principle in BC:
+        - Posting groups = accounting classification (affects G/L)
+        - Item categories = business classification (affects reporting)
+    config_data:
+      expected_posting_groups:
+        gen_prod_posting_group: "RETAIL"
+        inventory_posting_group: "RESALE"
+        vat_prod_posting_group: "VAT25"
+    validation_questions:
+      - question: "Why do all items share the same posting groups despite being in different categories?"
+        expected_answer: "Because posting groups determine which G/L accounts to use for accounting. All Nordic Traders items are physical retail goods with the same VAT treatment (25%), so they all use RETAIL/RESALE/VAT25. The item category handles the business-level classification for reporting."
+        hints:
+          - "Do laptops and monitors post to different revenue accounts?"
+          - "Posting groups are about accounting, categories are about classification"
+
+validation_questions:
+  - question: "What are the four item categories you created?"
+    expected_answer: "LAPTOPS, MONITORS, ACCESSORIES, NETWORKING"
+    hints: []
+  - question: "What unit of measure do all items use and why?"
+    expected_answer: "PCS (Pieces), because all items are individual physical products sold as discrete units."
+    hints: []
+  - question: "Why is the distinction between posting groups and item categories important?"
+    expected_answer: "Posting groups control the financial accounting (which G/L accounts are debited/credited). Item categories control business reporting and organization. Changing a posting group changes how transactions are recorded in the ledger. Changing a category only affects how items are grouped in reports."
+    hints: []
+
+agent_context: |
+  This is a lighter lesson that prepares for the more detailed item card
+  creation in the next lesson. Use it to reinforce the distinction between
+  accounting classification (posting groups) and business classification
+  (item categories).
+
+  Key teaching points:
+  - Item categories are for organization and reporting, not accounting
+  - All items share the same posting groups because they are all retail goods
+  - Units of measure must exist before items can reference them
+  - PCS is the standard unit for discrete goods (electronics)
+  - International Standard Codes matter for electronic invoicing in Nordics
+  - Categories can have hierarchies, but flat is fine for small catalogs
+
+  Common mistakes:
+  - Confusing item categories with posting groups
+  - Thinking different categories need different posting groups
+  - Forgetting to create units of measure before creating items
+  - Over-complicating the category hierarchy for a simple product catalog
+  - Not understanding that PCS already exists in some BC environments
+
+  This lesson should feel relatively easy after the complexity of posting
+  groups and master data. That is intentional — it gives the student a
+  confidence boost before the detailed item card setup.
+
+estimated_duration: "20 minutes"

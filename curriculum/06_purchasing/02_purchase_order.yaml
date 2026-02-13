@@ -1,0 +1,317 @@
+id: purchase_order
+title: "Creating and Processing a Purchase Order"
+objectives:
+  - "Create a purchase order in a foreign currency (USD)"
+  - "Understand how BC handles currency conversion on purchase documents"
+  - "Review and verify the purchase order before posting"
+  - "Post a partial receipt (Receive only, without invoicing)"
+  - "Understand the impact of receiving on inventory and the G/L"
+prerequisites:
+  - "purchase_setup"
+tasks:
+  - id: create_purchase_order
+    title: "Create a purchase order for Shenzhen TechParts"
+    instructions: |
+      Search for "Purchase Orders" and click "+ New" to create a new purchase order
+      (Page 50).
+
+      Header fields:
+        Buy-from Vendor No.:   V20000 (Shenzhen TechParts)
+
+      When you select the vendor, BC auto-fills:
+        - Vendor Name, Address, Payment Terms (NET60)
+        - Currency Code: USD (because the vendor card has USD)
+        - Gen. Bus. Posting Group: EXPORT
+        - VAT Bus. Posting Group: EXPORT
+        - Vendor Posting Group: FOREIGN
+
+      Set additional header fields:
+        Vendor Invoice No.:    ST-2025-0042 (Shenzhen's invoice reference)
+        Order Date:            (today's work date)
+        Expected Receipt Date: (work date + 30 days)
+        Location Code:         MAIN (or your default warehouse)
+
+      Now add the purchase lines:
+
+        Type    No.        Description              Qty    Direct Unit Cost (USD)
+        ──────  ─────────  ─────────────────────    ─────  ─────────────────────
+        Item    ITEM-1001  ProBook 15 Laptop        50     520.00
+        Item    ITEM-2001  ClearView 27" Monitor    30     280.00
+
+      After entering the lines, observe:
+        - Line Amount (USD) = Qty x Direct Unit Cost
+        - Line 1: 50 x 520.00 = 26,000.00 USD
+        - Line 2: 30 x 280.00 = 8,400.00 USD
+        - Total: 34,400.00 USD
+
+      The lines auto-fill:
+        - Gen. Prod. Posting Group: RETAIL
+        - VAT Prod. Posting Group: VAT25
+        - But because the vendor is EXPORT, VAT% = 0% (no VAT on imports from Asia)
+    config_data:
+      vendor:
+        no: "V20000"
+        name: "Shenzhen TechParts"
+        currency: "USD"
+        payment_terms: "NET60"
+        gen_bus_posting_group: "EXPORT"
+        vat_bus_posting_group: "EXPORT"
+      header:
+        vendor_invoice_no: "ST-2025-0042"
+        location_code: "MAIN"
+      lines:
+        - { type: "Item", no: "ITEM-1001", description: "ProBook 15 Laptop", quantity: 50, direct_unit_cost_usd: 520.00, line_amount_usd: 26000.00 }
+        - { type: "Item", no: "ITEM-2001", description: "ClearView 27\" Monitor", quantity: 30, direct_unit_cost_usd: 280.00, line_amount_usd: 8400.00 }
+      totals:
+        total_excl_vat_usd: 34400.00
+        vat_amount: 0.00
+        total_incl_vat_usd: 34400.00
+    validation_questions:
+      - question: "What currency is shown on the purchase order and why?"
+        expected_answer: "USD — because the vendor card for Shenzhen TechParts has Currency Code = USD. BC automatically uses the vendor's currency for the purchase order."
+        hints:
+          - "Check the vendor card's Currency Code field"
+      - question: "Why is the VAT amount 0.00 on this purchase order?"
+        expected_answer: "Because the vendor has VAT Bus. Posting Group = EXPORT, and in the VAT Posting Setup, EXPORT combinations always have 0% VAT. Imports from outside the EU are not subject to Danish VAT at the point of purchase."
+        hints:
+          - "Look at the VAT Posting Setup for EXPORT + VAT25"
+
+  - id: understand_currency_conversion
+    title: "Understand currency conversion on the purchase order"
+    instructions: |
+      With the purchase order open, look at the header and note the Currency Code = USD.
+
+      BC converts USD amounts to DKK using the exchange rate from the Currency
+      Exchange Rates table. To see the current rate:
+        Search for "Currency Exchange Rates" (Page 483)
+        Find the USD line and note the Exchange Rate Amount and Relational Exch. Rate Amount.
+
+      For example, if the rate is:
+        Exchange Rate Amount: 100
+        Relational Exch. Rate Amount: 685 (meaning 100 USD = 685 DKK)
+
+      Then the PO total converts approximately:
+        34,400.00 USD x 6.85 = 235,640.00 DKK
+
+      On the Purchase Order page, use the Navigate menu or Statistics (F7)
+      to see both the USD (foreign) and DKK (local) amounts.
+
+      Key points about currency in purchasing:
+        1. The purchase order lines show amounts in the VENDOR's currency (USD)
+        2. The General Ledger always posts in LOCAL currency (DKK)
+        3. The exchange rate used is from the Posting Date
+        4. Currency gains/losses are realized when the payment is applied
+        5. You can manually override the exchange rate on a specific document
+           using the Currency Factor field (but this is rarely done)
+    config_data:
+      exchange_rate_example:
+        currency: "USD"
+        exchange_rate_amount: 100
+        relational_exch_rate_amount: 685
+        effective_rate: 6.85
+      conversion_example:
+        usd_total: 34400.00
+        dkk_equivalent: 235640.00
+    validation_questions:
+      - question: "In which currency does the General Ledger post — the vendor's currency or the local currency?"
+        expected_answer: "The General Ledger always posts in the local currency (DKK). The vendor ledger entry tracks both the original USD amount and the DKK equivalent."
+        hints:
+          - "The G/L is always in the company's local currency"
+      - question: "When are currency exchange gains or losses realized?"
+        expected_answer: "Currency exchange gains or losses are realized when the payment is applied to the invoice, because the exchange rate at payment time may differ from the rate at invoice time."
+        hints:
+          - "Think about what happens if the USD/DKK rate changes between invoice date and payment date"
+
+  - id: review_po_printout
+    title: "Review the purchase order printout"
+    instructions: |
+      Before posting, review the purchase order document:
+
+      On the Purchase Order page (Page 50), go to:
+        Actions → Print/Send → Print
+
+      Or use the Report menu to preview the "Purchase Order" report.
+
+      Verify the following on the printout:
+        1. Vendor address is correct (Shenzhen TechParts, China)
+        2. Ship-to address is your warehouse (Nordic Traders, Denmark)
+        3. Line items, quantities, and unit costs match what you entered
+        4. Payment Terms show NET60
+        5. Currency is USD
+        6. The expected receipt date is reasonable
+
+      Also review the Purchase Order Statistics (Ctrl+F7 or navigate to Statistics):
+        - Total Amount (USD): 34,400.00
+        - VAT Amount: 0.00
+        - Total Including VAT: 34,400.00
+        - Amount in LCY (DKK): (depends on exchange rate)
+
+      This review step is important in real business operations — catching errors
+      before posting saves significant time compared to correcting posted entries.
+    config_data: {}
+    validation_questions:
+      - question: "Where can you see both the USD and DKK amounts for this purchase order?"
+        expected_answer: "In the Purchase Order Statistics page (Ctrl+F7 or F7), which shows totals in both the document currency (USD) and the local currency (DKK)"
+        hints:
+          - "Try pressing F7 or Ctrl+F7 on the Purchase Order page"
+
+  - id: post_receipt
+    title: "Post the purchase receipt (Receive only)"
+    instructions: |
+      Now we will post the receipt — this means the goods have arrived at our
+      warehouse, but we have NOT yet received the vendor's invoice.
+
+      On the Purchase Order page (Page 50):
+        1. Go to Actions → Posting → Post
+        2. BC asks "Receive and/or Invoice?"
+        3. Select "Receive" only (do NOT select Invoice)
+        4. Confirm the posting
+
+      After posting the receipt, observe what has changed:
+
+      On the Purchase Order:
+        - Quantity Received now shows 50 (for laptops) and 30 (for monitors)
+        - Qty. to Receive is now 0 (all received)
+        - Qty. to Invoice still shows 50 and 30 (invoice not yet posted)
+        - The order status is now "Released" (partially posted)
+
+      To see the posted receipt:
+        Search for "Posted Purchase Receipts" (Page 145)
+        Find the new receipt document (PR-100001 or similar)
+        Review the lines — they match the PO lines
+
+      To check inventory impact:
+        Search for "Item Ledger Entries" (Page 38)
+        Filter on Item No. = ITEM-1001
+        You should see a new entry:
+          Entry Type: Purchase
+          Quantity: 50
+          Location Code: MAIN
+          Remaining Quantity: 50
+
+      The receipt posting creates:
+        1. Item Ledger Entries (inventory increased by 50 laptops and 30 monitors)
+        2. Value Entries (cost assigned to inventory)
+        3. G/L Entries (interim/expected cost entries if using Expected Cost Posting)
+
+      IMPORTANT: No vendor ledger entry is created yet — that happens when
+      we post the invoice in the next lesson.
+    config_data:
+      posting_action: "Receive"
+      expected_results:
+        item_ledger_entries:
+          - { item_no: "ITEM-1001", entry_type: "Purchase", quantity: 50, location: "MAIN" }
+          - { item_no: "ITEM-2001", entry_type: "Purchase", quantity: 30, location: "MAIN" }
+        purchase_order_status:
+          qty_received_line1: 50
+          qty_received_line2: 30
+          qty_to_invoice_line1: 50
+          qty_to_invoice_line2: 30
+    validation_questions:
+      - question: "After posting the receipt, what is the Qty. to Invoice on the purchase order lines?"
+        expected_answer: "50 for the laptops and 30 for the monitors — the full quantities, because we only received but did not invoice yet"
+        hints:
+          - "Receipt and invoice are separate posting steps"
+      - question: "Does posting a receipt create a vendor ledger entry (payable)?"
+        expected_answer: "No. A vendor ledger entry is only created when the invoice is posted. The receipt only affects inventory (Item Ledger Entries) and potentially interim G/L entries."
+        hints:
+          - "Think about it: you owe money when you accept the invoice, not when goods arrive"
+
+  - id: verify_inventory_impact
+    title: "Verify the inventory and G/L impact of the receipt"
+    instructions: |
+      Let us confirm what the receipt posting created across the system.
+
+      1. Check Item Ledger Entries (Page 38):
+         Filter: Item No. = ITEM-1001
+         You should see:
+           Document No.: (Posted Receipt No.)
+           Entry Type: Purchase
+           Quantity: 50
+           Cost Amount (Actual): 26,000.00 USD equivalent in DKK
+           Remaining Quantity: 50
+
+         Do the same for ITEM-2001 (30 monitors).
+
+      2. Check Item Card inventory (Page 30):
+         Open item ITEM-1001 (ProBook 15 Laptop)
+         In the Inventory section, Quantity on Hand should now be 50
+         (assuming this is the first purchase)
+
+         Open item ITEM-2001 (ClearView 27" Monitor)
+         Quantity on Hand should be 30
+
+      3. Check Warehouse Entries (if using warehouse management):
+         Search for "Warehouse Entries" (Page 7334)
+         You should see put-away entries for both items at MAIN location
+
+      4. Check Value Entries (Page 5802):
+         Filter: Item No. = ITEM-1001
+         Entry Type: Direct Cost
+         Cost Amount (Actual): should show the DKK equivalent of 26,000 USD
+
+      The receipt has now increased our inventory. In the next lesson,
+      we will post the invoice which creates the vendor payable.
+    config_data:
+      verification_pages:
+        item_ledger_entries: 38
+        item_card: 30
+        warehouse_entries: 7334
+        value_entries: 5802
+    validation_questions:
+      - question: "What is the Quantity on Hand for ITEM-1001 after posting the receipt?"
+        expected_answer: "50 units (the quantity we received on the purchase order)"
+        hints:
+          - "Check the Item Card for ITEM-1001"
+      - question: "What Entry Type appears in the Item Ledger Entries for this receipt?"
+        expected_answer: "Purchase"
+        hints:
+          - "Item Ledger Entry types include Purchase, Sale, Positive Adj., Negative Adj., Transfer, etc."
+
+validation_questions:
+  - question: "What is the total purchase order value in USD?"
+    expected_answer: "34,400.00 USD (26,000.00 for 50 laptops + 8,400.00 for 30 monitors)"
+    hints: []
+  - question: "Explain the difference between Receive and Invoice in purchase order posting."
+    expected_answer: "Receive records the physical arrival of goods (updates inventory via Item Ledger Entries) but creates no payable. Invoice records the financial obligation to the vendor (creates Vendor Ledger Entry and full G/L entries). They can be done together or separately."
+    hints: []
+  - question: "Why is there 0% VAT on a purchase from China?"
+    expected_answer: "Because the vendor is classified as EXPORT (non-EU). In the VAT Posting Setup, all EXPORT combinations have 0% VAT. Import VAT may be handled separately through customs declarations, not through the standard purchase invoice."
+    hints: []
+
+agent_context: |
+  This is the first transactional lesson — the student creates their first real
+  document in BC. This is a significant milestone and the student may need extra
+  guidance navigating the Purchase Order page.
+
+  Key teaching points:
+  - The Purchase Order page (Page 50) has a header/lines structure
+  - Vendor selection auto-populates many fields from the vendor card
+  - Foreign currency (USD) is handled automatically via exchange rates
+  - VAT is 0% for EXPORT vendors — explain the difference between no VAT
+    on the purchase and import VAT/customs duty (which is outside BC scope
+    for this curriculum)
+  - Partial posting (Receive only) is the standard workflow for trading companies
+  - After receipt, inventory is updated but no payable exists yet
+
+  Company context:
+  - This is the first PO for Nordic Traders — purchasing from their primary
+    vendor Shenzhen TechParts
+  - 50 ProBook 15 Laptops at 520 USD each = 26,000 USD
+  - 30 ClearView 27" Monitors at 280 USD each = 8,400 USD
+  - All amounts on the PO are in USD; GL entries will be in DKK
+  - Shenzhen TechParts has NET60 payment terms
+
+  Navigation tips for the student:
+  - Use Alt+N to create a new document
+  - Use F7 or Ctrl+F7 for statistics
+  - Use Ctrl+Enter to move from header to lines
+  - The posting options appear as a dialog asking "Receive" / "Invoice" / "Receive and Invoice"
+
+  Common mistakes:
+  - Forgetting to enter the Vendor Invoice No. (required because we set Ext. Doc. No. Mandatory)
+  - Selecting "Receive and Invoice" instead of just "Receive"
+  - Not understanding that the amounts shown on lines are in USD, not DKK
+  - Looking for vendor ledger entries after receipt (they do not exist yet)
+
+estimated_duration: "45 minutes"

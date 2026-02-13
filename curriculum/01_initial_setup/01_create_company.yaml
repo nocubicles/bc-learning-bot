@@ -1,0 +1,93 @@
+id: create_company
+title: "Creating the Nordic Traders Company"
+objectives:
+  - "Understand the concept of companies in Business Central"
+  - "Create a new company in a sandbox environment"
+  - "Verify the company is accessible and ready for configuration"
+prerequisites: []
+tasks:
+  - id: open_companies_page
+    title: "Open the Companies page"
+    instructions: |
+      In your Business Central sandbox, use the Search icon (magnifying glass)
+      or press Alt+Q and search for "Companies".
+
+      Open the Companies page (Page 357). You will see the default company
+      that was created with your sandbox (typically called "My Company" or
+      "CRONUS ...").
+
+      Take note of the existing companies listed — we will create a new one.
+    config_data: {}
+    validation_questions:
+      - question: "How many companies do you see listed on the Companies page?"
+        expected_answer: "At least 1 (the default CRONUS or My Company)"
+        hints:
+          - "Search for 'Companies' using Alt+Q"
+          - "The Companies page lists all companies in your environment"
+
+  - id: create_new_company
+    title: "Create the Nordic Traders company"
+    instructions: |
+      On the Companies page, click "New" in the action bar to create a new company.
+
+      In the "Create New Company" wizard:
+        1. Company Name: Enter "Nordic Traders ApS"
+        2. Select "Create New - No Data"
+           (We want a blank company so we can set everything up from scratch)
+        3. Click "Finish" to create the company
+
+      The company creation may take a few minutes. Wait until the process completes.
+    config_data:
+      company_name: "Nordic Traders ApS"
+      company_type: "Create New - No Data"
+    validation_questions:
+      - question: "What name did you give the new company?"
+        expected_answer: "Nordic Traders ApS"
+        hints:
+          - "The company name should be exactly 'Nordic Traders ApS'"
+      - question: "Which option did you select — with evaluation data or no data?"
+        expected_answer: "Create New - No Data"
+        hints:
+          - "We want a blank company to configure from scratch"
+
+  - id: switch_to_company
+    title: "Switch to the new company"
+    instructions: |
+      After the company is created, you need to switch to it.
+
+      Click the Settings gear icon (top right) and choose "My Settings" (Page 9176).
+      In the Company field, change the value to "Nordic Traders ApS".
+      Click OK.
+
+      Business Central will reload and you should now be working inside
+      the Nordic Traders ApS company. Verify by checking the company name
+      displayed in the top bar of the application.
+    config_data:
+      target_company: "Nordic Traders ApS"
+    validation_questions:
+      - question: "What company name do you see in the top bar after switching?"
+        expected_answer: "Nordic Traders ApS"
+        hints:
+          - "Check the company name displayed at the top of the browser window or in the navigation bar"
+
+validation_questions:
+  - question: "Is the Nordic Traders ApS company created and are you now working inside it?"
+    expected_answer: "Yes"
+    hints:
+      - "The company name should appear in the top navigation bar"
+
+agent_context: |
+  This is the very first lesson. The student may be completely new to BC.
+  Be patient and explain UI navigation carefully — how to use the search bar,
+  where the Settings icon is, what the top bar shows.
+
+  Common mistakes:
+  - Choosing "Create New - Setup Data Only" instead of "No Data"
+  - Not waiting for company creation to complete
+  - Forgetting to switch to the new company after creating it
+  - Typo in company name (ensure exact match: "Nordic Traders ApS")
+
+  If the student already has a CRONUS company, reassure them that creating
+  a new blank company is intentional — we will configure everything ourselves.
+
+estimated_duration: "15 minutes"

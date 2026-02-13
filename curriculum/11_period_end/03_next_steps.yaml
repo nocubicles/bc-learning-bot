@@ -1,0 +1,311 @@
+id: next_steps
+title: "Next Steps and Continuing Your BC Journey"
+objectives:
+  - "Review what was accomplished throughout the curriculum"
+  - "Understand the role of AL extensions for customization"
+  - "Learn about integration options (APIs, Power Automate)"
+  - "Consider go-live planning best practices"
+  - "Identify further learning paths in the Business Central ecosystem"
+prerequisites:
+  - "close_fiscal_year"
+tasks:
+  - id: review_accomplishments
+    title: "Review what you have built"
+    instructions: |
+      Let us take a step back and review everything you have accomplished.
+
+      Starting from an empty Business Central environment, you have:
+
+        Module 1:  Created the company Nordic Traders ApS
+                   Configured company information for a Danish trading company
+                   Completed assisted setup wizards
+
+        Module 2:  Designed and imported a Chart of Accounts
+                   Following the Danish standard numbering (1000-9999)
+                   Configured account categories for financial reporting
+
+        Module 3:  Set up the General Ledger infrastructure
+                   Created posting groups (General, Customer, Vendor, Inventory, VAT)
+                   Configured the General Posting Setup matrix (9 combinations)
+                   Set up Danish VAT (25% moms) with EU reverse charge
+
+        Module 4:  Created master data
+                   Customers (Danish, EU, and international)
+                   Vendors (Asian electronics suppliers)
+                   Items with costing and posting groups
+
+        Module 5:  Processed purchase transactions
+                   Purchase orders, receipts, and invoices
+                   Vendor payments through payment journals
+
+        Module 6:  Processed sales transactions
+                   Sales orders, shipments, and invoices
+                   Customer cash receipts
+
+        Module 7:  Managed inventory
+                   Stock tracking, transfers, cost adjustments
+
+        Module 8:  Built financial reports
+                   Balance Sheet, Income Statement
+                   Account schedules and analysis views
+
+        Module 9:  Advanced reporting and analysis
+
+        Module 10: Validated the implementation and tested end-to-end
+                   Corrected errors using reversals and credit memos
+
+        Module 11: Closed the accounting period and fiscal year
+                   Transferred profit to retained earnings
+
+      This is a complete implementation cycle. Well done.
+    config_data: {}
+    validation_questions:
+      - question: "How many modules did you complete?"
+        expected_answer: "11 modules — covering the full cycle from company creation to fiscal year closing"
+        hints:
+          - "Count them in the summary above"
+      - question: "What is the logical flow of a BC implementation?"
+        expected_answer: "Company setup → Chart of Accounts → Posting groups → Master data → Transactions (purchase and sales) → Inventory management → Financial reporting → Testing and validation → Period-end closing"
+        hints:
+          - "Think about what depends on what — you cannot post transactions without posting groups, and you cannot close the year without transactions"
+
+  - id: al_extensions_overview
+    title: "Introduction to AL extensions"
+    instructions: |
+      Business Central is built on a modern extension model. All customizations
+      are done through AL extensions — you do NOT modify the base application.
+
+      Key concepts:
+
+      1. AL Language:
+         - AL is the programming language for Business Central
+         - It is similar to the old C/AL language but modernized
+         - Development is done in Visual Studio Code with the AL extension
+
+      2. Extension Types:
+         - Table Extensions: Add fields to existing tables
+         - Page Extensions: Add fields/actions to existing pages
+         - Codeunit Subscribers: Hook into existing business logic via events
+         - Report Extensions: Modify existing reports
+
+      3. Common Customizations:
+         - Adding custom fields to the Customer or Item card
+         - Creating new pages for specialized workflows
+         - Adding validation logic (e.g., custom credit limit checks)
+         - Building integrations with external systems
+
+      4. AppSource:
+         - Microsoft's marketplace for BC extensions
+         - Thousands of ready-made extensions for specific industries
+         - Nordic Traders could use extensions for: e-commerce integration,
+           warehouse management, document management, etc.
+
+      As a BC consultant, understanding AL development (even at a basic level)
+      helps you communicate with developers and design better solutions.
+    config_data: {}
+    validation_questions:
+      - question: "What programming language is used for Business Central customizations?"
+        expected_answer: "AL — the modern programming language for BC extensions, developed in Visual Studio Code"
+        hints:
+          - "It replaced the older C/AL language"
+      - question: "Why are extensions preferred over modifying the base application?"
+        expected_answer: "Extensions keep the base application untouched, which means upgrades are easier, customizations are isolated and testable, and multiple extensions can coexist without conflicts"
+        hints:
+          - "Think about what happens when Microsoft releases a new version of BC"
+
+  - id: integrations_overview
+    title: "Integration options for Business Central"
+    instructions: |
+      Modern Business Central runs in the cloud and offers rich integration
+      capabilities.
+
+      1. BC APIs (REST/OData):
+         - BC exposes standard APIs for common entities (Customers, Items,
+           Sales Orders, etc.)
+         - Custom API pages can be created via AL extensions
+         - Used for: e-commerce platforms, CRM systems, external portals
+
+      2. Power Automate (formerly Microsoft Flow):
+         - Low-code/no-code automation platform
+         - BC has a native Power Automate connector
+         - Example flows:
+           * Send an email when a sales order exceeds a threshold
+           * Create a Teams notification when inventory drops below minimum
+           * Sync customer data between BC and a CRM
+
+      3. Power BI:
+         - You already learned about analysis views — Power BI takes reporting
+           to the next level
+         - BC has built-in Power BI integration
+         - Pre-built Power BI reports for BC are available from Microsoft
+
+      4. Dataverse / Dynamics 365 Integration:
+         - BC integrates with Dynamics 365 Sales (CRM)
+         - Dataverse provides a common data platform
+         - Useful for companies using multiple Dynamics 365 products
+
+      For Nordic Traders, practical first integrations might include:
+        - Power Automate: approval flows for purchase orders above 50,000 DKK
+        - API: connecting an e-commerce webshop for automated order creation
+        - Power BI: executive dashboard for sales and inventory metrics
+    config_data: {}
+    validation_questions:
+      - question: "What are the main integration technologies for Business Central?"
+        expected_answer: "REST/OData APIs for system-to-system integration, Power Automate for workflow automation, Power BI for advanced reporting, and Dataverse for Dynamics 365 ecosystem integration"
+        hints:
+          - "Think about the Microsoft ecosystem"
+      - question: "Give one practical integration example for a trading company like Nordic Traders."
+        expected_answer: "Connecting an e-commerce webshop via BC APIs to automatically create sales orders when customers place online orders, or using Power Automate to send alerts when inventory drops below a minimum quantity"
+        hints:
+          - "Think about what would save time or reduce manual work"
+
+  - id: go_live_planning
+    title: "Go-live planning considerations"
+    instructions: |
+      In a real implementation, going live is a carefully planned event.
+      Here is what a typical go-live plan includes:
+
+      1. Data Migration:
+         - Opening balances for G/L accounts
+         - Open customer and vendor entries (unpaid invoices)
+         - Inventory quantities and values
+         - Fixed asset registers
+         - Historical data (optional, for reporting)
+
+      2. User Training:
+         - End users need training on their specific workflows
+         - Power users need deeper training on setup and troubleshooting
+         - Documentation: quick reference guides for daily tasks
+
+      3. Parallel Run (optional):
+         - Running both the old system and BC simultaneously for a period
+         - Comparing outputs to verify BC produces correct results
+         - Common for risk-averse organizations
+
+      4. Go-Live Cutover:
+         - Choose a cutover date (often the start of a fiscal period)
+         - Final data migration on the cutover weekend
+         - Day 1 support: have the implementation team on standby
+         - First period-end close is the critical milestone
+
+      5. Post-Go-Live Support:
+         - Hypercare period (2-4 weeks of intensive support)
+         - Bug fixes and configuration adjustments
+         - User feedback collection
+         - Performance monitoring
+
+      For Nordic Traders, a recommended go-live approach:
+        - Go live on January 1 (start of fiscal year)
+        - Migrate opening balances as of December 31
+        - Run a two-week parallel test in December
+        - First month-end close in January confirms success
+    config_data: {}
+    validation_questions:
+      - question: "Why is the start of a fiscal period the best time to go live?"
+        expected_answer: "Because it provides a clean cutoff — opening balances are set as of the last day of the previous period, and the new system starts with a fresh period. This simplifies data migration and avoids splitting transactions across systems."
+        hints:
+          - "Think about accounting periods and clean starting points"
+      - question: "What is a parallel run?"
+        expected_answer: "A period where both the old system and the new BC system run simultaneously, processing the same transactions, so the outputs can be compared to verify BC produces correct results"
+        hints:
+          - "It is a risk mitigation strategy"
+
+  - id: celebrate_and_continue
+    title: "Congratulations and continuing your learning"
+    instructions: |
+      You have completed the BC Learning Bot curriculum.
+
+      You now have practical, hands-on knowledge of:
+        - Business Central company setup and configuration
+        - Chart of Accounts design and implementation
+        - The posting group architecture that drives BC's accounting engine
+        - Master data management for customers, vendors, and items
+        - The full purchase-to-payment and order-to-cash cycles
+        - Inventory management and costing
+        - Financial reporting and analysis
+        - Data validation and error correction
+        - Period-end and year-end closing procedures
+
+      Recommended next steps for continued learning:
+
+      1. BC Certification:
+         - Microsoft Certified: Dynamics 365 Business Central Functional Consultant
+         - Exam MB-800: Business Central Functional Consultant
+         - Study with Microsoft Learn modules
+
+      2. Deeper BC Topics:
+         - Fixed Assets management
+         - Manufacturing (production BOMs, routings)
+         - Service Management
+         - Job/Project accounting
+         - Multi-currency and intercompany transactions
+         - Dimensions and advanced cost allocation
+         - Warehouse management (bins, picks, put-aways)
+
+      3. Technical Skills:
+         - AL development fundamentals
+         - VS Code and the AL extension
+         - DevOps for BC (CI/CD pipelines, automated testing)
+         - BC performance optimization
+
+      4. Community:
+         - Dynamics 365 Community forums
+         - BC TechDays conference
+         - LinkedIn BC groups
+         - Local Dynamics user groups (NAVUG / BC User Group Nordic)
+
+      Keep exploring, keep building, and keep learning.
+      The BC ecosystem is deep and rewarding.
+    config_data: {}
+    validation_questions:
+      - question: "What Microsoft certification covers Business Central functional consulting?"
+        expected_answer: "Microsoft Certified: Dynamics 365 Business Central Functional Consultant, tested through exam MB-800"
+        hints:
+          - "The MB-800 exam"
+      - question: "Name three BC topic areas you would like to explore next."
+        expected_answer: "This is a personal reflection question. Good answers include any of: Fixed Assets, Manufacturing, Service Management, Job accounting, multi-currency, dimensions, warehouse management, AL development, or Power Platform integration."
+        hints:
+          - "Think about what interests you most or what your organization needs"
+
+validation_questions:
+  - question: "What was the most valuable thing you learned in this curriculum?"
+    expected_answer: "This is a reflective question — any thoughtful answer is correct. Strong answers connect specific BC skills to business understanding."
+    hints: []
+  - question: "If you had to explain Business Central to someone in one sentence, what would you say?"
+    expected_answer: "Business Central is Microsoft's cloud ERP system for small-to-medium businesses that integrates finance, supply chain, sales, and operations into a single platform with built-in reporting and extensibility."
+    hints: []
+
+agent_context: |
+  This is the final lesson — a wrap-up and celebration of what the student
+  has accomplished. The tone should be warm, encouraging, and forward-looking.
+
+  Key teaching points:
+  - The student has completed a real (simplified) implementation cycle
+  - AL extensions are how BC is customized — understanding this is important
+    even for functional consultants
+  - Integration capabilities make BC part of a larger ecosystem
+  - Go-live planning is a critical skill for consultants
+  - Learning never stops — BC is deep and constantly evolving
+
+  Approach:
+  - Start with genuine recognition of what they have built
+  - Keep the technical content high-level — this is an overview, not deep dives
+  - For AL extensions and integrations, focus on WHAT and WHY, not HOW
+  - The go-live planning section connects classroom learning to real projects
+  - End on an encouraging note with clear next steps
+
+  Tone:
+  - Celebratory but professional
+  - Encouraging without being patronizing
+  - Forward-looking — this is a beginning, not an end
+  - Practical — give them actionable next steps
+
+  This lesson is deliberately lighter on hands-on tasks because it serves
+  as a bridge between the structured curriculum and independent learning.
+  The student should leave feeling confident and motivated to continue.
+
+  If the student asks questions about specific advanced topics, provide
+  brief overviews and point them to Microsoft Learn or other resources
+  rather than trying to teach the full topic here.
+
+estimated_duration: "25 minutes"

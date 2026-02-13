@@ -1,0 +1,365 @@
+id: sales_invoice
+title: "Posting the Sales Invoice and Revenue Recognition"
+objectives:
+  - "Post the sales invoice for a previously shipped sales order"
+  - "Review customer ledger entries and the Posted Sales Invoice"
+  - "Examine G/L entries: revenue, COGS, VAT, and receivables"
+  - "Create a second sales order for an EU customer with reverse charge VAT"
+  - "Understand the difference between domestic VAT and EU reverse charge treatment"
+prerequisites:
+  - "sales_order"
+tasks:
+  - id: post_sales_invoice
+    title: "Post the sales invoice for Nordisk Elektronik"
+    instructions: |
+      Open the sales order you created for Nordisk Elektronik A/S.
+      Search for "Sales Orders" (Page 9305 — Sales Order List) and find your order.
+
+      The order should show:
+        - Quantity Shipped: 10 (laptops) and 5 (monitors)
+        - Qty. to Invoice: 10 and 5
+        - Status: Released (partially posted)
+
+      Post the invoice:
+        1. Go to Actions → Posting → Post
+        2. When asked "Ship and/or Invoice?", select "Invoice"
+        3. Confirm the posting
+
+      After posting, the sales order is fully posted. It may be automatically
+      deleted or archived (depending on setup). The order has been fully
+      shipped and invoiced, so it has no remaining quantities.
+
+      Find the posted invoice:
+        Search for "Posted Sales Invoices" (Page 132)
+        Find the new posted invoice (PSI-100001 or similar)
+
+      The posted invoice shows:
+        - Sell-to Customer: C10000 Nordisk Elektronik A/S
+        - Amount: 70,000.00 DKK (excl. VAT)
+        - VAT Amount: 17,500.00 DKK
+        - Amount Incl. VAT: 87,500.00 DKK
+        - External Document No.: NE-PO-2025-108
+    config_data:
+      posting_action: "Invoice"
+      posted_sales_invoice_page: 132
+      expected_document:
+        customer: "C10000"
+        amount_excl_vat: 70000.00
+        vat_amount: 17500.00
+        amount_incl_vat: 87500.00
+    validation_questions:
+      - question: "What is the total amount the customer owes including VAT?"
+        expected_answer: "87,500.00 DKK (70,000.00 + 17,500.00 VAT)"
+        hints:
+          - "The customer pays the net amount plus 25% Danish moms"
+      - question: "Where can you find the posted invoice after the sales order is closed?"
+        expected_answer: "In the Posted Sales Invoices list (Page 132). You can also search for 'Posted Sales Invoices' in the search bar."
+        hints:
+          - "Posted documents have their own list pages, separate from open documents"
+
+  - id: review_customer_ledger_entries
+    title: "Review customer ledger entries"
+    instructions: |
+      The invoice posting created a Customer Ledger Entry — this represents
+      the amount the customer owes us.
+
+      Search for "Customer Ledger Entries" (Page 25).
+      Filter: Customer No. = C10000
+
+      You should see a new entry:
+        Document Type:     Invoice
+        Document No.:      PSI-100001 (posted invoice number)
+        Posting Date:      (today's work date)
+        Customer No.:      C10000
+        Description:       Nordisk Elektronik A/S
+        Currency Code:     (blank = DKK)
+        Original Amount:   87,500.00 DKK (positive = customer owes us)
+        Remaining Amount:  87,500.00 DKK (unpaid)
+        Due Date:          (posting date + 30 days, per NET30 terms)
+        Open:              Yes
+
+      Key observations:
+        - Amounts are POSITIVE because this is a receivable (customer owes us)
+        - This is the OPPOSITE of vendor entries (which are negative)
+        - Original Amount includes VAT (87,500) — the customer owes the full amount
+        - Remaining Amount = Original Amount (nothing collected yet)
+        - Due Date comes from Payment Terms (NET30)
+
+      Compare with the Vendor Ledger Entry from module 06:
+        Vendor entry:   -34,400 USD (we OWE the vendor)
+        Customer entry: +87,500 DKK (customer OWES us)
+
+      Drill into Detailed Customer Ledger Entries to see the breakdown.
+    config_data:
+      page: 25
+      expected_entry:
+        document_type: "Invoice"
+        customer_no: "C10000"
+        currency_code: ""
+        original_amount: 87500.00
+        remaining_amount: 87500.00
+        open: true
+    validation_questions:
+      - question: "Why is the customer ledger entry amount positive while the vendor ledger entry was negative?"
+        expected_answer: "Customer entries are positive for invoices because they represent an asset (money owed TO us). Vendor entries are negative for invoices because they represent a liability (money owed BY us). It follows the accounting convention: assets have debit/positive balances, liabilities have credit/negative balances."
+        hints:
+          - "Receivables are assets (positive). Payables are liabilities (negative)."
+      - question: "Does the Customer Ledger Entry amount include or exclude VAT?"
+        expected_answer: "It includes VAT. The customer owes 87,500 DKK which is 70,000 net + 17,500 VAT. The full amount including VAT is what the customer must pay."
+        hints:
+          - "The customer pays everything — the net amount plus the VAT"
+
+  - id: examine_gl_entries
+    title: "Examine G/L entries (revenue, COGS, VAT, receivables)"
+    instructions: |
+      The sales invoice posting creates multiple G/L entries. This is more
+      complex than the purchase invoice because it involves revenue, COGS,
+      and VAT all at once.
+
+      Search for "G/L Entries" (Page 20).
+      Filter: Document No. = (your posted invoice number, e.g., PSI-100001)
+
+      You should see entries similar to:
+
+        G/L Account  Account Name               Debit (DKK)   Credit (DKK)
+        ───────────  ─────────────────────────   ───────────   ────────────
+        1300         Trade Receivables           87,500.00     0.00
+        4100         Product Sales               0.00          70,000.00
+        2200         VAT Payable                 0.00          17,500.00
+        5100         COGS - Products             45,210.00     0.00
+        1210         Inventory                   0.00          45,210.00
+
+      Let us trace each entry:
+
+      1. TRADE RECEIVABLES (1300) — Debit 87,500
+         Source: Customer Posting Group (DOMESTIC → Receivables Account 1300)
+         The customer now owes us 87,500 DKK (incl. VAT)
+
+      2. PRODUCT SALES / REVENUE (4100) — Credit 70,000
+         Source: General Posting Setup (DOMESTIC x RETAIL → Sales Account 4100)
+         Revenue is recognized on the income statement
+
+      3. VAT PAYABLE (2200) — Credit 17,500
+         Source: VAT Posting Setup (DOMESTIC x VAT25 → Sales VAT Account 2200)
+         We collected VAT from the customer, which we owe to SKAT
+
+      4. COGS - PRODUCTS (5100) — Debit 45,210
+         Source: General Posting Setup (DOMESTIC x RETAIL → COGS Account 5100)
+         Cost of goods sold recognized on the income statement
+         Amount = actual cost of 10 laptops + 5 monitors at their purchase cost
+
+      5. INVENTORY (1210) — Credit 45,210
+         Source: Inventory Posting Setup (RESALE → Inventory Account 1210)
+         Inventory decreases as goods are sold (cost moves from balance sheet to P&L)
+
+      The accounting equation balances:
+        Debits:  87,500 + 45,210 = 132,710
+        Credits: 70,000 + 17,500 + 45,210 = 132,710  ✓
+
+      This is the complete picture: revenue + COGS + VAT + receivable + inventory.
+    config_data:
+      gl_entries:
+        - { account: "1300", name: "Trade Receivables", debit: 87500.00, credit: 0.00, source: "Customer Posting Group (DOMESTIC)" }
+        - { account: "4100", name: "Product Sales", debit: 0.00, credit: 70000.00, source: "General Posting Setup (DOMESTIC x RETAIL)" }
+        - { account: "2200", name: "VAT Payable", debit: 0.00, credit: 17500.00, source: "VAT Posting Setup (DOMESTIC x VAT25)" }
+        - { account: "5100", name: "COGS - Products", debit: 45210.00, credit: 0.00, source: "General Posting Setup (DOMESTIC x RETAIL)" }
+        - { account: "1210", name: "Inventory", debit: 0.00, credit: 45210.00, source: "Inventory Posting Setup (RESALE)" }
+    validation_questions:
+      - question: "How many G/L entries are created by a domestic sales invoice posting?"
+        expected_answer: "5 entries — Trade Receivables (debit), Product Sales/Revenue (credit), VAT Payable (credit), COGS (debit), and Inventory (credit)"
+        hints:
+          - "Think about all the accounts affected: receivable, revenue, VAT, COGS, inventory"
+      - question: "Which G/L account represents the cost of the goods we just sold?"
+        expected_answer: "5100 (COGS - Products). This is the cost that moves from Inventory (1210) on the balance sheet to COGS (5100) on the income statement when goods are sold."
+        hints:
+          - "COGS = Cost of Goods Sold — the purchase cost of the items that were sold"
+      - question: "Why does the Inventory account (1210) have a credit entry?"
+        expected_answer: "Because inventory is being reduced. When we sell goods, the cost leaves the Inventory asset account (credit reduces an asset) and moves to COGS on the income statement (debit increases an expense)."
+        hints:
+          - "Credits decrease asset accounts. The inventory is going DOWN."
+
+  - id: create_eu_sales_order
+    title: "Create a sales order for TechSweden AB (EU, reverse charge VAT)"
+    instructions: |
+      Now let us create a second sales order — this time to an EU customer
+      to see how VAT treatment differs.
+
+      Create a new Sales Order (Page 42):
+
+      Header:
+        Sell-to Customer No.:   C30000 (TechSweden AB)
+
+      Auto-filled from customer card:
+        - Currency Code: SEK (Swedish Krona)
+        - Gen. Bus. Posting Group: EU
+        - VAT Bus. Posting Group: EU
+        - Customer Posting Group: FOREIGN
+        - Payment Terms: NET30
+
+      Lines:
+
+        Type    No.        Description              Qty    Unit Price (SEK)
+        ──────  ─────────  ─────────────────────    ─────  ────────────────
+        Item    ITEM-1001  ProBook 15 Laptop        5      6,200.00
+        Item    ITEM-3001  USB-C Docking Station    10     1,100.00
+
+      After entering the lines, observe:
+        - Line 1: 5 x 6,200 = 31,000.00 SEK
+        - Line 2: 10 x 1,100 = 11,000.00 SEK
+        - Subtotal: 42,000.00 SEK
+
+      Now check the VAT:
+        - Gen. Bus. = EU, VAT Bus. = EU
+        - VAT Prod. = VAT25
+        - VAT Posting Setup: EU + VAT25 = Reverse Charge VAT, 25%
+
+      But here is the key difference:
+        With Reverse Charge VAT, the VAT Amount on the invoice is 0.
+        The invoice shows 42,000.00 SEK with no VAT added.
+        The BUYER (TechSweden) is responsible for self-assessing and
+        reporting VAT to the Swedish tax authority (Skatteverket).
+
+      Check Statistics (F7):
+        Amount: 42,000.00 SEK
+        VAT Amount: 0.00 SEK
+        Total: 42,000.00 SEK
+
+      Post this order completely (Ship and Invoice) in one step:
+        Actions → Posting → Post → "Ship and Invoice"
+
+      This is to demonstrate that you CAN post both at once when appropriate.
+    config_data:
+      customer:
+        no: "C30000"
+        name: "TechSweden AB"
+        currency: "SEK"
+        gen_bus_posting_group: "EU"
+        vat_bus_posting_group: "EU"
+        customer_posting_group: "FOREIGN"
+      lines:
+        - { type: "Item", no: "ITEM-1001", description: "ProBook 15 Laptop", quantity: 5, unit_price_sek: 6200.00, line_amount_sek: 31000.00 }
+        - { type: "Item", no: "ITEM-3001", description: "USB-C Docking Station", quantity: 10, unit_price_sek: 1100.00, line_amount_sek: 11000.00 }
+      totals:
+        amount_excl_vat_sek: 42000.00
+        vat_amount: 0.00
+        amount_incl_vat_sek: 42000.00
+        vat_type: "Reverse Charge"
+    validation_questions:
+      - question: "Why is the VAT amount 0.00 on the TechSweden invoice even though the VAT rate is 25%?"
+        expected_answer: "Because the VAT Calculation Type for EU + VAT25 is 'Reverse Charge VAT'. Under reverse charge, the seller does not charge VAT — instead, the buyer (TechSweden in Sweden) must self-assess and report the VAT to their own tax authority. This is standard for EU B2B cross-border transactions."
+        hints:
+          - "Check the VAT Posting Setup: EU + VAT25 has type 'Reverse Charge VAT'"
+      - question: "What currency is used on the TechSweden sales order?"
+        expected_answer: "SEK (Swedish Krona) — because TechSweden AB's customer card has Currency Code = SEK. The G/L entries will be converted to DKK using the SEK/DKK exchange rate."
+        hints:
+          - "The customer's card determines the document currency"
+
+  - id: compare_domestic_vs_eu_gl
+    title: "Compare G/L entries: domestic vs. EU sale"
+    instructions: |
+      Let us compare the G/L entries from the two sales to understand
+      the different VAT treatments.
+
+      Search for "G/L Entries" (Page 20).
+
+      DOMESTIC SALE (Nordisk Elektronik, PSI-100001):
+        1300  Trade Receivables     87,500 DR   (incl. VAT)
+        4100  Product Sales                     70,000 CR
+        2200  VAT Payable                       17,500 CR
+        5100  COGS                  45,210 DR
+        1210  Inventory                         45,210 CR
+
+      EU SALE (TechSweden, PSI-100002 — amounts in DKK equivalent):
+        1300  Trade Receivables     ~28,350 DR  (no VAT included)
+        4100  Product Sales                     ~28,350 CR
+        5100  COGS                  ~xx,xxx DR  (cost of 5 laptops + 10 docking stations)
+        1210  Inventory                         ~xx,xxx CR
+
+      Key differences:
+        1. NO VAT PAYABLE entry for the EU sale — reverse charge means
+           we do not collect VAT, so there is no VAT to remit
+        2. The receivable equals the net amount (no VAT markup)
+        3. The EU sale amounts are in DKK (converted from SEK at the posting rate)
+        4. Revenue, COGS, and Inventory entries work the same regardless of VAT
+
+      The EU customer's invoice will include a note like:
+        "Reverse charge: VAT to be accounted for by the recipient
+         pursuant to Article 196 of the EU VAT Directive 2006/112/EC"
+
+      This is a legal requirement for B2B intra-EU transactions.
+    config_data:
+      comparison:
+        domestic:
+          receivable: 87500.00
+          revenue: 70000.00
+          vat_payable: 17500.00
+          has_vat_entry: true
+        eu:
+          receivable_sek: 42000.00
+          revenue_sek: 42000.00
+          vat_payable: 0.00
+          has_vat_entry: false
+    validation_questions:
+      - question: "What is the key G/L difference between a domestic and EU sale?"
+        expected_answer: "The domestic sale has a VAT Payable entry (credit to account 2200) and the receivable includes VAT. The EU sale has no VAT Payable entry and the receivable equals the net amount only. Revenue, COGS, and Inventory entries are structurally the same in both cases."
+        hints:
+          - "Compare which accounts appear in each case"
+      - question: "Under EU reverse charge rules, who is responsible for reporting the VAT?"
+        expected_answer: "The buyer (TechSweden AB in Sweden) is responsible for self-assessing and reporting the VAT to the Swedish tax authority (Skatteverket). The seller (Nordic Traders) does not charge or remit VAT on this transaction."
+        hints:
+          - "The 'reverse charge' means the charge is reversed — the buyer handles the VAT instead of the seller"
+
+validation_questions:
+  - question: "How many G/L entries does a typical domestic sales invoice create?"
+    expected_answer: "5 entries: Trade Receivables (debit), Revenue (credit), VAT Payable (credit), COGS (debit), Inventory (credit)"
+    hints: []
+  - question: "When is COGS (Cost of Goods Sold) recognized in BC?"
+    expected_answer: "COGS is recognized when the sales invoice is posted, not when the shipment is posted. The invoice posting moves the cost from the Inventory account (balance sheet) to the COGS account (income statement)."
+    hints: []
+  - question: "What happens to VAT when selling to an EU business customer?"
+    expected_answer: "Under EU reverse charge rules, the seller does not charge VAT. The invoice is issued at net amount with 0% VAT, and the buyer self-assesses VAT in their own country. There is no VAT Payable entry in the seller's G/L."
+    hints: []
+
+agent_context: |
+  This is one of the most important lessons in the curriculum — it shows the
+  complete financial impact of a sale and introduces the critical EU reverse
+  charge concept.
+
+  Key teaching points:
+  - Sales invoice posting creates 5 G/L entries for domestic sales
+  - The entries cover: receivable, revenue, VAT, COGS, and inventory movement
+  - COGS is recognized at invoice time, not shipment time
+  - Customer Ledger Entries are positive (assets), opposite to vendor entries
+  - EU reverse charge: no VAT charged, buyer self-assesses
+  - Currency handling for the SEK sale follows the same pattern as USD purchases
+
+  Company context:
+  - First domestic sale: 87,500 DKK to Nordisk Elektronik (incl. 25% VAT)
+  - First EU sale: 42,000 SEK to TechSweden (0% VAT, reverse charge)
+  - After these two sales:
+    - Inventory: 35 laptops (50 - 10 - 5), 25 monitors (30 - 5),
+      minus 10 docking stations from original stock
+  - Cash flow: 87,500 DKK receivable due in 30 days, plus ~28,350 DKK
+    equivalent from TechSweden
+
+  Posting group chains:
+  Domestic (C10000):
+    Customer: DOMESTIC + DOMESTIC + DOMESTIC
+    → Gen Posting Setup: DOMESTIC x RETAIL → Sales 4100, COGS 5100
+    → Cust. Posting Group: DOMESTIC → Receivables 1300
+    → VAT Posting Setup: DOMESTIC x VAT25 → 25%, Sales VAT 2200
+
+  EU (C30000):
+    Customer: EU + EU + FOREIGN
+    → Gen Posting Setup: EU x RETAIL → Sales 4100, COGS 5100
+    → Cust. Posting Group: FOREIGN → Receivables 1300
+    → VAT Posting Setup: EU x VAT25 → Reverse Charge, 25%, but 0 on invoice
+
+  Common mistakes:
+  - Expecting COGS entries after shipment (they appear after invoice posting)
+  - Not understanding why VAT is 0 for the EU sale
+  - Confusing the receivable amount (incl. VAT domestic, excl. VAT EU)
+  - Not realizing the EU invoice must include the reverse charge statement
+  - Trying to navigate back to the sales order after full posting (it is deleted/archived)
+
+estimated_duration: "50 minutes"

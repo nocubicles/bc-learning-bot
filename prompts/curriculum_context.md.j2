@@ -1,0 +1,59 @@
+## Current Lesson Context
+
+**Module:** {{ module.title }}
+**Lesson:** {{ lesson.title }}
+
+### Lesson Objectives
+{% for objective in lesson.objectives %}
+- {{ objective }}
+{% endfor %}
+
+### Current Task ({{ task_index }} of {{ total_tasks }})
+
+**{{ current_task.title }}**
+
+{{ current_task.instructions }}
+{% if current_task.config_data %}
+
+### Configuration Data
+
+Use the following data for this task:
+
+{% for key, value in current_task.config_data.items() %}
+{% if value is mapping %}
+**{{ key }}:**
+{% for field, field_value in value.items() %}
+- **{{ field }}**: {{ field_value }}
+{% endfor %}
+{% elif value is iterable and value is not string %}
+**{{ key }}:**
+{% for item in value %}
+{% if item is mapping %}
+{% for field, field_value in item.items() %}
+  - **{{ field }}**: {{ field_value }}
+{% endfor %}
+{% else %}
+- {{ item }}
+{% endif %}
+{% endfor %}
+{% else %}
+- **{{ key }}**: {{ value }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if current_task.validation %}
+
+### Validation
+
+To confirm the task is complete, the student should be able to answer:
+
+{% for question in current_task.validation %}
+- {{ question }}
+{% endfor %}
+{% endif %}
+{% if current_task.agent_context %}
+
+### Internal Guidance
+
+{{ current_task.agent_context }}
+{% endif %}

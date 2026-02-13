@@ -1,0 +1,129 @@
+id: coa_validation
+title: "Validating the Chart of Accounts"
+objectives:
+  - "Run the Indent Chart of Accounts function"
+  - "Verify account structure and totaling formulas"
+  - "Understand the G/L Account Card in detail"
+prerequisites:
+  - "coa_import"
+tasks:
+  - id: indent_chart
+    title: "Run Indent Chart of Accounts"
+    instructions: |
+      Open the Chart of Accounts (Page 16).
+
+      In the action bar, look for "Actions" → "Functions" → "Indent Chart of Accounts".
+      Click it and confirm the prompt.
+
+      This function recalculates the indentation of all accounts based on
+      Begin-Total / End-Total pairs. After running it, your chart should
+      show a nicely indented hierarchy:
+
+        Assets                          (no indent — Heading)
+          Fixed Assets                  (indented — Begin-Total)
+            Equipment & Furniture       (indented further — Posting)
+            IT Hardware                 (indented further — Posting)
+          Total Fixed Assets            (indented — End-Total)
+          ...
+    config_data: {}
+    validation_questions:
+      - question: "After running Indent Chart of Accounts, do the accounts show a hierarchical indentation?"
+        expected_answer: "Yes"
+        hints:
+          - "Posting accounts inside a Begin-Total/End-Total range should be indented"
+
+  - id: verify_totals
+    title: "Verify totaling formulas work"
+    instructions: |
+      To verify that the totaling formulas are correct, we will look at the
+      Net Change and Balance columns on the Chart of Accounts.
+
+      Since we have not posted any transactions yet, all balances will be zero.
+      But we can verify the structure is correct:
+
+      1. Click on account 1999 Total Assets → open the G/L Account Card (Page 17)
+      2. Check that the Totaling field shows "1000..1998"
+      3. Go back to the list and spot-check other Total accounts
+
+      Also verify that all Posting accounts have:
+        - "Direct Posting" = Yes (for accounts that receive journal entries)
+        - Correct Account Category and Subcategory
+
+      Tip: On the Chart of Accounts list, you can add the "Direct Posting"
+      column by clicking on the column header area and choosing "Choose Columns".
+    config_data:
+      key_checks:
+        - { account: "1999", totaling: "1000..1998", type: "Total" }
+        - { account: "4999", totaling: "4000..4998", type: "Total" }
+        - { account: "1190", totaling: "1100..1189", type: "End-Total" }
+    validation_questions:
+      - question: "What does the Totaling field show for account 1999?"
+        expected_answer: "1000..1998"
+        hints:
+          - "Open the G/L Account Card for account 1999"
+      - question: "Is Direct Posting enabled on account 1500 Bank Account - DKK?"
+        expected_answer: "Yes"
+        hints:
+          - "Bank accounts should allow direct posting via journal entries"
+
+  - id: check_account_categories
+    title: "Verify account categories for financial reporting"
+    instructions: |
+      Account Categories drive the standard financial reports in BC.
+
+      On the Chart of Accounts, verify these key mappings:
+        - All 1xxx accounts → Category: Assets
+        - All 2xxx accounts → Category: Liabilities
+        - All 3xxx accounts → Category: Equity
+        - 4100-4200 → Category: Income
+        - 4300 Sales Discounts → Category: Income (contra-revenue)
+        - 5xxx accounts → Category: Cost of Goods Sold
+        - 6xxx, 7xxx accounts → Category: Expense
+        - 8100, 8300 → Category: Income (interest and FX gains)
+        - 8200, 8400 → Category: Expense (interest and FX losses)
+        - 9100 → Category: Expense
+
+      If any category is wrong, correct it now. The financial reports
+      (Balance Sheet, Income Statement) rely on these categories.
+    config_data: {}
+    validation_questions:
+      - question: "What Account Category is set for account 5100 COGS - Products?"
+        expected_answer: "Cost of Goods Sold"
+        hints:
+          - "COGS accounts have their own category, separate from Expense"
+      - question: "What Account Category is set for account 8200 Interest Expense?"
+        expected_answer: "Expense"
+        hints:
+          - "Even though it is under Financial Items heading, it is still an Expense"
+
+validation_questions:
+  - question: "After indenting, does the Chart of Accounts show a clear hierarchy?"
+    expected_answer: "Yes"
+    hints:
+      - "Run Indent Chart of Accounts if you haven't already"
+  - question: "Are all Total accounts showing correct Totaling formulas?"
+    expected_answer: "Yes"
+    hints: []
+
+agent_context: |
+  This is a validation and review lesson. The student should carefully check
+  their work from the previous lesson.
+
+  Key teaching points:
+  - Indent Chart of Accounts is a function, not automatic — must be run manually
+  - Account Categories are essential for the standard Balance Sheet and Income Statement reports
+  - Direct Posting should be Yes for accounts that receive journal entries
+    (but NOT for structural accounts like Headings and Totals)
+  - The Totaling formula format: "1000..1998" means "sum 1000 through 1998"
+
+  Common mistakes:
+  - Not running the Indent function after creating accounts
+  - Wrong Account Categories (especially for COGS vs Expense)
+  - Leaving Direct Posting enabled on Heading/Total accounts
+  - Incorrect Totaling ranges that miss some posting accounts
+
+  If the student finds errors, guide them to fix each one. This is a normal
+  part of implementation — validation catches mistakes before they cause
+  problems in posting.
+
+estimated_duration: "20 minutes"

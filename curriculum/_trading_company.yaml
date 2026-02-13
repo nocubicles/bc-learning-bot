@@ -1,0 +1,56 @@
+id: trading_company
+title: "Implementing a Trading Company in Business Central"
+description: >
+  Complete implementation guide for Nordic Traders ApS — a Danish trading company
+  importing consumer electronics from Asian manufacturers and distributing across
+  the Nordic region (Denmark, Sweden, Norway, Finland). This curriculum walks through
+  every step from company creation to period-end closing in a Business Central
+  cloud sandbox.
+company_name: "Nordic Traders ApS"
+country: "DK"
+currency: "DKK"
+modules:
+  - dir: "01_initial_setup"
+    id: "initial_setup"
+    title: "Initial Setup"
+    order: 1
+  - dir: "02_chart_of_accounts"
+    id: "chart_of_accounts"
+    title: "Chart of Accounts"
+    order: 2
+  - dir: "03_general_ledger"
+    id: "general_ledger"
+    title: "General Ledger Setup"
+    order: 3
+  - dir: "04_master_data"
+    id: "master_data"
+    title: "Master Data — Customers & Vendors"
+    order: 4
+  - dir: "05_items"
+    id: "items"
+    title: "Item Setup"
+    order: 5
+  - dir: "06_purchasing"
+    id: "purchasing"
+    title: "Purchasing"
+    order: 6
+  - dir: "07_sales"
+    id: "sales"
+    title: "Sales"
+    order: 7
+  - dir: "08_inventory"
+    id: "inventory"
+    title: "Inventory Management"
+    order: 8
+  - dir: "09_financial_reporting"
+    id: "financial_reporting"
+    title: "Financial Reporting"
+    order: 9
+  - dir: "10_testing"
+    id: "testing"
+    title: "Testing & Validation"
+    order: 10
+  - dir: "11_period_end"
+    id: "period_end"
+    title: "Period-End Closing"
+    order: 11

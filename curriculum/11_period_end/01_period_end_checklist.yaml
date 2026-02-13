@@ -1,0 +1,243 @@
+id: period_end_checklist
+title: "Period-End Closing Checklist"
+objectives:
+  - "Understand the month-end / period-end closing process"
+  - "Reconcile customer and vendor subledgers to the general ledger"
+  - "Perform inventory cost adjustment"
+  - "Post adjustment journals as needed"
+prerequisites:
+  - "error_correction"
+tasks:
+  - id: understand_period_end
+    title: "Understand the period-end closing process"
+    instructions: |
+      At the end of each accounting period (usually monthly), a company must
+      perform closing activities to ensure the financial records are accurate
+      and complete.
+
+      The typical period-end checklist for Nordic Traders includes:
+
+        1. Reconcile bank statements to BC bank accounts
+        2. Reconcile customer subledger (AR) to G/L account 1300
+        3. Reconcile vendor subledger (AP) to G/L account 2110
+        4. Run Adjust Cost - Item Entries batch job
+        5. Post any accrual or adjustment journals
+        6. Review and post any recurring journals
+        7. Run the Trial Balance and review for anomalies
+        8. Close the period (optional — prevents posting to past periods)
+
+      In a real implementation, this checklist would be customized per client.
+      The goal is to ensure that the books are accurate before financial
+      statements are produced.
+
+      Search for "Accounting Periods" (Page 100) to see the periods
+      defined for Nordic Traders. Note which periods are open and which
+      are closed.
+    config_data:
+      period_end_checklist:
+        - step: 1
+          task: "Reconcile bank statements"
+          gl_account: "1500"
+        - step: 2
+          task: "Reconcile AR subledger to GL"
+          gl_account: "1300"
+        - step: 3
+          task: "Reconcile AP subledger to GL"
+          gl_account: "2110"
+        - step: 4
+          task: "Run Adjust Cost - Item Entries"
+          batch_job: "Report 795"
+        - step: 5
+          task: "Post adjustment journals"
+        - step: 6
+          task: "Review Trial Balance"
+          report: "Report 6"
+        - step: 7
+          task: "Close the accounting period"
+          page: "Page 100"
+    validation_questions:
+      - question: "Why do companies perform period-end closing?"
+        expected_answer: "To ensure financial records are accurate and complete before producing financial statements, and to prevent posting to past periods which could alter already-reported figures"
+        hints:
+          - "Think about financial reporting and data integrity"
+      - question: "What is the Accounting Periods page used for?"
+        expected_answer: "It defines the fiscal periods for the company and allows you to close periods to prevent posting to past dates"
+        hints:
+          - "Page 100 in Business Central"
+
+  - id: reconcile_subledgers
+    title: "Reconcile customer and vendor subledgers to G/L"
+    instructions: |
+      One of the most important period-end tasks is subledger reconciliation.
+      This ensures that the detailed customer/vendor balances match the
+      corresponding G/L control accounts.
+
+      Step 1: Reconcile Accounts Receivable
+        Search for "Customer - Summary Aging" (Report 105) or use
+        "Customer Ledger Entries" (Page 25).
+
+        Sum up all open (unpaid) customer ledger entries.
+        This total should equal the balance on G/L account 1300 (Trade Receivables).
+
+        You can also search for "Reconcile Customer and Vendor Accounts" (Report 33)
+        which automates this comparison.
+
+      Step 2: Reconcile Accounts Payable
+        Search for "Vendor - Summary Aging" (Report 305) or use
+        "Vendor Ledger Entries" (Page 29).
+
+        Sum up all open vendor entries.
+        This total should equal the balance on G/L account 2110 (Trade Payables).
+
+      If the subledger total does not match the G/L balance:
+        - Check for direct postings to the control account (should be avoided)
+        - Check for unapplied entries
+        - Review the Customer/Vendor Posting Group configuration
+
+      In our test scenario, both accounts should reconcile because we have
+      not made any direct postings to the control accounts.
+    config_data:
+      reconciliation:
+        ar_account: "1300"
+        ar_report: 105
+        ap_account: "2110"
+        ap_report: 305
+        reconciliation_report: 33
+    validation_questions:
+      - question: "What does it mean if the customer subledger total does not match G/L account 1300?"
+        expected_answer: "It means there is a discrepancy — possibly a direct posting was made to the control account bypassing the customer ledger, or there are configuration issues with the Customer Posting Group"
+        hints:
+          - "The control account should only be posted to through customer transactions"
+      - question: "Why should you never post directly to a subledger control account like 1300 or 2110?"
+        expected_answer: "Because direct postings bypass the customer/vendor ledger, causing the subledger and G/L to go out of sync. All postings should flow through documents or journals with Account Type set to Customer/Vendor."
+        hints:
+          - "The subledger must always match its G/L control account"
+
+  - id: adjust_item_costs
+    title: "Run inventory cost adjustment"
+    instructions: |
+      When items are received and invoiced at different times, or when
+      additional costs (like freight) are added later, the inventory value
+      needs to be adjusted.
+
+      Search for "Adjust Cost - Item Entries" (Report 795).
+
+      Run the batch job:
+        - Item No. Filter: (leave blank to adjust all items)
+        - Post to G/L: Yes (this also runs the "Post Inventory Cost to G/L" batch job)
+
+      This batch job:
+        1. Recalculates item costs based on the costing method (FIFO)
+        2. Adjusts the Value Entries to reflect the correct cost
+        3. Posts the adjustments to the G/L (Inventory account and COGS account)
+
+      After running, verify:
+        - Search for "Value Entries" (Page 5802) and filter by your test items
+        - Check that the "Cost Amount (Actual)" column is correct
+        - Review any adjustment entries that were created
+
+      For Nordic Traders with FIFO costing, this ensures that COGS reflects
+      the actual purchase cost of the specific units that were sold.
+    config_data:
+      batch_job:
+        report_id: 795
+        item_filter: ""
+        post_to_gl: true
+    validation_questions:
+      - question: "Why is Adjust Cost - Item Entries important to run at period-end?"
+        expected_answer: "Because it ensures inventory values and COGS are accurate by applying any cost adjustments that occurred after the original posting (e.g., late invoices, additional charges). Without it, financial statements may show incorrect inventory and COGS figures."
+        hints:
+          - "Think about timing differences between receiving goods and getting invoiced"
+      - question: "What costing method does Nordic Traders use, and what does it mean?"
+        expected_answer: "FIFO (First In, First Out) — the cost of the oldest inventory items is assigned to COGS first, so the remaining inventory is valued at the most recent purchase prices"
+        hints:
+          - "FIFO assumes the first items purchased are the first ones sold"
+
+  - id: post_adjustments
+    title: "Post period-end adjustment journals"
+    instructions: |
+      Sometimes you need to record expenses that have been incurred but
+      not yet invoiced (accruals), or prepayments that need to be recognized.
+
+      Search for "General Journals" (Page 39).
+
+      Let us post a sample accrual for monthly rent:
+
+        Line 1:
+          Posting Date: Last day of the period (e.g., 31/01/2025)
+          Account Type: G/L Account
+          Account No.: 6100 (Rent)
+          Amount: 15,000.00
+          Bal. Account Type: G/L Account
+          Bal. Account No.: 2300 (Accrued Expenses)
+          Description: "Accrual - January rent"
+
+      Post the journal.
+
+      This records the rent expense in the correct period even though
+      the invoice may arrive in the next month. In the following period,
+      when the actual invoice arrives, you would reverse the accrual
+      and post the real invoice.
+
+      Verify:
+        - G/L Entry for 6100 (Rent) shows 15,000 debit
+        - G/L Entry for 2300 (Accrued Expenses) shows 15,000 credit
+        - The Trial Balance now includes this expense in the current period
+    config_data:
+      adjustment_journal:
+        account: "6100"
+        account_name: "Rent"
+        amount: 15000.00
+        bal_account: "2300"
+        bal_account_name: "Accrued Expenses"
+        description: "Accrual - January rent"
+    validation_questions:
+      - question: "What is an accrual journal entry?"
+        expected_answer: "An accrual records an expense (or revenue) in the period it was incurred, even if the invoice or payment has not yet occurred. It uses an accrued expense/revenue account as the offsetting entry."
+        hints:
+          - "The matching principle in accounting — expenses should be recorded in the period they relate to"
+      - question: "What happens to the accrual in the following period?"
+        expected_answer: "The accrual is reversed at the beginning of the next period, and when the actual invoice arrives, it is posted normally. This avoids double-counting the expense."
+        hints:
+          - "Think about what would happen if you did not reverse the accrual and then posted the real invoice"
+
+validation_questions:
+  - question: "What are the most critical steps in a period-end checklist?"
+    expected_answer: "Reconcile bank statements, reconcile AR and AP subledgers to GL, run Adjust Cost - Item Entries, post accrual/adjustment journals, and review the Trial Balance"
+    hints: []
+  - question: "Why does subledger-to-GL reconciliation matter?"
+    expected_answer: "Because the subledger (detailed customer/vendor entries) must match the GL control account balance. If they do not match, financial statements are unreliable and audit findings will result."
+    hints: []
+
+agent_context: |
+  This lesson introduces the discipline of period-end closing — a fundamental
+  accounting process that every BC implementation must support.
+
+  Key teaching points:
+  - Period-end closing is a recurring process, not a one-time event
+  - Subledger reconciliation is the most important validation step
+  - Adjust Cost - Item Entries should be run before closing any period
+  - Accruals ensure expenses are recorded in the correct period (matching principle)
+  - Closing periods prevents accidental posting to past periods
+
+  Approach:
+  - Present the checklist as a professional practice used by all accountants
+  - Walk through each step methodically
+  - The reconciliation step may seem tedious but is critically important
+  - Use the accrual journal as a teaching moment about the matching principle
+  - Explain that in real implementations, many of these steps are automated
+    with recurring journals and job queues
+
+  Context for Nordic Traders:
+  - As a trading company, inventory cost adjustment is especially important
+    because purchase prices may vary and foreign currency effects apply
+  - The rent accrual is a realistic example — most companies accrue rent monthly
+  - Bank reconciliation is simplified here but is typically the most
+    time-consuming period-end task
+
+  Common issues:
+  - Students may not understand why reconciliation matters if everything seems correct
+  - The Adjust Cost batch job can take time on large datasets
+  - Accrual concepts may be new to students without accounting background
+
+estimated_duration: "35 minutes"

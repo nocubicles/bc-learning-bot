@@ -1,0 +1,309 @@
+id: balance_sheet
+title: "Balance Sheet Reporting"
+objectives:
+  - "Create a Balance Sheet Financial Report for Nordic Traders"
+  - "Verify the accounting equation: Assets = Liabilities + Equity"
+  - "Analyze key balance sheet items and their meaning"
+  - "Export financial reports to Excel"
+prerequisites:
+  - "account_schedules"
+tasks:
+  - id: create_balance_sheet_rows
+    title: "Create the Balance Sheet Row Definition"
+    instructions: |
+      Search for "Financial Report Row Definitions" (Page 104).
+
+      Click New and set:
+        Name: NT-BS-ROWS
+        Description: Nordic Traders Balance Sheet Rows
+
+      Open the row definition and create the following rows:
+
+        Row No.  Description                Totaling Type    Totaling    Show Opposite Sign
+        ──────   ────────────────────────   ─────────────    ────────    ──────────────────
+        10       === ASSETS ===             (blank)          (blank)     No
+        20       Cash & Bank                Posting Accounts 1100        No
+        30       Trade Receivables          Posting Accounts 1300        No
+        40       VAT Receivable             Posting Accounts 1400        No
+        50       Inventory                  Posting Accounts 1210        No
+        60       Prepaid Expenses           Posting Accounts 1500        No
+        70       TOTAL CURRENT ASSETS       Formula          20..60      No
+        80       (blank line)
+        90       Fixed Assets               Posting Accounts 1600        No
+        100      Accum. Depreciation        Posting Accounts 1700        No
+        110      TOTAL FIXED ASSETS         Formula          90..100     No
+        120      (blank line)
+        130      TOTAL ASSETS               Formula          70+110      No
+        140      (blank line)
+        150      === LIABILITIES ===        (blank)          (blank)     No
+        160      Trade Payables             Posting Accounts 2110        Yes
+        170      VAT Payable                Posting Accounts 2200        Yes
+        180      Other Current Liabilities  Posting Accounts 2300        Yes
+        190      Payroll Liabilities        Posting Accounts 2400        Yes
+        200      TOTAL CURRENT LIABILITIES  Formula          160..190    Yes
+        210      (blank line)
+        220      Long-term Loans            Posting Accounts 2500        Yes
+        230      TOTAL LIABILITIES          Formula          200+220     Yes
+        240      (blank line)
+        250      === EQUITY ===             (blank)          (blank)     No
+        260      Share Capital              Posting Accounts 3100        Yes
+        270      Retained Earnings          Posting Accounts 3200        Yes
+        280      Current Year Earnings      Posting Accounts 3300        Yes
+        290      TOTAL EQUITY               Formula          260..280    Yes
+        300      (blank line)
+        310      TOTAL LIAB. + EQUITY       Formula          230+290     Yes
+        320      (blank line)
+        330      BALANCE CHECK              Formula          130+310     No
+
+      Important notes on Show Opposite Sign:
+        - Asset accounts have debit balances (positive) — no sign flip needed
+        - Liability accounts have credit balances (negative in BC) — flip to
+          show as positive
+        - Equity accounts have credit balances — flip to show as positive
+        - The BALANCE CHECK row (130 + 310) should equal zero if assets =
+          liabilities + equity. Since we flip the sign on liabilities and
+          equity, we add Assets + (Liabilities + Equity). If everything
+          balances, the result is zero.
+
+      Set Bold = Yes on rows: 70, 110, 130, 200, 230, 290, 310, 330
+    config_data:
+      row_definition:
+        name: "NT-BS-ROWS"
+        description: "Nordic Traders Balance Sheet Rows"
+        key_rows:
+          - { row_no: 130, description: "TOTAL ASSETS" }
+          - { row_no: 230, description: "TOTAL LIABILITIES" }
+          - { row_no: 290, description: "TOTAL EQUITY" }
+          - { row_no: 310, description: "TOTAL LIAB. + EQUITY" }
+          - { row_no: 330, description: "BALANCE CHECK" }
+    validation_questions:
+      - question: "Why do liability and equity rows need 'Show Opposite Sign' set to Yes?"
+        expected_answer: "Because these accounts have credit balances, which BC displays as negative numbers. Flipping the sign makes them display as positive values on the balance sheet, which is the standard presentation."
+        hints:
+          - "Debits are positive, credits are negative in BC's internal representation"
+      - question: "What should the BALANCE CHECK row show if the balance sheet is correct?"
+        expected_answer: "Zero — because Total Assets should equal Total Liabilities + Total Equity. Since we show liabilities and equity with opposite sign, Assets + (Liabilities + Equity) = 0."
+        hints:
+          - "The accounting equation must balance"
+
+  - id: create_balance_sheet_columns
+    title: "Create the Balance Sheet Column Definition"
+    instructions: |
+      For the balance sheet, we need columns that show balances (not net changes),
+      because balance sheet accounts are cumulative.
+
+      Search for "Financial Report Column Definitions" and create:
+        Name: NT-BAL-COLS
+        Description: Balance Sheet Columns
+
+      Add these columns:
+
+        Column No.  Column Header         Column Type        Comparison Period
+        ──────────  ──────────────────    ────────────────   ─────────────────
+        10          Current Period        Balance at Date    (blank)
+        20          Prior Month           Balance at Date    -1M
+        30          Change                Formula            10-20
+        40          Prior Year End        Balance at Date    -1Y
+
+      Key difference from the Income Statement columns:
+        - We use "Balance at Date" instead of "Net Change" because balance
+          sheet accounts accumulate over time
+        - "Balance at Date" shows the total balance as of the period ending date
+        - The "Change" column (Formula: 10-20) shows what changed in the last month
+        - "-1M" shifts back one month, "-1Y" shifts back one year
+    config_data:
+      column_definition:
+        name: "NT-BAL-COLS"
+        description: "Balance Sheet Columns"
+        columns:
+          - { column_no: 10, header: "Current Period", type: "Balance at Date" }
+          - { column_no: 20, header: "Prior Month", type: "Balance at Date", comparison: "-1M" }
+          - { column_no: 30, header: "Change", type: "Formula", formula: "10-20" }
+          - { column_no: 40, header: "Prior Year End", type: "Balance at Date", comparison: "-1Y" }
+    validation_questions:
+      - question: "Why do we use 'Balance at Date' for balance sheet columns instead of 'Net Change'?"
+        expected_answer: "Because balance sheet accounts represent cumulative balances, not period movements. Balance at Date shows the total balance as of the selected date, while Net Change would only show the activity in that period."
+        hints:
+          - "Think about what a balance sheet represents — a snapshot in time"
+
+  - id: run_balance_sheet
+    title: "Create and run the Balance Sheet report"
+    instructions: |
+      Go to Financial Reports (Page 103) and create:
+        Name:              NT-BALANCE-SHEET
+        Description:       Nordic Traders Balance Sheet
+        Row Definition:    NT-BS-ROWS
+        Column Definition: NT-BAL-COLS
+
+      Run the report with a date filter for the current month end.
+
+      Review the output and verify:
+
+      1. ASSETS should include:
+         - Cash & Bank: May be zero if no bank payments were processed
+         - Trade Receivables: Outstanding customer invoices (from sales not yet paid)
+         - VAT Receivable: Input VAT from the USD purchase order
+         - Inventory: Value of unsold laptops and monitors (should match the
+           Inventory Valuation report from the previous lesson)
+
+      2. LIABILITIES should include:
+         - Trade Payables: Outstanding vendor invoices (from the purchase order
+           if not yet paid)
+         - VAT Payable: Output VAT from domestic sales
+
+      3. EQUITY:
+         - Current Year Earnings should reflect the net income from your
+           Income Statement
+
+      4. BALANCE CHECK row should be ZERO
+
+      If the balance check is not zero, something is misconfigured in your
+      row definition. Double-check account number mappings and ensure all
+      accounts are included somewhere in the rows.
+    config_data:
+      financial_report:
+        name: "NT-BALANCE-SHEET"
+        description: "Nordic Traders Balance Sheet"
+        row_definition: "NT-BS-ROWS"
+        column_definition: "NT-BAL-COLS"
+    validation_questions:
+      - question: "Does your BALANCE CHECK row show zero?"
+        expected_answer: "Yes — if it does not, there are accounts in the Chart of Accounts that are not included in any row of the Balance Sheet row definition"
+        hints:
+          - "Every G/L account with a balance must be included in the balance sheet rows"
+      - question: "What amount shows in the Inventory row, and does it match the Inventory Valuation report?"
+        expected_answer: "It should show the total value of unsold inventory (laptops and monitors at FIFO cost) and it should match the Inventory Valuation report total and the balance of G/L account 1210"
+        hints:
+          - "All three sources should agree: G/L account, Inventory Valuation report, and Balance Sheet"
+
+  - id: verify_accounting_equation
+    title: "Verify the accounting equation and analyze results"
+    instructions: |
+      The fundamental accounting equation is:
+
+        Assets = Liabilities + Equity
+
+      Your Balance Sheet report should demonstrate this. Compare:
+        - TOTAL ASSETS (row 130)
+        - TOTAL LIABILITIES + TOTAL EQUITY (row 310)
+
+      They must be equal. This is the most fundamental check in accounting.
+
+      Now analyze what the balance sheet tells you about Nordic Traders:
+
+      Current Assets:
+        - Inventory is likely the largest asset — Nordic Traders has significant
+          stock of laptops and monitors
+        - Trade Receivables shows money owed by customers (EU customer payment
+          may still be outstanding)
+        - VAT Receivable shows input VAT that can be offset against output VAT
+
+      Current Liabilities:
+        - Trade Payables shows money owed to the Asian vendor
+        - VAT Payable shows output VAT collected from domestic sales
+
+      Quick Ratios to consider (calculate mentally or on paper):
+        - Current Ratio = Current Assets / Current Liabilities
+          (above 1.0 means the company can cover short-term obligations)
+        - Inventory-to-Assets ratio = Inventory / Total Assets
+          (high ratio is typical for a trading company)
+    config_data: {}
+    validation_questions:
+      - question: "State the accounting equation and confirm it holds for Nordic Traders."
+        expected_answer: "Assets = Liabilities + Equity. Yes, it holds — the BALANCE CHECK row shows zero, confirming Total Assets equals Total Liabilities plus Total Equity."
+        hints:
+          - "This is the most fundamental equation in accounting"
+      - question: "What is likely the largest asset on Nordic Traders' balance sheet, and why?"
+        expected_answer: "Inventory — because Nordic Traders is a trading company that holds significant stock of electronics (laptops and monitors) purchased for resale"
+        hints:
+          - "Think about what a trading company's main asset would be"
+
+  - id: export_to_excel
+    title: "Export the financial reports to Excel"
+    instructions: |
+      Business Central allows you to export Financial Reports to Excel
+      for further analysis and sharing.
+
+      From the Balance Sheet report view:
+        1. Click the "Send to" action in the action bar, or look for
+           the Excel/Export option
+        2. Select "Microsoft Excel Document (data only)" or similar option
+        3. Save the file
+
+      Alternatively, use the "Print" action to generate a PDF.
+
+      You can also export the Income Statement (NT-INCOME-STMT) the same way.
+
+      In Excel, you can:
+        - Add charts and graphs
+        - Create additional calculations and ratios
+        - Format the statements for board presentations
+        - Compare multiple periods side by side
+
+      Note: In modern BC, you can also use the "Edit in Excel" feature
+      for many pages, but Financial Reports have their own export options.
+
+      Export both the Income Statement and Balance Sheet to Excel.
+      These are the two core financial statements that every business
+      needs. (The third is the Cash Flow Statement, which BC also
+      supports but is beyond the scope of this lesson.)
+    config_data: {}
+    validation_questions:
+      - question: "What are the three core financial statements in accounting?"
+        expected_answer: "Income Statement (Profit & Loss), Balance Sheet, and Cash Flow Statement"
+        hints:
+          - "We have created two of them — the third tracks cash movements"
+      - question: "Why would you export financial reports to Excel?"
+        expected_answer: "For additional analysis, creating charts, calculating ratios, formatting for presentations, and sharing with stakeholders who do not have access to Business Central"
+        hints:
+          - "Not everyone has access to BC, and Excel offers more formatting flexibility"
+
+validation_questions:
+  - question: "What is the accounting equation?"
+    expected_answer: "Assets = Liabilities + Equity"
+    hints: []
+  - question: "Why does the Balance Sheet use 'Balance at Date' columns instead of 'Net Change'?"
+    expected_answer: "Because the balance sheet is a point-in-time snapshot showing cumulative account balances, not period-over-period changes"
+    hints: []
+  - question: "If the BALANCE CHECK row is not zero, what does that indicate?"
+    expected_answer: "That one or more G/L accounts with a balance are not included in the row definition, so the balance sheet is incomplete"
+    hints: []
+
+agent_context: |
+  This lesson builds on the Income Statement from the previous lesson to create
+  a complete Balance Sheet. The student now has both core financial statements.
+
+  Key teaching points:
+  - Balance Sheet is a snapshot in time (Balance at Date), not a period report
+  - The accounting equation (Assets = Liabilities + Equity) must always hold
+  - Show Opposite Sign is critical for presenting liabilities/equity correctly
+  - The BALANCE CHECK row is a powerful self-validation technique
+  - Inventory is typically the largest asset for a trading company
+  - Current Year Earnings on the balance sheet should tie to net income on the IS
+
+  Common mistakes:
+  - Using "Net Change" column type instead of "Balance at Date" for the BS
+  - Forgetting Show Opposite Sign on liability/equity rows (numbers appear negative)
+  - Not including all accounts in the row definition (causes balance check failure)
+  - Missing an account range — if the student added any accounts not in the
+    predefined ranges, those need to be included
+  - Confusing "Total" totaling type with "Formula" totaling type
+
+  If the BALANCE CHECK is not zero, help the student debug:
+  1. Go to Chart of Accounts and run a Trial Balance
+  2. Identify which accounts have balances
+  3. Check if each account is included in the BS row definition
+  4. Common culprits: accounts created in between defined ranges,
+     or accounts that the student added outside the original CoA plan
+
+  The Nordic Traders balance sheet should show:
+  - Inventory (1210): Significant balance from unsold laptops/monitors
+  - Trade Receivables (1300): If customer invoices are not yet paid
+  - Trade Payables (2110): If vendor invoice is not yet paid
+  - VAT accounts: 1400 (receivable) and 2200 (payable) from transactions
+  - Current Year Earnings (3300): Net income from all posted transactions
+
+  The export to Excel is straightforward but important — financial statements
+  are typically shared outside BC in Excel or PDF format.
+
+estimated_duration: "35 minutes"

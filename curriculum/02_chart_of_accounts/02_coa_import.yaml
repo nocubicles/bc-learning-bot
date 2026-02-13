@@ -1,0 +1,216 @@
+id: coa_import
+title: "Importing the Chart of Accounts"
+objectives:
+  - "Learn how to use Configuration Packages to import data"
+  - "Import the planned Chart of Accounts into Business Central"
+  - "Understand the alternative methods for importing G/L accounts"
+prerequisites:
+  - "coa_design"
+tasks:
+  - id: understand_import_methods
+    title: "Understand data import methods"
+    instructions: |
+      Business Central offers several ways to import a Chart of Accounts:
+
+      1. Configuration Packages (RapidStart) — the standard tool for
+         importing master data during implementation. Uses Excel templates.
+      2. Manual entry — entering accounts one by one on the Chart of Accounts page.
+      3. Copy from another company — if you have a template company.
+      4. Edit in Excel — using the "Edit in Excel" feature on the CoA page.
+
+      For this lesson, we will use the "Edit in Excel" method on the
+      Chart of Accounts page because it is the simplest approach for our
+      relatively small chart.
+
+      If you are comfortable with Configuration Packages, you may use
+      that method instead — the result is the same.
+    config_data: {}
+    validation_questions:
+      - question: "Which import method will we use?"
+        expected_answer: "Edit in Excel on the Chart of Accounts page"
+        hints:
+          - "The simplest approach for a small chart of accounts"
+
+  - id: create_accounts_manually
+    title: "Create G/L accounts"
+    instructions: |
+      Open the Chart of Accounts page (Page 16): Search → "Chart of Accounts".
+
+      We will create the accounts. For each account, click "New" and fill in:
+        - No.: The account number
+        - Name: The account name
+        - Income/Balance: Either "Income Statement" or "Balance Sheet"
+        - Account Type: Posting, Heading, Total, Begin-Total, or End-Total
+        - Account Category: Assets, Liabilities, Equity, Income, Cost of Goods Sold, or Expense
+        - Account Subcategory: Choose the most appropriate one from the dropdown
+
+      Start with the first set of Balance Sheet accounts:
+
+        No.    Name                      Income/Balance    Account Type    Category
+        ─────  ────────────────────────  ────────────────  ──────────────  ──────────
+        1000   Assets                    Balance Sheet     Heading         Assets
+        1100   Fixed Assets              Balance Sheet     Begin-Total     Assets
+        1110   Equipment & Furniture     Balance Sheet     Posting         Assets
+        1120   IT Hardware               Balance Sheet     Posting         Assets
+        1190   Total Fixed Assets        Balance Sheet     End-Total       Assets
+        1200   Current Assets            Balance Sheet     Begin-Total     Assets
+        1210   Inventory                 Balance Sheet     Posting         Assets
+        1300   Trade Receivables         Balance Sheet     Posting         Assets
+        1310   Prepayments to Vendors    Balance Sheet     Posting         Assets
+        1400   VAT Receivable            Balance Sheet     Posting         Assets
+        1500   Bank Account - DKK        Balance Sheet     Posting         Assets
+        1510   Bank Account - USD        Balance Sheet     Posting         Assets
+        1520   Cash                      Balance Sheet     Posting         Assets
+        1990   Total Current Assets      Balance Sheet     End-Total       Assets
+        1999   Total Assets              Balance Sheet     Total           Assets
+
+      Continue with Liabilities and Equity:
+
+        2000   Liabilities               Balance Sheet     Heading         Liabilities
+        2100   Current Liabilities       Balance Sheet     Begin-Total     Liabilities
+        2110   Trade Payables            Balance Sheet     Posting         Liabilities
+        2120   Prepayments from Cust.    Balance Sheet     Posting         Liabilities
+        2200   VAT Payable               Balance Sheet     Posting         Liabilities
+        2210   Tax Payable               Balance Sheet     Posting         Liabilities
+        2300   Accrued Expenses          Balance Sheet     Posting         Liabilities
+        2900   Total Current Liabilities Balance Sheet     End-Total       Liabilities
+        3000   Equity                    Balance Sheet     Heading         Equity
+        3100   Share Capital             Balance Sheet     Posting         Equity
+        3200   Retained Earnings         Balance Sheet     Posting         Equity
+        3999   Total Equity              Balance Sheet     Total           Equity
+
+      Then the Income Statement accounts:
+
+        4000   Revenue                   Income Statement  Heading         Income
+        4100   Product Sales             Income Statement  Posting         Income
+        4200   Service Revenue           Income Statement  Posting         Income
+        4300   Sales Discounts           Income Statement  Posting         Income
+        4999   Total Revenue             Income Statement  Total           Income
+        5000   Cost of Goods Sold        Income Statement  Heading         Cost of Goods Sold
+        5100   COGS - Products           Income Statement  Posting         Cost of Goods Sold
+        5200   COGS - Freight Inbound    Income Statement  Posting         Cost of Goods Sold
+        5300   Inventory Adjustments     Income Statement  Posting         Cost of Goods Sold
+        5999   Total COGS                Income Statement  Total           Cost of Goods Sold
+        6000   Operating Expenses        Income Statement  Heading         Expense
+        6100   Rent                      Income Statement  Posting         Expense
+        6200   Utilities                 Income Statement  Posting         Expense
+        6300   Office Supplies           Income Statement  Posting         Expense
+        6400   Insurance                 Income Statement  Posting         Expense
+        6500   Marketing & Advertising   Income Statement  Posting         Expense
+        6600   Travel Expenses           Income Statement  Posting         Expense
+        6700   IT & Software             Income Statement  Posting         Expense
+        6800   Depreciation              Income Statement  Posting         Expense
+        6999   Total Operating Expenses  Income Statement  Total           Expense
+        7000   Personnel Expenses        Income Statement  Heading         Expense
+        7100   Salaries                  Income Statement  Posting         Expense
+        7200   Social Contributions      Income Statement  Posting         Expense
+        7300   Pension Contributions     Income Statement  Posting         Expense
+        7999   Total Personnel Expenses  Income Statement  Total           Expense
+        8000   Financial Items           Income Statement  Heading         Income
+        8100   Interest Income           Income Statement  Posting         Income
+        8200   Interest Expense          Income Statement  Posting         Expense
+        8300   Currency Exchange Gains   Income Statement  Posting         Income
+        8400   Currency Exchange Losses  Income Statement  Posting         Expense
+        8999   Total Financial Items     Income Statement  Total           Income
+        9000   Tax                       Income Statement  Heading         Expense
+        9100   Corporate Income Tax      Income Statement  Posting         Expense
+        9999   Total Tax                 Income Statement  Total           Expense
+
+      Take your time entering these. Accuracy matters more than speed.
+    config_data:
+      accounts:
+        - { no: "1000", name: "Assets", type: "Heading", income_balance: "Balance Sheet", category: "Assets" }
+        - { no: "1110", name: "Equipment & Furniture", type: "Posting", income_balance: "Balance Sheet", category: "Assets" }
+        - { no: "1210", name: "Inventory", type: "Posting", income_balance: "Balance Sheet", category: "Assets" }
+        - { no: "1300", name: "Trade Receivables", type: "Posting", income_balance: "Balance Sheet", category: "Assets" }
+        - { no: "1500", name: "Bank Account - DKK", type: "Posting", income_balance: "Balance Sheet", category: "Assets" }
+        - { no: "2110", name: "Trade Payables", type: "Posting", income_balance: "Balance Sheet", category: "Liabilities" }
+        - { no: "3200", name: "Retained Earnings", type: "Posting", income_balance: "Balance Sheet", category: "Equity" }
+        - { no: "4100", name: "Product Sales", type: "Posting", income_balance: "Income Statement", category: "Income" }
+        - { no: "5100", name: "COGS - Products", type: "Posting", income_balance: "Income Statement", category: "Cost of Goods Sold" }
+    validation_questions:
+      - question: "How many G/L accounts have you created in total?"
+        expected_answer: "Approximately 50 accounts"
+        hints:
+          - "Count all the accounts in both the Balance Sheet and Income Statement sections"
+      - question: "What Account Type did you set for account 1100 Fixed Assets?"
+        expected_answer: "Begin-Total"
+        hints:
+          - "Begin-Total starts a grouping range that ends with an End-Total account"
+
+  - id: set_totaling_formulas
+    title: "Configure totaling formulas"
+    instructions: |
+      For Total and End-Total accounts, you need to set the Totaling field
+      so BC knows which accounts to sum up.
+
+      Open each Total/End-Total account card and set the Totaling field:
+
+        1190 Total Fixed Assets:        1100..1189
+        1990 Total Current Assets:      1200..1989
+        1999 Total Assets:              1000..1998
+        2900 Total Current Liabilities: 2100..2899
+        3999 Total Equity:              3000..3998
+        4999 Total Revenue:             4000..4998
+        5999 Total COGS:                5000..5998
+        6999 Total Operating Expenses:  6000..6998
+        7999 Total Personnel Expenses:  7000..7998
+        8999 Total Financial Items:     8000..8998
+        9999 Total Tax:                 9000..9998
+
+      The format "1100..1189" means "sum all Posting accounts from 1100 to 1189".
+      You can also use pipe (|) to combine ranges: "1100..1189|1200..1989".
+    config_data:
+      totaling:
+        "1190": "1100..1189"
+        "1990": "1200..1989"
+        "1999": "1000..1998"
+        "2900": "2100..2899"
+        "3999": "3000..3998"
+        "4999": "4000..4998"
+        "5999": "5000..5998"
+        "6999": "6000..6998"
+        "7999": "7000..7998"
+        "8999": "8000..8998"
+        "9999": "9000..9998"
+    validation_questions:
+      - question: "What Totaling formula did you enter for account 1999 Total Assets?"
+        expected_answer: "1000..1998"
+        hints:
+          - "It should sum all accounts from 1000 to 1998"
+
+validation_questions:
+  - question: "How many Posting-type accounts are there in the chart?"
+    expected_answer: "Approximately 35 posting accounts"
+    hints:
+      - "Count only accounts with Account Type = Posting"
+  - question: "What is the Totaling formula for Total Revenue (4999)?"
+    expected_answer: "4000..4998"
+    hints: []
+
+agent_context: |
+  This is a hands-on lesson with a lot of data entry. Be patient.
+  The student might take 30-60 minutes to enter all accounts.
+
+  Key teaching points:
+  - Account Types and their roles (Posting vs structural accounts)
+  - Totaling formulas use the ".." range notation
+  - Begin-Total / End-Total pairs create indentation in reports
+  - Account Categories and Subcategories drive standard financial reports
+  - "Direct Posting" should be enabled on Posting accounts that receive journal entries
+
+  Common mistakes:
+  - Setting wrong Account Type (Posting instead of Heading, etc.)
+  - Forgetting Totaling formulas on Total/End-Total accounts
+  - Wrong Income/Balance classification (e.g., marking an expense as Balance Sheet)
+  - Missing Begin-Total / End-Total pairs (they must come in pairs)
+  - Entering duplicate account numbers
+
+  If the student finds manual entry tedious, acknowledge it and explain that
+  in real projects, consultants often use Excel import or Configuration Packages.
+  The manual process teaches them the structure.
+
+  Tip: The "Indent Chart of Accounts" action re-calculates indentation based
+  on Begin-Total/End-Total pairs. The student can run this after entering all accounts.
+
+estimated_duration: "45 minutes"

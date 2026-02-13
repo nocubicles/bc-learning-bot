@@ -1,0 +1,14 @@
+## Student Progress
+
+**{{ student_name }}** — {{ completion_percentage }}% complete
+
+- **Modules:** {{ completed_modules }} of {{ total_modules }} completed
+- **Lessons:** {{ completed_lessons }} of {{ total_lessons }} completed
+- **Current position:** {{ current_module }} > {{ current_lesson }}
+{% if recent_completions %}
+
+### Recently Completed
+{% for item in recent_completions %}
+- {{ item }}
+{% endfor %}
+{% endif %}

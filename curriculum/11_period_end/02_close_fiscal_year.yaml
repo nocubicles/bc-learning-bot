@@ -1,0 +1,241 @@
+id: close_fiscal_year
+title: "Closing the Fiscal Year"
+objectives:
+  - "Understand the fiscal year closing process in Business Central"
+  - "Run the Close Income Statement batch job"
+  - "Understand how revenue and expense accounts are zeroed out"
+  - "Post closing entries to retained earnings"
+prerequisites:
+  - "period_end_checklist"
+tasks:
+  - id: understand_year_end
+    title: "Understand fiscal year-end closing"
+    instructions: |
+      Fiscal year closing is the final step in the annual accounting cycle.
+      The key concept is:
+
+      Income Statement accounts (Revenue, COGS, Expenses) are TEMPORARY accounts.
+      They accumulate balances during the year and must be reset to zero at year-end.
+
+      The net result (profit or loss) is transferred to a Balance Sheet account —
+      specifically the Retained Earnings account.
+
+      For Nordic Traders:
+        - Revenue accounts (4000-4999): Will be zeroed out
+        - COGS accounts (5000-5999): Will be zeroed out
+        - Expense accounts (6000-9999): Will be zeroed out
+        - The net amount goes to account 3200 (Retained Earnings)
+
+      This is what the "Close Income Statement" batch job does automatically.
+
+      Before running it:
+        1. Ensure ALL period-end tasks are complete for every month in the year
+        2. Run final Adjust Cost - Item Entries
+        3. Verify the Trial Balance one last time
+        4. Ensure all periods for the fiscal year are closed on the
+           Accounting Periods page (Page 100)
+
+      Search for "Accounting Periods" (Page 100).
+      To close a fiscal year, the first period of the NEXT fiscal year must exist.
+      Then use the "Close Year" action on the Accounting Periods page.
+    config_data:
+      retained_earnings_account: "3200"
+      income_statement_range: "4000-9999"
+      fiscal_year: "2025"
+    validation_questions:
+      - question: "Why must Income Statement accounts be zeroed out at year-end?"
+        expected_answer: "Because Income Statement accounts are temporary — they track activity for a single fiscal year. Zeroing them out transfers the net result to Retained Earnings and starts the new year with clean revenue and expense accounts."
+        hints:
+          - "Think about how a P&L report works — it shows one year at a time"
+      - question: "What account receives the net profit or loss at year-end?"
+        expected_answer: "Account 3200 (Retained Earnings) — this is an equity account on the Balance Sheet that accumulates profits from all prior years"
+        hints:
+          - "It is in the Equity section (3000 range)"
+
+  - id: run_close_income_statement
+    title: "Run the Close Income Statement batch job"
+    instructions: |
+      Search for "Close Income Statement" (Report 94).
+
+      Configure the batch job:
+
+        Fiscal Year Ending Date: 31/12/2025 (or the last day of your fiscal year)
+        Gen. Journal Template: GENERAL
+        Gen. Journal Batch: CLOSING (create this batch if it does not exist)
+        Document No.: CLOSE-2025
+        Retained Earnings Acc.: 3200 (Retained Earnings)
+        Post to Retained Earnings Acc.:
+          - "Balance" = one summarized entry per Income Statement account
+          - "Details" = individual entries preserving dimension detail
+          Choose "Balance" for simplicity.
+        Dimensions: Leave default (carries over dimension values if applicable)
+
+      Click OK to run the batch job.
+
+      IMPORTANT: The batch job does NOT post the entries automatically.
+      It creates journal lines in the General Journal batch you specified.
+      You must review and post them manually.
+
+      Search for "General Journals" (Page 39) and select the CLOSING batch.
+      You will see lines like:
+        - Credit 4100 (Product Sales) — zeroing out revenue
+        - Debit 5100 (COGS - Products) — zeroing out COGS
+        - Debit 6100 (Rent), Debit 6300 (Office Supplies), etc. — zeroing out expenses
+        - Debit or Credit 3200 (Retained Earnings) — the net amount
+
+      Review the lines carefully. The total of all debits must equal the
+      total of all credits.
+    config_data:
+      close_income_statement:
+        report_id: 94
+        fiscal_year_ending: "31/12/2025"
+        journal_template: "GENERAL"
+        journal_batch: "CLOSING"
+        document_no: "CLOSE-2025"
+        retained_earnings_account: "3200"
+        posting_method: "Balance"
+    validation_questions:
+      - question: "Does the Close Income Statement batch job post entries automatically?"
+        expected_answer: "No — it creates journal lines in the specified General Journal batch. You must review and post them manually."
+        hints:
+          - "This gives you a chance to review the closing entries before they become permanent"
+      - question: "What Document No. will the closing entries have?"
+        expected_answer: "CLOSE-2025 — the document number we specified when running the batch job"
+        hints:
+          - "This makes it easy to identify closing entries in the GL"
+
+  - id: review_and_post_closing
+    title: "Review and post closing entries"
+    instructions: |
+      In "General Journals" (Page 39), with the CLOSING batch selected,
+      carefully review each line.
+
+      For each revenue account, verify:
+        - The closing entry is on the Credit side (equal and opposite to the accumulated debit balance)
+        - Wait — actually, revenue accounts normally have credit balances.
+          So the closing entry will DEBIT the revenue account to bring it to zero.
+
+      Let us trace the logic:
+        Account 4100 (Product Sales) has a credit balance of, say, 1,490 DKK.
+        The closing entry DEBITS 4100 for 1,490 to zero it out.
+
+        Account 5100 (COGS) has a debit balance of, say, 750 DKK.
+        The closing entry CREDITS 5100 for 750 to zero it out.
+
+        The net difference goes to 3200 (Retained Earnings).
+        If revenue > expenses, Retained Earnings gets a CREDIT (profit).
+        If expenses > revenue, Retained Earnings gets a DEBIT (loss).
+
+      Once you are satisfied the entries look correct, post the journal (F9).
+
+      After posting, verify:
+        - Run the Trial Balance for the closed fiscal year
+        - All Income Statement accounts (4000-9999) should show zero balance
+        - Account 3200 (Retained Earnings) should have increased by the net profit
+    config_data: {}
+    validation_questions:
+      - question: "If Product Sales (4100) had a credit balance of 1,490 DKK, what does the closing entry do?"
+        expected_answer: "It debits account 4100 for 1,490 DKK, bringing the balance to zero"
+        hints:
+          - "To zero out a credit balance, you post a debit of the same amount"
+      - question: "If total revenue was 1,490 DKK and total expenses were 1,250 DKK, what entry goes to Retained Earnings?"
+        expected_answer: "A credit of 240 DKK to Retained Earnings (3200), representing the net profit for the year"
+        hints:
+          - "Revenue minus expenses equals profit, and profit increases equity (credit)"
+
+  - id: verify_closed_year
+    title: "Verify the fiscal year is properly closed"
+    instructions: |
+      After posting the closing entries, perform these final verifications:
+
+      Step 1: Check Income Statement accounts are zero
+        Search for "Trial Balance" (Report 6).
+        Set the date filter to the closed fiscal year (01/01/2025..31/12/2025).
+        All accounts in range 4000-9999 should show zero net change after
+        the closing entries.
+
+      Step 2: Check Retained Earnings
+        Search for "G/L Account Card" (Page 17) for account 3200.
+        The balance should include the net profit/loss from the closed year.
+
+      Step 3: Check the Accounting Periods
+        Search for "Accounting Periods" (Page 100).
+        The fiscal year should show as closed.
+        Verify that the new fiscal year periods exist.
+
+      Step 4: Verify the new year starts clean
+        Run the Trial Balance for the first period of the new year
+        (e.g., 01/01/2026..31/01/2026).
+        Income Statement accounts should start at zero.
+        Balance Sheet accounts should carry forward their balances.
+
+      Congratulations — the fiscal year is closed. In practice, you might
+      still need to make post-closing adjustments (audit adjustments),
+      which is why BC allows posting to closed years with proper permissions.
+    config_data:
+      verification_checks:
+        - check: "Income Statement accounts are zero"
+          report: "Trial Balance (Report 6)"
+          date_filter: "01/01/2025..31/12/2025"
+        - check: "Retained Earnings updated"
+          account: "3200"
+        - check: "Fiscal year marked as closed"
+          page: "Accounting Periods (Page 100)"
+        - check: "New year starts clean"
+          date_filter: "01/01/2026..31/01/2026"
+    validation_questions:
+      - question: "After closing the fiscal year, what balances do Income Statement accounts have?"
+        expected_answer: "Zero — all revenue and expense accounts are zeroed out by the closing entries, with the net amount transferred to Retained Earnings"
+        hints:
+          - "That is the entire purpose of the Close Income Statement batch job"
+      - question: "Do Balance Sheet accounts also get zeroed out at year-end?"
+        expected_answer: "No — Balance Sheet accounts (Assets, Liabilities, Equity) are permanent accounts that carry their balances forward into the new fiscal year"
+        hints:
+          - "Only Income Statement (temporary) accounts are closed"
+
+validation_questions:
+  - question: "What does the Close Income Statement batch job (Report 94) do?"
+    expected_answer: "It creates journal entries that zero out all Income Statement accounts (revenue, COGS, expenses) and transfers the net profit or loss to the Retained Earnings account (3200)"
+    hints: []
+  - question: "Why does BC create journal lines instead of posting closing entries directly?"
+    expected_answer: "To allow the accountant to review the closing entries before posting. This provides a chance to verify the amounts and catch any issues before the entries become permanent."
+    hints: []
+  - question: "What is the Retained Earnings account for Nordic Traders?"
+    expected_answer: "Account 3200 (Retained Earnings) in the Equity section of the Balance Sheet"
+    hints: []
+
+agent_context: |
+  This is a milestone lesson — closing the fiscal year wraps up the full
+  accounting cycle that the student has been building throughout the curriculum.
+
+  Key teaching points:
+  - Income Statement accounts are temporary; Balance Sheet accounts are permanent
+  - The Close Income Statement batch job creates (but does not post) closing entries
+  - The net result goes to Retained Earnings (3200)
+  - Always review closing entries before posting
+  - The accounting cycle: Open year → Post transactions → Period-end procedures
+    → Close year → Repeat
+
+  Approach:
+  - This is conceptually important — make sure the student understands WHY
+    accounts are closed, not just HOW
+  - Walk through the journal lines to show how each account is zeroed out
+  - The debit/credit logic of closing entries can be confusing — use concrete
+    numbers from their test transactions
+  - Emphasize the verification steps — a properly closed year is clean and orderly
+
+  Common mistakes:
+  - Running Close Income Statement before completing all period-end tasks
+  - Forgetting to actually post the closing journal (the batch job only creates lines)
+  - Not creating the next fiscal year's accounting periods first
+  - Running the batch job twice (which would double the closing entries)
+  - Confusing "Close Year" on Accounting Periods with "Close Income Statement"
+
+  Real-world context:
+  - In practice, auditors may request post-closing adjustments
+  - Some companies close monthly (12 closing cycles per year)
+  - The Close Income Statement is typically run by the finance manager or
+    external accountant, not regular users
+  - Danish companies must file annual accounts (aarsrapport) after year-end
+
+estimated_duration: "35 minutes"

@@ -1,0 +1,286 @@
+id: error_correction
+title: "Error Correction and Reversals"
+objectives:
+  - "Understand when and how to reverse posted journal entries"
+  - "Create credit memos to correct posted purchase and sales invoices"
+  - "Use the Copy Document function to speed up corrections"
+  - "Know the rules for when corrections are possible versus when they are not"
+prerequisites:
+  - "test_transactions"
+tasks:
+  - id: understand_correction_rules
+    title: "Understand correction rules in Business Central"
+    instructions: |
+      In Business Central, you cannot simply delete or edit a posted entry.
+      This is by design — it ensures a complete audit trail.
+
+      There are several correction methods depending on the situation:
+
+      1. Reverse Transaction (for journal entries):
+         - Only works for G/L journal entries
+         - Creates an exact mirror entry that cancels the original
+         - Both entries remain visible in the ledger
+
+      2. Corrective Credit Memo (for posted invoices):
+         - Creates a new document that offsets the original invoice
+         - Required for purchase and sales invoices
+         - Can be for the full amount or partial
+
+      3. Copy Document (helper function):
+         - Copies data from a posted document to a new one
+         - Useful when creating credit memos that mirror the original
+
+      Key rules:
+        - You can NEVER delete a posted G/L entry
+        - You can NEVER modify the amount of a posted entry
+        - Inventory entries that have been applied cannot be directly reversed
+        - Fiscal periods that are closed prevent posting in that period
+        - The Posting Date of the correction matters for reporting
+
+      Understanding these rules is essential for any BC consultant or user.
+    config_data: {}
+    validation_questions:
+      - question: "Can you delete a posted General Ledger entry in Business Central?"
+        expected_answer: "No — posted entries can never be deleted. They can only be corrected by posting a reversing entry or credit memo"
+        hints:
+          - "BC enforces a complete audit trail"
+      - question: "What is the difference between reversing a journal entry and creating a credit memo?"
+        expected_answer: "Reversing is for journal entries and creates a mirror entry. Credit memos are for posted invoices and create a new offsetting document. The result is similar but the method and document type differ."
+        hints:
+          - "Think about what type of document was originally posted"
+
+  - id: reverse_journal_entry
+    title: "Reverse a posted journal entry"
+    instructions: |
+      Let us practice reversing a journal entry.
+
+      First, create and post a test journal entry:
+        Search for "General Journals" (Page 39).
+        Create a line:
+          Posting Date: Today
+          Document Type: (blank)
+          Account Type: G/L Account
+          Account No.: 6300 (Office Supplies)
+          Amount: 500.00
+          Bal. Account Type: G/L Account
+          Bal. Account No.: 1500 (Bank Account - DKK)
+          Description: "Test entry - to be reversed"
+        Post the journal.
+
+      Now reverse it:
+        Search for "General Ledger Entries" (Page 20).
+        Find the entry you just posted (filter by Description or Document No.).
+        Select the entry and click "Reverse Transaction" from the actions menu.
+
+        BC will show you the "Reverse Transaction Entries" page with the
+        entries that will be reversed. Review them.
+
+        Click "Reverse" to confirm.
+
+      Verify:
+        - Go back to G/L Entries and find both the original and the reversal.
+        - The original entry should now show "Reversed" = Yes.
+        - The reversal entry has the same amount but opposite sign.
+        - The net effect on accounts 6300 and 1500 is zero.
+    config_data:
+      test_journal:
+        account: "6300"
+        account_name: "Office Supplies"
+        amount: 500.00
+        bal_account: "1500"
+        bal_account_name: "Bank Account - DKK"
+    validation_questions:
+      - question: "After reversing, how many G/L entries exist for this transaction?"
+        expected_answer: "4 entries total — 2 from the original posting (debit Office Supplies, credit Bank) and 2 from the reversal (credit Office Supplies, debit Bank)"
+        hints:
+          - "Each posting creates a debit and credit entry, and the reversal creates another pair"
+      - question: "What does the Reversed field show on the original entry?"
+        expected_answer: "Yes — indicating this entry has been reversed"
+        hints:
+          - "BC marks reversed entries so you can identify them"
+
+  - id: purchase_credit_memo
+    title: "Create a purchase credit memo"
+    instructions: |
+      Sometimes a vendor invoice is incorrect — wrong quantity, wrong price,
+      or the goods were returned. The correct approach is a Purchase Credit Memo.
+
+      Search for "Purchase Credit Memos" (Page 9309).
+
+      Create a new credit memo.
+
+      Instead of typing everything manually, use Copy Document:
+        Go to Actions → Functions → "Copy Document" (or search "Copy Document").
+        - Document Type: Posted Invoice
+        - Document No.: (select the posted purchase invoice from our test)
+        - Include Header: Yes
+        - Recalculate Lines: No
+
+      This copies all the lines from the original invoice.
+
+      Review the credit memo:
+        - The vendor and amounts should match the original invoice
+        - Adjust the quantity if it is a partial return (e.g., change from 50 to 5)
+        - Verify the posting date
+
+      For this exercise, let us say 5 units were defective. Change the
+      quantity to 5 on the line.
+
+      Post the credit memo.
+
+      Verify:
+        - Search for "Posted Purchase Credit Memos" (Page 147)
+        - Check the Vendor Ledger Entries — the credit memo creates a positive
+          (debit) entry that partially offsets the original invoice
+        - Check G/L entries: Inventory (1210) is credited, Trade Payables (2110) is debited
+        - Check Item Ledger Entries — 5 units should be returned (negative adjustment)
+    config_data:
+      credit_memo:
+        reason: "5 defective units returned"
+        original_quantity: 50
+        return_quantity: 5
+        expected_gl_entries:
+          - { account: "1210", description: "Inventory", side: "Credit" }
+          - { account: "2110", description: "Trade Payables", side: "Debit" }
+    validation_questions:
+      - question: "Why do we use Copy Document instead of manually entering the credit memo?"
+        expected_answer: "Copy Document saves time and reduces errors by automatically copying all details from the original invoice — vendor, items, prices, posting groups"
+        hints:
+          - "It ensures the credit memo matches the original document exactly"
+      - question: "After posting a purchase credit memo for 5 returned items, what happens to inventory?"
+        expected_answer: "Inventory quantity decreases by 5 units (the items are returned to the vendor) and the inventory value in the G/L is reduced accordingly"
+        hints:
+          - "Think about what happens physically — the goods go back to the supplier"
+
+  - id: sales_credit_memo
+    title: "Create a sales credit memo"
+    instructions: |
+      The same concept applies on the sales side. If a customer returns
+      goods or was invoiced incorrectly, you issue a Sales Credit Memo.
+
+      Search for "Sales Credit Memos" (Page 9302).
+
+      Create a new credit memo using Copy Document:
+        - Document Type: Posted Invoice
+        - Document No.: (select your posted sales invoice)
+        - Include Header: Yes
+        - Recalculate Lines: No
+
+      For this exercise, the customer returns 2 units. Change quantity to 2.
+
+      Post the credit memo.
+
+      Verify in "Posted Sales Credit Memos" (Page 144):
+        - Customer Ledger Entries show a credit entry
+        - G/L entries reverse the original pattern:
+          Trade Receivables (1300) — Credit (reducing what customer owes)
+          Product Sales (4100) — Debit (reducing revenue)
+          VAT Payable (2200) — Debit (reducing VAT liability)
+          COGS (5100) — Credit (reducing cost of goods sold)
+          Inventory (1210) — Debit (items returned to stock)
+
+      Note: The customer already paid the full invoice. The credit memo
+      creates an open credit entry. You would either refund the customer
+      or apply the credit to their next invoice.
+    config_data:
+      sales_credit_memo:
+        reason: "2 units returned by customer"
+        return_quantity: 2
+        expected_gl_entries:
+          - { account: "1300", description: "Trade Receivables", side: "Credit" }
+          - { account: "4100", description: "Product Sales", side: "Debit" }
+          - { account: "2200", description: "VAT Payable", side: "Debit" }
+          - { account: "5100", description: "COGS - Products", side: "Credit" }
+          - { account: "1210", description: "Inventory", side: "Debit" }
+    validation_questions:
+      - question: "When a sales credit memo is posted, what happens to revenue?"
+        expected_answer: "Revenue (account 4100) is debited, which reduces the revenue balance — effectively reversing the revenue recorded by the original invoice for the returned items"
+        hints:
+          - "Credit memos reverse the original invoice entries"
+      - question: "If the customer already paid and you post a credit memo, what happens?"
+        expected_answer: "The credit memo creates an open credit entry on the customer ledger. You can either refund the customer via payment journal or apply the credit to a future invoice."
+        hints:
+          - "The payment and the credit memo are separate entries that can be applied to each other"
+
+  - id: audit_trail_review
+    title: "Review the audit trail"
+    instructions: |
+      One of the strengths of Business Central is its complete audit trail.
+      Let us review what the system has recorded.
+
+      Search for "General Ledger Entries" (Page 20).
+
+      Sort by Entry No. to see all entries in chronological order.
+      You should see entries from:
+        1. The purchase invoice posting
+        2. The vendor payment
+        3. The sales invoice posting
+        4. The customer cash receipt
+        5. The test journal entry
+        6. The journal reversal
+        7. The purchase credit memo
+        8. The sales credit memo
+
+      Each entry has:
+        - Entry No. (unique, sequential)
+        - Posting Date
+        - Document Type and Document No.
+        - G/L Account
+        - Debit/Credit Amount
+        - User ID (who posted it)
+
+      Key takeaway: Every single financial event is recorded permanently.
+      This is essential for auditing, tax compliance, and financial reporting.
+
+      In Denmark, the Bogfoeringslov (Bookkeeping Act) requires that all
+      accounting records be retained and immutable — BC's design supports this.
+    config_data: {}
+    validation_questions:
+      - question: "Can any user modify a posted G/L entry?"
+        expected_answer: "No — posted entries are immutable. They can only be corrected through reversals or credit memos, and both the original and correction remain in the audit trail"
+        hints:
+          - "This is a fundamental principle of BC's accounting design"
+      - question: "Why is a complete audit trail important for a Danish company?"
+        expected_answer: "Danish bookkeeping law (Bogfoeringslov) requires that all accounting records be retained, complete, and immutable. The audit trail ensures compliance with these legal requirements."
+        hints:
+          - "Think about legal and regulatory requirements"
+
+validation_questions:
+  - question: "What are the three main methods for correcting errors in BC?"
+    expected_answer: "1) Reverse Transaction for journal entries, 2) Credit Memos for posted invoices, 3) Copy Document as a helper to create correction documents"
+    hints: []
+  - question: "When should you use a credit memo versus a journal reversal?"
+    expected_answer: "Use a credit memo when correcting a posted invoice (purchase or sales). Use a journal reversal when correcting a posted general journal entry. Credit memos handle the full document lifecycle including inventory, VAT, and sub-ledgers."
+    hints: []
+
+agent_context: |
+  This lesson teaches a critical real-world skill. Mistakes happen in every
+  implementation, and knowing how to fix them properly is essential.
+
+  Key teaching points:
+  - BC's immutable ledger is a feature, not a limitation
+  - Corrections are always additive (new entries) never destructive (deleting old ones)
+  - Reverse Transaction only works for G/L journal entries
+  - Credit memos are the proper way to correct posted invoices
+  - Copy Document is a huge time-saver for creating credit memos
+  - The audit trail is a legal requirement in Denmark (Bogfoeringslov)
+
+  Approach:
+  - Frame errors positively — they are a learning opportunity
+  - Show the student that corrections are clean and traceable
+  - Emphasize the difference between "reverse" (journals) and "credit memo" (invoices)
+  - Point out how BC links original and correcting entries
+
+  Common mistakes:
+  - Trying to "delete" posted entries (not possible)
+  - Creating a credit memo but forgetting to adjust the quantity for partial returns
+  - Posting a credit memo with the wrong date (affects period reporting)
+  - Not applying the credit memo to the original entry in the ledger
+  - Confusing Purchase Credit Memos with Sales Credit Memos
+
+  Real-world context:
+  - In practice, about 5-10% of transactions need some form of correction
+  - Good training on corrections prevents accounting messes
+  - Auditors specifically look at reversal patterns to detect issues
+
+estimated_duration: "40 minutes"

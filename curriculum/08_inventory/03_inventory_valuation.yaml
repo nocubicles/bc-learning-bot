@@ -1,0 +1,269 @@
+id: inventory_valuation
+title: "Inventory Valuation and Cost Adjustment"
+objectives:
+  - "Understand how Business Central values inventory using FIFO costing"
+  - "Run the Adjust Cost - Item Entries batch job"
+  - "Review Value Entries and understand expected vs actual cost"
+  - "Interpret the Inventory Valuation report"
+prerequisites:
+  - "item_journal"
+tasks:
+  - id: understand_costing
+    title: "Understand inventory costing in Business Central"
+    instructions: |
+      Business Central supports several costing methods:
+        - FIFO (First In, First Out) — default for most trading companies
+        - LIFO (Last In, First Out)
+        - Average
+        - Specific
+        - Standard
+
+      Nordic Traders uses FIFO costing (set up when we created the items).
+      Under FIFO, the oldest inventory costs are applied first when goods
+      are sold or consumed.
+
+      Example with Nordic Traders' laptops:
+        - Purchased 50 laptops at 5,500 DKK each (Purchase Order 1)
+        - If we later purchase 20 more at 5,800 DKK each (Purchase Order 2)
+        - When we sell 10 laptops, FIFO applies the cost from PO1 (5,500 DKK)
+        - Only after all 50 from PO1 are sold does BC use the PO2 cost
+
+      Key concepts:
+        - Cost Application: BC matches outbound entries to inbound entries
+          using the costing method (FIFO matches to oldest available)
+        - Expected Cost: The estimated cost before the purchase invoice is
+          posted (based on the PO line amount)
+        - Actual Cost: The final cost after the purchase invoice is posted
+        - Value Entries: The detailed cost records behind Item Ledger Entries
+    config_data: {}
+    validation_questions:
+      - question: "Under FIFO costing, which inventory cost is used first when goods are sold?"
+        expected_answer: "The cost from the oldest (first) purchase that still has remaining quantity"
+        hints:
+          - "FIFO = First In, First Out — the first items purchased are the first items costed out"
+      - question: "What is the difference between Expected Cost and Actual Cost?"
+        expected_answer: "Expected Cost is recorded when goods are received but the purchase invoice has not yet been posted. Actual Cost is recorded when the purchase invoice is posted. The expected cost may differ from the actual if the invoice amount changes."
+        hints:
+          - "Think about the timing: receipt comes before invoice"
+
+  - id: review_value_entries
+    title: "Review Value Entries for your items"
+    instructions: |
+      Search for "Value Entries" (Page 5802).
+
+      Value Entries are the cost layer behind every Item Ledger Entry.
+      Each item ledger entry can have one or more value entries showing:
+        - The cost amount when goods were received (expected cost)
+        - The cost amount when the invoice was posted (actual cost)
+        - Any cost adjustments made by the Adjust Cost batch job
+        - Revaluation entries if costs are manually adjusted
+
+      Filter by your laptop item number.
+
+      Key columns to examine:
+        - Item Ledger Entry Type: Purchase, Sale, Positive Adjmt., etc.
+        - Entry Type:            Direct Cost, Revaluation, Rounding, Variance
+        - Cost Amount (Expected): The interim cost before invoicing
+        - Cost Amount (Actual):   The final invoiced cost
+        - Cost per Unit:          The unit cost used
+        - Document No.:           Links to the source document
+        - Valued Quantity:         Number of units this entry values
+
+      Look for your purchase entries — you should see entries where the
+      Expected Cost was recorded at receipt time, and the Actual Cost
+      was recorded at invoice time. If you posted the receipt and invoice
+      together, you will see only the actual cost.
+
+      Also check the value entries for the item journal adjustments
+      you posted in the previous lesson.
+    config_data: {}
+    validation_questions:
+      - question: "What is the Entry Type for a normal purchase cost in Value Entries?"
+        expected_answer: "Direct Cost"
+        hints:
+          - "Direct Cost represents the actual purchase cost of the item"
+      - question: "Can a single Item Ledger Entry have multiple Value Entries?"
+        expected_answer: "Yes — for example, one for expected cost at receipt and another adjusting to actual cost at invoice, plus any subsequent cost adjustments"
+        hints:
+          - "Think about the receipt-then-invoice workflow"
+
+  - id: run_adjust_cost
+    title: "Run the Adjust Cost - Item Entries batch job"
+    instructions: |
+      The Adjust Cost - Item Entries batch job is a critical periodic process
+      that ensures inventory costs are correct throughout the system.
+
+      What it does:
+        - Forwards cost changes from inbound entries to related outbound entries
+        - Adjusts the COGS when the purchase cost changes after the sale was posted
+        - Ensures the inventory valuation on the balance sheet is accurate
+        - Creates adjustment Value Entries and corresponding G/L Entries
+
+      When to run it:
+        - Before running financial reports
+        - Before closing an accounting period
+        - After posting purchase invoices that have different amounts than
+          the original purchase order
+        - As a regular periodic task (daily or weekly in production)
+
+      Search for "Adjust Cost - Item Entries" (Report 795).
+
+      On the request page:
+        Item No. Filter: (leave blank to process all items)
+        Post Inventory Cost to G/L: Yes
+
+      Click OK to run the batch job.
+
+      The job may complete quickly if there are no adjustments needed.
+      If adjustments were made, you will see new Value Entries created
+      with Entry Type = "Revaluation" or adjustments to existing entries.
+
+      After running, search for "Post Inventory Cost to G/L" (Report 1002)
+      if the Adjust Cost job did not do it automatically. This ensures all
+      inventory value changes are reflected in the general ledger.
+    config_data:
+      batch_job:
+        name: "Adjust Cost - Item Entries"
+        report_id: 795
+        post_to_gl: true
+    validation_questions:
+      - question: "What does the Adjust Cost - Item Entries batch job do?"
+        expected_answer: "It recalculates and adjusts inventory costs to ensure outbound entries reflect the correct inbound cost, and posts the cost differences to the general ledger"
+        hints:
+          - "It makes sure COGS and inventory values are accurate"
+      - question: "When should you run this batch job?"
+        expected_answer: "Before financial reporting, before period-end closing, after posting purchase invoices that differ from PO amounts, and as a regular periodic task"
+        hints:
+          - "Any time you need accurate cost figures"
+
+  - id: inventory_valuation_report
+    title: "Run the Inventory Valuation report"
+    instructions: |
+      Search for "Inventory Valuation" (Report 1001).
+
+      This report shows the total value of your inventory as of a given date,
+      broken down by item. It should match the Inventory account (1210) on
+      your balance sheet.
+
+      On the request page:
+        Ending Date: (today's date)
+        Show: leave defaults or select as needed
+
+      Run the report and review:
+        - Each item is listed with its quantity on hand and total value
+        - The value is calculated using the FIFO cost layers
+        - The report total should match your Inventory G/L account balance
+
+      Check the following for Nordic Traders:
+        - Laptop quantity should be: 50 (purchased) - (units sold) + 2 (adjustment) = remaining
+        - Monitor quantity should be: 30 (purchased) - (units sold) + 1 (adjustment) - 1 (write-off) = remaining
+        - The total DKK value should reconcile to account 1210
+
+      If the totals do not match the G/L account, it means the Adjust Cost
+      batch job needs to be run, or the Post Inventory Cost to G/L has not
+      been completed.
+    config_data:
+      report:
+        name: "Inventory Valuation"
+        report_id: 1001
+    validation_questions:
+      - question: "What should the Inventory Valuation report total match in the general ledger?"
+        expected_answer: "The balance of the Inventory G/L account (1210)"
+        hints:
+          - "The sub-ledger (item ledger) and the general ledger must agree"
+      - question: "If the Inventory Valuation report total does not match the G/L account balance, what should you do?"
+        expected_answer: "Run the Adjust Cost - Item Entries batch job followed by Post Inventory Cost to G/L to synchronise the item ledger values with the general ledger"
+        hints:
+          - "The cost adjustment process ensures the two are in sync"
+
+  - id: understand_cost_flow
+    title: "Trace the FIFO cost flow through Nordic Traders' transactions"
+    instructions: |
+      Let us trace how FIFO costing works through the transactions you have
+      already posted for Nordic Traders.
+
+      Open Item Ledger Entries (Page 38) and filter by your laptop item.
+      Sort by Posting Date or Entry No. to see the chronological order.
+
+      The cost flow should look like this:
+
+        1. Purchase: +50 laptops at 5,500 DKK each = 275,000 DKK total
+           (This is Entry 1 — the inbound cost layer)
+
+        2. Sale: -10 laptops (domestic sale)
+           FIFO applies the cost from Entry 1: 10 x 5,500 = 55,000 DKK COGS
+           Entry 1 Remaining Quantity drops from 50 to 40
+
+        3. Sale: -X laptops (EU sale, however many you sold)
+           FIFO continues from Entry 1: X x 5,500 DKK COGS
+           Entry 1 Remaining Quantity drops further
+
+        4. Positive Adjmt: +2 laptops at DISPLAY at 5,500 DKK
+           New inbound entry — but FIFO applies these after Entry 1
+
+      The Remaining Quantity on Entry 1 tells you how many units from
+      that purchase are still available for cost application.
+
+      This is the power of FIFO: you always know exactly which purchase
+      cost is being applied to each sale, creating a clear audit trail.
+
+      You can also use the "Application Worksheet" (Page 521) to see
+      how inbound and outbound entries are matched.
+    config_data: {}
+    validation_questions:
+      - question: "If Nordic Traders sold 10 laptops domestically and then 5 to the EU customer, what cost per unit does BC apply to both sales under FIFO?"
+        expected_answer: "5,500 DKK per unit for both sales, because all sold units come from the same first (and only) purchase batch of 50 at 5,500 DKK each"
+        hints:
+          - "There is only one purchase batch so far, so all sales use that cost"
+      - question: "When would the FIFO cost per unit change for sales?"
+        expected_answer: "When all 50 units from the first purchase are consumed and the next sale must use units from a second purchase at a different cost"
+        hints:
+          - "FIFO uses the oldest cost first; a new cost only applies when the old batch is exhausted"
+
+validation_questions:
+  - question: "What costing method does Nordic Traders use, and why is it appropriate?"
+    expected_answer: "FIFO (First In, First Out) — it is appropriate for a trading company because it matches the physical flow of goods (oldest stock is sold first) and provides clear cost traceability"
+    hints: []
+  - question: "What are Value Entries and how do they relate to Item Ledger Entries?"
+    expected_answer: "Value Entries are the cost records behind Item Ledger Entries. Each item ledger entry has one or more value entries that track expected cost, actual cost, and any adjustments"
+    hints: []
+  - question: "Why is it important to run Adjust Cost - Item Entries regularly?"
+    expected_answer: "To ensure that COGS and inventory values on the balance sheet are accurate, especially after posting purchase invoices at amounts different from the original receipt"
+    hints: []
+
+agent_context: |
+  This lesson covers inventory valuation and the cost adjustment process.
+  It is conceptually dense but essential for understanding BC's costing engine.
+
+  Key teaching points:
+  - FIFO is the most common costing method for trading companies
+  - The cost adjustment process is how BC keeps inventory costs accurate
+  - Value Entries are the cost layer behind Item Ledger Entries
+  - Expected vs Actual cost relates to the receipt-invoice timing gap
+  - The Inventory Valuation report should reconcile to the G/L inventory account
+  - If they do not match, run Adjust Cost + Post Inventory Cost to G/L
+
+  Common mistakes:
+  - Not running Adjust Cost before generating financial reports (leads to
+    inaccurate COGS and inventory values)
+  - Confusing Item Ledger Entries (quantity tracking) with Value Entries
+    (cost tracking) — they are related but serve different purposes
+  - Not understanding that BC can have a timing gap between receipt and
+    invoice where expected costs are used temporarily
+  - Thinking FIFO means physical stock rotation — in BC it is purely a
+    cost flow assumption, not a physical handling instruction
+
+  For the Nordic Traders scenario: the student has purchased 50 laptops at
+  5,500 DKK and 30 monitors at 2,800 DKK from the Asian vendor in USD.
+  If the USD exchange rate fluctuated between receipt and invoice, there
+  may be cost variances — this is a good teaching moment about currency
+  impact on inventory cost.
+
+  The Adjust Cost batch job in modern BC (v22+) can also be configured to
+  run automatically via the Job Queue. Mention this as a best practice for
+  production environments.
+
+  If the student is confused by the cost tracing exercise, use simpler numbers
+  or draw out the flow: Purchase -> Cost Layer -> Sale -> COGS application.
+
+estimated_duration: "35 minutes"

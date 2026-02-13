@@ -1,0 +1,317 @@
+id: account_schedules
+title: "Financial Reports and Income Statement"
+objectives:
+  - "Understand Financial Reports (Account Schedules) in Business Central"
+  - "Create a Row Definition for an Income Statement"
+  - "Create a Column Definition for current month and year-to-date"
+  - "Run and interpret the Income Statement report"
+prerequisites:
+  - "inventory_valuation"
+tasks:
+  - id: understand_financial_reports
+    title: "Understand the Financial Reports framework"
+    instructions: |
+      Financial Reports in Business Central (previously called Account Schedules)
+      are a powerful tool for creating custom financial statements.
+
+      A Financial Report consists of two components:
+        1. Row Definition — defines WHAT data to show (which G/L accounts,
+           formulas, totals, headings)
+        2. Column Definition — defines HOW to show it (which periods,
+           comparison columns, budget columns, formulas)
+
+      Together, they form a matrix: rows of accounts crossed with columns
+      of periods or calculations.
+
+      Think of it like a spreadsheet template:
+        - Row Definition = the left-hand labels and account mappings
+        - Column Definition = the column headers and period logic
+        - Financial Report = the combination that produces the output
+
+      Business Central may come with some default financial reports
+      depending on your setup. We will create our own from scratch
+      to match Nordic Traders' chart of accounts.
+
+      In modern BC (v22+), the feature was renamed from "Account Schedules"
+      to "Financial Reports" with an updated UI. The underlying functionality
+      is the same.
+    config_data: {}
+    validation_questions:
+      - question: "What are the two main components of a Financial Report in BC?"
+        expected_answer: "A Row Definition (defines which accounts and formulas to show) and a Column Definition (defines the periods, comparisons, and calculations for columns)"
+        hints:
+          - "Think of it as a matrix: rows define what, columns define how"
+      - question: "What was the Financial Reports feature previously called in older BC versions?"
+        expected_answer: "Account Schedules"
+        hints:
+          - "The name changed around BC v22"
+
+  - id: create_income_row_definition
+    title: "Create the Income Statement Row Definition"
+    instructions: |
+      Search for "Financial Reports" (Page 103).
+
+      First, we need to create a Row Definition. Click on
+      "Row Definitions" in the navigation or search for
+      "Financial Report Row Definitions" (Page 104).
+
+      Click New and set:
+        Name: NT-IS-ROWS
+        Description: Nordic Traders Income Statement Rows
+
+      Then open the row definition to add lines. Create the following rows:
+
+        Row No.  Description              Totaling Type    Totaling          Show
+        ──────   ─────────────────────    ─────────────    ────────────      ────
+        10       === REVENUE ===          (blank)          (blank)           Yes
+        20       Product Sales            Posting Accounts 4100              Yes
+        30       Service Revenue          Posting Accounts 4200              Yes
+        40       Sales Discounts          Posting Accounts 4300              Yes
+        50       TOTAL REVENUE            Formula          20..40            Yes
+        60       (blank line)             (blank)          (blank)           Yes
+        70       === COST OF GOODS SOLD ===  (blank)      (blank)           Yes
+        80       COGS - Products          Posting Accounts 5100              Yes
+        90       COGS - Services          Posting Accounts 5200              Yes
+        100      Inventory Adjustments    Posting Accounts 5300              Yes
+        110      TOTAL COGS              Formula          80..100            Yes
+        120      (blank line)             (blank)          (blank)           Yes
+        130      GROSS PROFIT            Formula          50+110             Yes
+        140      (blank line)             (blank)          (blank)           Yes
+        150      === OPERATING EXPENSES ===  (blank)      (blank)           Yes
+        160      Salaries & Wages        Posting Accounts 6100              Yes
+        170      Rent                    Posting Accounts 6200              Yes
+        180      Office Supplies         Posting Accounts 6300              Yes
+        190      Marketing               Posting Accounts 6400              Yes
+        200      Insurance               Posting Accounts 6500              Yes
+        210      Depreciation            Posting Accounts 7100              Yes
+        220      Other Operating Exp.    Posting Accounts 7200              Yes
+        230      TOTAL OPERATING EXP.    Formula          160..220           Yes
+        240      (blank line)             (blank)          (blank)           Yes
+        250      OPERATING INCOME        Formula          130+230            Yes
+        260      (blank line)             (blank)          (blank)           Yes
+        270      === OTHER INCOME/EXP === (blank)          (blank)           Yes
+        280      Interest Income         Posting Accounts 8100              Yes
+        290      Interest Expense        Posting Accounts 8200              Yes
+        300      Exchange Rate Gains/Losses Posting Accounts 8300           Yes
+        310      TOTAL OTHER             Formula          280..300           Yes
+        320      (blank line)             (blank)          (blank)           Yes
+        330      NET INCOME BEFORE TAX   Formula          250+310            Yes
+        340      Corporate Tax           Posting Accounts 9100              Yes
+        350      NET INCOME              Formula          330+340            Yes
+
+      Notes on the Totaling column:
+        - "Posting Accounts" rows use G/L account numbers (e.g. 4100)
+        - "Formula" rows reference other Row No. values (e.g. 20..40 means
+          sum of rows 20 through 40)
+        - Revenue accounts typically have credit balances (shown as negative
+          in BC). You may want to set "Show Opposite Sign" = Yes on revenue
+          rows so they display as positive numbers.
+
+      Set "Show Opposite Sign" = Yes on rows: 20, 30, 40, 50, 130, 250, 330, 350
+      (revenue and profit lines that should appear as positive numbers).
+    config_data:
+      row_definition:
+        name: "NT-IS-ROWS"
+        description: "Nordic Traders Income Statement Rows"
+        rows:
+          - { row_no: 20, description: "Product Sales", totaling_type: "Posting Accounts", totaling: "4100" }
+          - { row_no: 30, description: "Service Revenue", totaling_type: "Posting Accounts", totaling: "4200" }
+          - { row_no: 50, description: "TOTAL REVENUE", totaling_type: "Formula", totaling: "20..40" }
+          - { row_no: 80, description: "COGS - Products", totaling_type: "Posting Accounts", totaling: "5100" }
+          - { row_no: 110, description: "TOTAL COGS", totaling_type: "Formula", totaling: "80..100" }
+          - { row_no: 130, description: "GROSS PROFIT", totaling_type: "Formula", totaling: "50+110" }
+          - { row_no: 250, description: "OPERATING INCOME", totaling_type: "Formula", totaling: "130+230" }
+          - { row_no: 350, description: "NET INCOME", totaling_type: "Formula", totaling: "330+340" }
+    validation_questions:
+      - question: "What Totaling Type do you use for a line that sums other rows?"
+        expected_answer: "Formula"
+        hints:
+          - "Posting Accounts pulls from G/L, Formula calculates from other row numbers"
+      - question: "Why do we set 'Show Opposite Sign' on revenue rows?"
+        expected_answer: "Because revenue accounts have credit balances which BC displays as negative numbers. Show Opposite Sign flips them to positive for readable financial reporting."
+        hints:
+          - "Credits are negative in BC's internal representation"
+
+  - id: create_column_definition
+    title: "Create the Column Definition for period reporting"
+    instructions: |
+      Search for "Financial Report Column Definitions" or navigate
+      from the Financial Reports page.
+
+      Click New and set:
+        Name: NT-PERIOD-COLS
+        Description: Current Month + YTD
+
+      Open the column definition and create these columns:
+
+        Column No.  Column Header       Column Type       Ledger Entry Type  Formula  Comparison Period
+        ──────────  ──────────────────  ────────────────  ─────────────────  ───────  ─────────────────
+        10          Current Month       Net Change        Entries            (blank)  (blank)
+        20          Year to Date        Year to Date      Entries            (blank)  (blank)
+        30          Prior Year Month    Net Change        Entries            (blank)  -1Y
+        40          YTD Variance        Formula           (blank)            20-30    (blank)
+
+      Column Type explanation:
+        - Net Change: Shows the movement for the period (month, quarter, etc.)
+        - Year to Date: Shows the cumulative total from the start of the fiscal year
+        - Balance at Date: Shows the balance as of the period end date (used for
+          balance sheet accounts)
+        - Formula: Calculates based on other columns
+
+      The Comparison Period "-1Y" on column 30 shifts the date filter back
+      by one year, showing the same month last year for comparison.
+
+      Column 40 uses a formula (20-30) to show the variance between
+      current YTD and prior year — useful for trend analysis.
+    config_data:
+      column_definition:
+        name: "NT-PERIOD-COLS"
+        description: "Current Month + YTD"
+        columns:
+          - { column_no: 10, header: "Current Month", type: "Net Change" }
+          - { column_no: 20, header: "Year to Date", type: "Year to Date" }
+          - { column_no: 30, header: "Prior Year Month", type: "Net Change", comparison: "-1Y" }
+          - { column_no: 40, header: "YTD Variance", type: "Formula", formula: "20-30" }
+    validation_questions:
+      - question: "What is the difference between Net Change and Year to Date column types?"
+        expected_answer: "Net Change shows the movement for the selected period only (e.g. one month). Year to Date shows the cumulative total from January 1st (or fiscal year start) through the selected period."
+        hints:
+          - "Net Change = single period, Year to Date = cumulative"
+      - question: "What does the Comparison Period '-1Y' do?"
+        expected_answer: "It shifts the date filter back by one year, so the column shows data from the same period in the prior year"
+        hints:
+          - "Y = year, so -1Y = minus one year"
+
+  - id: create_financial_report
+    title: "Create and run the Income Statement Financial Report"
+    instructions: |
+      Go back to the Financial Reports page (Page 103).
+
+      Click New to create a new Financial Report:
+        Name:              NT-INCOME-STMT
+        Description:       Nordic Traders Income Statement
+        Row Definition:    NT-IS-ROWS
+        Column Definition: NT-PERIOD-COLS
+
+      Now click "Edit Financial Report" or "View" to run it.
+
+      Set the date filter to the current month (e.g. 01/02/2026..28/02/2026
+      or whatever the current period is).
+
+      Review the output:
+        - Revenue rows should show sales amounts from the sales orders you posted
+        - COGS rows should show the cost of goods sold
+        - Operating expenses may be zero if you have not posted any expense invoices
+        - Gross Profit = Revenue - COGS (this should be positive for a healthy business)
+        - The Year to Date column accumulates all activity since fiscal year start
+
+      If you see zeros everywhere, verify:
+        1. The date filter includes the period when you posted transactions
+        2. The G/L account numbers in the row definition match your Chart of Accounts
+        3. You have run Adjust Cost - Item Entries and Post Inventory Cost to G/L
+
+      This is YOUR company's income statement — built from the transactions
+      you have been posting throughout this curriculum.
+    config_data:
+      financial_report:
+        name: "NT-INCOME-STMT"
+        description: "Nordic Traders Income Statement"
+        row_definition: "NT-IS-ROWS"
+        column_definition: "NT-PERIOD-COLS"
+    validation_questions:
+      - question: "Does your Income Statement show revenue from the sales orders you posted?"
+        expected_answer: "Yes — the Product Sales line (account 4100) should show the revenue from domestic and EU sales posted in earlier lessons"
+        hints:
+          - "Check that the date filter covers the period when sales were posted"
+      - question: "What is the Gross Profit for Nordic Traders based on your report?"
+        expected_answer: "Gross Profit = Total Revenue minus Total COGS. The exact number depends on the sales prices and costs from your transactions, but it should be a positive number."
+        hints:
+          - "Revenue minus Cost of Goods Sold"
+
+  - id: explore_report_features
+    title: "Explore Financial Report features"
+    instructions: |
+      While viewing the Income Statement report, explore these features:
+
+      1. Drill-down: Click on any amount cell to drill down into the
+         G/L entries that make up that number. This is one of the most
+         powerful features — you can trace any reported amount back to
+         individual transactions.
+
+      2. Print/Export: Use the Print or Send To action to export the
+         report to PDF or Excel. This is how you would share financial
+         statements with stakeholders.
+
+      3. Change column definition: You can switch to a different column
+         definition without modifying the row definition. Try this by
+         going back to the Financial Report setup and changing the
+         column definition.
+
+      4. Row formatting: In the Row Definition, you can set font styles
+         (Bold, Italic) on total lines to make them stand out. Go back
+         to NT-IS-ROWS and set Bold = Yes on rows 50, 110, 130, 230,
+         250, 330, 350 (the total and profit lines).
+
+      The Financial Reports framework is highly flexible. Once you
+      understand row definitions and column definitions, you can create
+      any financial statement: income statements, balance sheets,
+      cash flow statements, budget comparisons, departmental P&Ls, etc.
+    config_data: {}
+    validation_questions:
+      - question: "How do you trace a reported amount back to its source transactions?"
+        expected_answer: "Click on the amount cell in the Financial Report to drill down into the G/L entries. From there, you can see each individual transaction that contributed to that amount."
+        hints:
+          - "BC supports drill-down from financial reports to ledger entries"
+      - question: "Can you use the same Row Definition with different Column Definitions?"
+        expected_answer: "Yes — Row Definitions and Column Definitions are independent components. You can mix and match them to create different views of the same data."
+        hints:
+          - "Think of them as reusable building blocks"
+
+validation_questions:
+  - question: "What are the two building blocks of a Financial Report?"
+    expected_answer: "Row Definition (what accounts/formulas to show) and Column Definition (what periods/calculations to show)"
+    hints: []
+  - question: "What Totaling Type references G/L accounts directly?"
+    expected_answer: "Posting Accounts"
+    hints: []
+  - question: "How can you verify the accuracy of a Financial Report?"
+    expected_answer: "Drill down on any amount to see the underlying G/L entries, and cross-reference totals with the Chart of Accounts or Trial Balance"
+    hints: []
+
+agent_context: |
+  This lesson introduces Financial Reports, one of BC's most powerful features.
+  The student is building their first Income Statement from scratch, using the
+  Chart of Accounts they designed in Module 02.
+
+  Key teaching points:
+  - Financial Reports = Row Definition + Column Definition (a matrix)
+  - Row Definition maps to G/L accounts or formulas referencing other rows
+  - Column Definition controls the time periods and calculations
+  - Drill-down is incredibly powerful — trace any number to source transactions
+  - Show Opposite Sign is essential for revenue rows (credits display as negative)
+  - The report should reflect real data from the student's earlier transactions
+
+  Common mistakes:
+  - Wrong G/L account numbers in the row definition (must match the CoA exactly)
+  - Forgetting Show Opposite Sign on revenue/profit rows (numbers appear negative)
+  - Incorrect formula references (e.g. using account numbers instead of row numbers)
+  - Setting the wrong date filter (too narrow = no data, too wide = too much)
+  - Confusing Net Change with Balance at Date column types
+  - Not running Adjust Cost before generating reports (COGS may be incorrect)
+
+  If the student's report shows all zeros:
+  1. Check that the date filter covers the posting dates of their transactions
+  2. Verify the G/L account numbers match the CoA (account 4100, 5100, etc.)
+  3. Ensure Adjust Cost + Post Inventory Cost to G/L has been run
+  4. Check that the Totaling Type is "Posting Accounts" not "Total"
+
+  The Nordic Traders scenario by this point should have:
+  - Revenue from domestic laptop/monitor sales and EU sales
+  - COGS from the sold items (at FIFO cost of 5,500 DKK per laptop, 2,800 DKK per monitor)
+  - Possibly exchange rate gains/losses from the USD purchase
+
+  Encourage the student to see the connection between the individual transactions
+  they posted in earlier modules and the financial statements — this is the
+  payoff of careful setup work.
+
+estimated_duration: "40 minutes"

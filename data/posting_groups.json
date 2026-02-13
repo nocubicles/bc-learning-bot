@@ -1,0 +1,163 @@
+{
+  "gen_business_posting_groups": [
+    {
+      "code": "DOMESTIC",
+      "description": "Domestic customers and vendors",
+      "default_vat_bus_posting_group": "DOMESTIC"
+    },
+    {
+      "code": "EU",
+      "description": "EU customers and vendors",
+      "default_vat_bus_posting_group": "EU"
+    },
+    {
+      "code": "EXPORT",
+      "description": "Export (non-EU) customers and vendors",
+      "default_vat_bus_posting_group": "EXPORT"
+    }
+  ],
+  "gen_product_posting_groups": [
+    {
+      "code": "RETAIL",
+      "description": "Retail goods (electronics, accessories)",
+      "default_vat_prod_posting_group": "VAT25"
+    },
+    {
+      "code": "SERVICES",
+      "description": "Service revenue and costs",
+      "default_vat_prod_posting_group": "VAT25"
+    }
+  ],
+  "customer_posting_groups": [
+    {
+      "code": "DOMESTIC",
+      "description": "Domestic customers",
+      "receivables_account": "12100"
+    },
+    {
+      "code": "FOREIGN",
+      "description": "Foreign customers",
+      "receivables_account": "12200"
+    }
+  ],
+  "vendor_posting_groups": [
+    {
+      "code": "DOMESTIC",
+      "description": "Domestic vendors",
+      "payables_account": "20100"
+    },
+    {
+      "code": "FOREIGN",
+      "description": "Foreign vendors",
+      "payables_account": "20200"
+    }
+  ],
+  "inventory_posting_groups": [
+    {
+      "code": "RESALE",
+      "description": "Resale inventory (purchased goods)",
+      "inventory_account": "13100",
+      "inventory_account_interim": "13300"
+    }
+  ],
+  "vat_business_posting_groups": [
+    {
+      "code": "DOMESTIC",
+      "description": "Domestic VAT (25% Danish moms)"
+    },
+    {
+      "code": "EU",
+      "description": "EU reverse charge"
+    },
+    {
+      "code": "EXPORT",
+      "description": "Export — zero-rated"
+    }
+  ],
+  "vat_product_posting_groups": [
+    {
+      "code": "VAT25",
+      "description": "Standard rate 25%",
+      "vat_percent": 25
+    },
+    {
+      "code": "VAT0",
+      "description": "Zero-rated VAT",
+      "vat_percent": 0
+    },
+    {
+      "code": "NO VAT",
+      "description": "No VAT (exempt)",
+      "vat_percent": 0
+    }
+  ],
+  "general_posting_setup": [
+    {
+      "gen_bus_posting_group": "DOMESTIC",
+      "gen_prod_posting_group": "RETAIL",
+      "sales_account": "40100",
+      "cogs_account": "50100",
+      "inventory_adjmt_account": "50300",
+      "sales_line_disc_account": "40400",
+      "sales_credit_memo_account": "40500",
+      "purch_account": "50100"
+    },
+    {
+      "gen_bus_posting_group": "DOMESTIC",
+      "gen_prod_posting_group": "SERVICES",
+      "sales_account": "40300",
+      "purch_account": "62200"
+    },
+    {
+      "gen_bus_posting_group": "EU",
+      "gen_prod_posting_group": "RETAIL",
+      "sales_account": "40100",
+      "cogs_account": "50100",
+      "inventory_adjmt_account": "50300",
+      "purch_account": "50100"
+    },
+    {
+      "gen_bus_posting_group": "EXPORT",
+      "gen_prod_posting_group": "RETAIL",
+      "sales_account": "40100",
+      "cogs_account": "50100",
+      "inventory_adjmt_account": "50300",
+      "purch_account": "50100"
+    }
+  ],
+  "vat_posting_setup": [
+    {
+      "vat_bus_posting_group": "DOMESTIC",
+      "vat_prod_posting_group": "VAT25",
+      "vat_calculation_type": "Normal VAT",
+      "vat_percent": 25,
+      "sales_vat_account": "21100",
+      "purchase_vat_account": "14200"
+    },
+    {
+      "vat_bus_posting_group": "DOMESTIC",
+      "vat_prod_posting_group": "VAT0",
+      "vat_calculation_type": "Normal VAT",
+      "vat_percent": 0,
+      "sales_vat_account": "21100",
+      "purchase_vat_account": "14200"
+    },
+    {
+      "vat_bus_posting_group": "EU",
+      "vat_prod_posting_group": "VAT25",
+      "vat_calculation_type": "Reverse Charge VAT",
+      "vat_percent": 25,
+      "sales_vat_account": "21100",
+      "purchase_vat_account": "14200",
+      "reverse_chrg_vat_account": "21200"
+    },
+    {
+      "vat_bus_posting_group": "EXPORT",
+      "vat_prod_posting_group": "VAT25",
+      "vat_calculation_type": "Normal VAT",
+      "vat_percent": 0,
+      "sales_vat_account": "21100",
+      "purchase_vat_account": "14200"
+    }
+  ]
+}
